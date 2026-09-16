@@ -28,6 +28,9 @@ run_app() {
 
 cd "$APP_DIR"
 
+echo "==> fix vendor ownership (composer unprivileged)"
+chown -R "$APP_USER":"$APP_USER" "$APP_DIR/vendor"
+
 echo "==> composer install"
 sudo -u "$APP_USER" composer install --no-dev --optimize-autoloader
 
