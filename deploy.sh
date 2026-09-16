@@ -14,8 +14,7 @@
 # Requerimientos (LXC Debian 13 / Proxmox):
 #   - composer + extensiones php8.4 (sqlite3, mbstring, xml, curl)
 #   - acceso a systemctl (ejecutar como root o con sudo)
-#   - acceso git para APP_USER: clonar con deploy key / token en /var/www/.ssh
-#     (o ajustar APP_USER al usuario que posee la clave SSH del repo)
+
 set -euo pipefail
 
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,9 +27,6 @@ run_app() {
 }
 
 cd "$APP_DIR"
-
-echo "==> git pull"
-sudo -u "$APP_USER" git pull --ff-only
 
 echo "==> composer install"
 sudo -u "$APP_USER" composer install --no-dev --optimize-autoloader
