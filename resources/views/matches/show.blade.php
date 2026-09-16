@@ -294,7 +294,7 @@
             <p class="muted small">Mensaje pre-escrito con los datos del partido y la lista actualizada por equipos, listo para reenviar al grupo.</p>
             <div class="share-box" id="share-msg">{{ $shareMessage }}</div>
             <div class="row mt">
-                <a class="btn btn-primary" target="_blank" rel="noopener" href="{{ 'https://wa.me/?text=' . rawurlencode($shareMessage) }}">📲 Enviar a un chat</a>
+                <a class="btn btn-primary" id="share-chat" target="_blank" rel="noopener" href="{{ 'https://wa.me/?text=' . rawurlencode($shareMessage) }}">📲 Enviar a un chat</a>
                 <button type="button" class="btn" id="copy-share">Copiar mensaje</button>
                 @if ($waGroup)
                     <a class="btn wa-link" target="_blank" rel="noopener" href="{{ $waGroup }}">Abrir el grupo</a>
@@ -328,6 +328,16 @@
                     btn.textContent = '¡Copiado!';
                     setTimeout(function () { btn.textContent = 'Copiar mensaje'; }, 1500);
                 }
+            });
+        })();
+
+        (function () {
+            var shareBtn = document.getElementById('share-chat');
+            if (!shareBtn || !navigator.share) return;
+            shareBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                var box = document.getElementById('share-msg');
+                navigator.share({ text: box.textContent }).catch(function () {});
             });
         })();
 
