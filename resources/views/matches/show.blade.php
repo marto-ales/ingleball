@@ -22,16 +22,23 @@
 @if (auth()->user()->is_organizer)
     <div class="card row">
         <strong>Herramientas de organización</strong>
-        @if ($match->isOpen())
-            <form method="POST" action="{{ route('matches.lock', $match) }}" class="inline">
+        @if ($match->isCancelled())
+            <form method="POST" action="{{ route('matches.reactivate', $match) }}" class="inline">
                 @csrf @method('PATCH')
-                <button class="btn" type="submit">Cerrar lista</button>
+                <button class="btn" type="submit">Reactivar partido</button>
             </form>
-        @elseif ($match->isLocked())
-            <form method="POST" action="{{ route('matches.unlock', $match) }}" class="inline">
-                @csrf @method('PATCH')
-                <button class="btn" type="submit">Reabrir lista</button>
-            </form>
+        @else
+            @if ($match->isOpen())
+                <form method="POST" action="{{ route('matches.lock', $match) }}" class="inline">
+                    @csrf @method('PATCH')
+                    <button class="btn" type="submit">Cerrar lista</button>
+                </form>
+            @elseif ($match->isLocked())
+                <form method="POST" action="{{ route('matches.unlock', $match) }}" class="inline">
+                    @csrf @method('PATCH')
+                    <button class="btn" type="submit">Reabrir lista</button>
+                </form>
+            @endif
         @endif
         <form method="POST" action="{{ route('matches.remind', $match) }}" class="inline">
             @csrf
@@ -43,6 +50,13 @@
                 {{ $match->recurring ? '★ Recurrente: activado' : 'Activar recurrencia semanal' }}
             </button>
         </form>
+        @if ($match->isActive())
+            <a class="btn" href="{{ route('matches.edit', $match) }}">Editar</a>
+            <form method="POST" action="{{ route('matches.cancel', $match) }}" class="inline" onsubmit="return confirm('¿Cancelar este partido?');">
+                @csrf @method('PATCH')
+                <button class="btn btn-danger" type="submit">Cancelar partido</button>
+            </form>
+        @endif
     </div>
 @endif
 
@@ -222,7 +236,9 @@
             @endif
         @else
             <p class="muted mb0">
-                @if ($match->isFinished())
+                @if ($match->isCancelled())
+                    Partido cancelado.
+                @elseif ($match->isFinished())
                     Aún no se registró el resultado.
                 @else
                     El resultado se podrá registrar recién cuando el partido esté finalizado.

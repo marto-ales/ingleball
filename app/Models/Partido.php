@@ -18,6 +18,7 @@ class Partido extends Model
     public const STATUS_OPEN = 'open';
     public const STATUS_LOCKED = 'locked';
     public const STATUS_FINISHED = 'finished';
+    public const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
         'title', 'played_at', 'venue', 'size', 'status', 'created_by', 'locked_at',
@@ -92,6 +93,16 @@ class Partido extends Model
     public function isFinished(): bool
     {
         return $this->status === self::STATUS_FINISHED;
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === self::STATUS_CANCELLED;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->isOpen() || $this->isLocked();
     }
 
     /**

@@ -40,6 +40,96 @@ final class MatchFlowTest extends TestCase
         $response->assertRedirect(route('matches.show', Partido::first()));
     }
 
+    public function test_organizer_can_edit_match(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+
+        $this->actingAs($organizer)
+            ->get(route('matches.edit', $match))
+            ->assertOk()
+            ->assertSee('Editar partido')
+            ->assertSee($match->title);
+
+        $this->actingAs($organizer)
+            ->patch(route('matches.update', $match), [
+                'title' => 'Lunes actualizado',
+                'played_at' => now()->addDays(3)->format('Y-m-d H:i'),
+                'venue' => 'Otra cancha',
+                'size' => 4,
+            ])
+            ->assertRedirect(route('matches.show', $match));
+
+        $this->assertDatabaseHas('matches', [
+            'id' => $match->id,
+            'title' => 'Lunes actualizado',
+            'venue' => 'Otra cancha',
+            'size' => 4,
+        ]);
+    }
+
+    public function test_regular_player_cannot_edit_cancel_or_finish_match(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $player = User::factory()->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+
+        $this->actingAs($player)
+            ->patch(route('matches.update', $match), [
+                'title' => 'x', 'played_at' => now()->addDay()->format('Y-m-d H:i'), 'size' => 5,
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($player)
+            ->patch(route('matches.cancel', $match))
+            ->assertForbidden();
+    }
+
+    public function test_organizer_can_cancel_and_reactivate_match(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+
+        $this->actingAs($organizer)
+            ->patch(route('matches.cancel', $match))
+            ->assertRedirect();
+
+        $this->assertSame(Partido::STATUS_CANCELLED, $match->refresh()->status);
+
+        $this->actingAs($organizer)
+            ->patch(route('matches.reactivate', $match))
+            ->assertRedirect();
+
+        $this->assertSame(Partido::STATUS_OPEN, $match->refresh()->status);
+    }
+
+    public function test_finished_match_cannot_be_cancelled_or_edited(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id, 'status' => Partido::STATUS_FINISHED]);
+
+        $this->actingAs($organizer)
+            ->patch(route('matches.cancel', $match))
+            ->assertForbidden();
+
+        $this->actingAs($organizer)
+            ->patch(route('matches.update', $match), [
+                'title' => 'x', 'played_at' => now()->addDay()->format('Y-m-d H:i'), 'size' => 5,
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_cancelled_match_renders_with_badge_in_index(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        Partido::factory()->create(['created_by' => $organizer->id, 'status' => Partido::STATUS_CANCELLED]);
+
+        $this->actingAs($organizer)
+            ->get(route('matches.index'))
+            ->assertOk()
+            ->assertSee('Cancelado');
+    }
+
     public function test_regular_player_cannot_create_match(): void
     {
         $player = User::factory()->create();

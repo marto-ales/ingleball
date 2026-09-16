@@ -36,6 +36,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('matches', [MatchController::class, 'index'])->name('matches.index');
     Route::get('matches/create', [MatchController::class, 'create'])->middleware('organizer')->name('matches.create');
+    Route::get('matches/{match}/edit', [MatchController::class, 'edit'])->middleware('organizer')->name('matches.edit');
+    Route::patch('matches/{match}', [MatchController::class, 'update'])->middleware('organizer')->name('matches.update');
+    Route::patch('matches/{match}/cancel', [MatchController::class, 'cancel'])->middleware('organizer')->name('matches.cancel');
+    Route::patch('matches/{match}/reactivate', [MatchController::class, 'reactivate'])->middleware('organizer')->name('matches.reactivate');
     Route::post('matches', [MatchController::class, 'store'])->middleware('organizer')->name('matches.store');
 
     Route::get('matches/{match}', [MatchController::class, 'show'])->name('matches.show');

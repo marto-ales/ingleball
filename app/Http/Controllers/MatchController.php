@@ -31,7 +31,11 @@ class MatchController extends Controller
         $all = Partido::with('creator')
             ->orderByDesc('played_at')
             ->get()
-            ->groupBy(fn (Partido $match): string => $match->isFinished() ? 'finished' : 'upcoming');
+            ->groupBy(fn (Partido $match): string => match (true) {
+                $match->isCancelled() => 'cancelled',
+                $match->isFinished() => 'finished',
+                default => 'upcoming',
+            });
 
         return view('matches.index', ['matches' => $all]);
     }
@@ -39,6 +43,54 @@ class MatchController extends Controller
     public function create(): View
     {
         return view('matches.create');
+    }
+
+    public function edit(Partido $match): View
+    {
+        abort_unless($match->isActive() || $match->isCancelled(), 403);
+
+        return view('matches.edit', ['match' => $match]);
+    }
+
+    public function update(Request $request, Partido $match): RedirectResponse
+    {
+        abort_unless($match->isActive() || $match->isCancelled(), 403);
+
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:120'],
+            'played_at' => ['required', 'date', 'after:now'],
+            'venue' => ['nullable', 'string', 'max:120'],
+            'size' => ['required', 'integer', 'in:3,4,5'],
+        ]);
+
+        $match->update([
+            'title' => $data['title'],
+            'played_at' => $data['played_at'],
+            'venue' => $data['venue'] ?? null,
+            'size' => $data['size'],
+        ]);
+
+        return redirect()
+            ->route('matches.show', $match)
+            ->with('status', 'Partido actualizado.');
+    }
+
+    public function cancel(Partido $match): RedirectResponse
+    {
+        abort_unless($match->isActive(), 403, 'Solo se puede cancelar un partido que no esté finalizado.');
+
+        $match->update(['status' => Partido::STATUS_CANCELLED]);
+
+        return back()->with('status', 'Partido cancelado.');
+    }
+
+    public function reactivate(Partido $match): RedirectResponse
+    {
+        abort_unless($match->isCancelled(), 403);
+
+        $match->update(['status' => Partido::STATUS_OPEN]);
+
+        return back()->with('status', 'Partido reactivado.');
     }
 
     public function store(Request $request): RedirectResponse

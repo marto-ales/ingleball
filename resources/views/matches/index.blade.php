@@ -29,6 +29,24 @@
     @endforelse
 </div>
 
+@if ($matches->has('cancelled') && $matches->get('cancelled', collect())->isNotEmpty())
+    <div class="section">
+        <h2>Cancelados</h2>
+        @foreach ($matches->get('cancelled') as $match)
+            <div class="card row between">
+                <div>
+                    <div class="row">
+                        <strong>{{ $match->title }}</strong>
+                        <span class="badge badge-cancelled">Cancelado</span>
+                    </div>
+                    <div class="muted small">{{ $match->played_at->format('d M Y') }}</div>
+                </div>
+                <a class="btn btn-sm" href="{{ route('matches.show', $match) }}">Ver</a>
+            </div>
+        @endforeach
+    </div>
+@endif
+
 <div class="section">
     <h2>Historial</h2>
     @forelse ($matches->get('finished', collect()) as $match)

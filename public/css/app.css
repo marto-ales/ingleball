@@ -84,6 +84,7 @@ h3 { font-size: 15px; margin: 0 0 8px; }
 .badge-open { background: #e7f4ec; color: var(--pitch-dark); }
 .badge-locked { background: #fff3e2; color: #8a5a00; }
 .badge-finished { background: #eceef1; color: #4a5560; }
+.badge-cancelled { background: #fdeaea; color: #a63c3c; }
 .badge-organizer { background: #e3eefe; color: #1a56db; }
 .badge-managed { background: #f0edfa; color: #6d4bb8; }
 .badge-active { background: #e7f4ec; color: var(--pitch-dark); }
