@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Guest;
 use App\Models\Partido;
 use App\Models\Rating;
 use App\Models\User;
@@ -73,8 +74,20 @@ class DatabaseSeeder extends Seeder
         foreach ($all->random(9) as $user) {
             $saturday->entries()->create(['user_id' => $user->id, 'role' => 'going', 'list_order' => $order++]);
         }
-        $guest = $saturday->guests()->create(['name' => 'Cheto (invitado)', 'phone' => '+5491155550099', 'overall' => 7]);
+        $guest = Guest::create(['name' => 'Cheto (invitado)', 'phone' => '+5491155550099', 'overall' => 7]);
         $saturday->entries()->create(['guest_id' => $guest->id, 'role' => 'going', 'list_order' => $order++]);
+
+        // Managed player: sits in the list but has no password (cannot log in).
+        $managed = User::factory()->create([
+            'name' => 'Pancho (sin cuenta)',
+            'username' => 'pancho',
+            'phone' => '+5491155550088',
+            'is_managed' => true,
+        ]);
+        $managed->player()->create([
+            'speed' => 6, 'skill' => 6, 'passing' => 6, 'shooting' => 6, 'defense' => 5, 'overall' => 6,
+        ]);
+        $saturday->entries()->create(['user_id' => $managed->id, 'role' => 'going', 'list_order' => $order++]);
 
         // Upcoming open match, 4v4.
         $four = Partido::factory()->create([

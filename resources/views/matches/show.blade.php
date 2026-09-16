@@ -43,6 +43,12 @@
                 <button class="btn btn-ghost" type="submit">Marcar finalizado</button>
             </form>
         @endunless
+        <form method="POST" action="{{ route('matches.recurring', $match) }}" class="inline">
+            @csrf
+            <button class="btn {{ $match->recurring ? 'btn-primary' : '' }}" type="submit">
+                {{ $match->recurring ? '★ Recurrente: activado' : 'Activar recurrencia semanal' }}
+            </button>
+        </form>
     </div>
 @endif
 

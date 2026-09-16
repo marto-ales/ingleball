@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Partido extends Model
@@ -20,6 +21,7 @@ class Partido extends Model
 
     protected $fillable = [
         'title', 'played_at', 'venue', 'size', 'status', 'created_by', 'locked_at',
+        'recurring', 'recurring_id',
     ];
 
     /**
@@ -31,6 +33,7 @@ class Partido extends Model
             'played_at' => 'datetime',
             'locked_at' => 'datetime',
             'size' => 'integer',
+            'recurring' => 'boolean',
         ];
     }
 
@@ -44,9 +47,16 @@ class Partido extends Model
         return $this->hasMany(MatchEntry::class, 'match_id');
     }
 
-    public function guests(): HasMany
+    public function guests(): HasManyThrough
     {
-        return $this->hasMany(Guest::class, 'match_id');
+        return $this->hasManyThrough(
+            Guest::class,
+            MatchEntry::class,
+            'match_id',
+            'id',
+            'id',
+            'guest_id',
+        );
     }
 
     public function result(): HasOne
@@ -62,6 +72,11 @@ class Partido extends Model
     public function goals(): HasMany
     {
         return $this->hasMany(Goal::class, 'match_id');
+    }
+
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'recurring_id');
     }
 
     public function isOpen(): bool

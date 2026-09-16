@@ -9,6 +9,7 @@ use App\Support\Captcha;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class RegisterController extends Controller
@@ -22,8 +23,8 @@ class RegisterController extends Controller
     {
         $rules = [
             'name' => ['required', 'string', 'max:80'],
-            'username' => ['required', 'string', 'max:30', 'alpha_dash', 'unique:users,username'],
-            'email' => ['nullable', 'email', 'max:120', 'unique:users,email'],
+            'username' => ['required', 'string', 'max:30', 'alpha_dash'],
+            'email' => ['nullable', 'email', 'max:120'],
             'phone' => ['nullable', 'string', 'max:20'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ];
@@ -34,22 +35,56 @@ class RegisterController extends Controller
 
         $data = $request->validate($rules);
 
-        $user = User::create([
-            'name' => $data['name'],
-            'username' => $data['username'],
-            'email' => $data['email'] ?? null,
-            'phone' => $data['phone'] ?? null,
-            'password' => $data['password'],
-            'is_organizer' => false,
-        ]);
+        $usernameOwner = User::where('username', $data['username'])->first();
+        if ($usernameOwner && ! $usernameOwner->is_managed) {
+            throw ValidationException::withMessages([
+                'username' => __('El nombre de usuario ya está en uso.'),
+            ]);
+        }
 
-        $user->player()->create([
-            'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'overall' => 5,
-        ]);
+        $emailOwner = ! empty($data['email'])
+            ? User::where('email', $data['email'])->first()
+            : null;
+        if ($emailOwner && ! $emailOwner->is_managed) {
+            throw ValidationException::withMessages([
+                'email' => __('El correo ya está en uso.'),
+            ]);
+        }
+
+        $managed = $usernameOwner?->is_managed ? $usernameOwner : ($emailOwner?->is_managed ? $emailOwner : null);
+
+        if ($managed) {
+            $user = $managed;
+            $user->forceFill([
+                'name' => $data['name'],
+                'phone' => $data['phone'] ?? $user->phone,
+                'email' => $data['email'] ?? $user->email,
+                'password' => $data['password'],
+                'is_managed' => false,
+            ])->save();
+        } else {
+            $user = User::create([
+                'name' => $data['name'],
+                'username' => $data['username'],
+                'email' => $data['email'] ?? null,
+                'phone' => $data['phone'] ?? null,
+                'password' => $data['password'],
+                'is_organizer' => false,
+            ]);
+        }
+
+        if (! $user->player()->exists()) {
+            $user->player()->create([
+                'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'overall' => 5,
+            ]);
+        }
 
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('dashboard')->with('status', '¡Bienvenido a Ingleball, ' . $user->name . '!');
+        return redirect()->route('dashboard')->with(
+            'status',
+            $managed ? '¡Bienvenido a Ingleball! Recuperaste tu historial como ' . $user->name . '.' : '¡Bienvenido a Ingleball, ' . $user->name . '!'
+        );
     }
 }

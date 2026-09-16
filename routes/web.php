@@ -11,6 +11,7 @@ use App\Http\Controllers\RatingController;
 use App\Http\Controllers\ResultController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -42,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('matches/{match}/unlock', [MatchController::class, 'unlock'])->middleware('organizer')->name('matches.unlock');
     Route::patch('matches/{match}/finish', [MatchController::class, 'finish'])->middleware('organizer')->name('matches.finish');
     Route::post('matches/{match}/remind', [MatchController::class, 'remind'])->middleware('organizer')->name('matches.remind');
+    Route::post('matches/{match}/recurring', [MatchController::class, 'toggleRecurring'])->middleware('organizer')->name('matches.recurring');
 
     Route::patch('matches/{match}/entries', [EntryController::class, 'update'])->name('entries.update');
     Route::delete('matches/{match}/entries', [EntryController::class, 'destroy'])->name('entries.destroy');
@@ -63,4 +65,15 @@ Route::middleware('auth')->group(function () {
 
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
+});
+
+Route::middleware('auth', 'organizer')->group(function () {
+    Route::get('users', [UserManagementController::class, 'index'])->name('users.manage.index');
+    Route::get('users/create', [UserManagementController::class, 'create'])->name('users.manage.create');
+    Route::post('users', [UserManagementController::class, 'store'])->name('users.manage.store');
+    Route::get('users/{user}/edit', [UserManagementController::class, 'edit'])->name('users.manage.edit');
+    Route::patch('users/{user}', [UserManagementController::class, 'update'])->name('users.manage.update');
+    Route::post('users/{user}/block', [UserManagementController::class, 'block'])->name('users.manage.block');
+    Route::post('users/{user}/unblock', [UserManagementController::class, 'unblock'])->name('users.manage.unblock');
+    Route::delete('users/{user}', [UserManagementController::class, 'destroy'])->name('users.manage.destroy');
 });

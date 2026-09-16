@@ -3,13 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Partido;
+use App\Services\RecurringMatchService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, RecurringMatchService $recurring): View
     {
+        $recurring->ensureUpcoming();
+
         $upcoming = Partido::whereIn('status', [Partido::STATUS_OPEN, Partido::STATUS_LOCKED])
             ->where('played_at', '>=', now()->subDay())
             ->orderBy('played_at')

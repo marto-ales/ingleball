@@ -24,7 +24,10 @@ class GuestController extends Controller
             'overall' => ['nullable', 'integer', 'between:1,10'],
         ]);
 
-        $guest = $match->guests()->create($data);
+        $guest = $this->findOrGlobal($data);
+        if ($match->entries()->where('guest_id', $guest->id)->exists()) {
+            return back()->with('status', $guest->name . ' ya está en la lista.');
+        }
 
         $nextOrder = ((int) $match->entries()->max('list_order')) + 1;
         $match->entries()->create([
@@ -33,17 +36,38 @@ class GuestController extends Controller
             'list_order' => $nextOrder,
         ]);
 
-        return back()->with('status', 'Invitado a ' . $data['name'] . '.');
+        return back()->with('status', 'Invitado a ' . $guest->name . '.');
     }
 
     public function destroy(Partido $match, Guest $guest): RedirectResponse
     {
         abort_unless($match->isOpen(), 403, 'La lista ya está cerrada.');
-        abort_unless($guest->match_id === $match->id, 404);
 
-        $match->entries()->where('guest_id', $guest->id)->delete();
-        $guest->delete();
+        $entry = $match->entries()->where('guest_id', $guest->id)->first();
+        abort_unless($entry, 404);
+
+        $entry->delete();
+        if (! $guest->entries()->exists()) {
+            $guest->delete();
+        }
 
         return back()->with('status', 'Invitado retirado.');
+    }
+
+    private function findOrGlobal(array $data): Guest
+    {
+        $phone = ! empty($data['phone']) ? preg_replace('/[^0-9]/', '', $data['phone']) : null;
+
+        $existing = $phone
+            ? Guest::whereNotNull('phone')->get()->first(fn (Guest $g) => preg_replace('/[^0-9]/', '', (string) $g->phone) === $phone)
+            : null;
+
+        if ($existing) {
+            $existing->update($data);
+
+            return $existing;
+        }
+
+        return Guest::create($data);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Partido;
 use App\Services\MessagingService;
+use App\Services\RecurringMatchService;
 use App\Services\ReminderService;
 use App\Services\TeamService;
 use Illuminate\Http\RedirectResponse;
@@ -16,10 +17,13 @@ class MatchController extends Controller
         private TeamService $teams,
         private ReminderService $reminders,
         private MessagingService $messaging,
+        private RecurringMatchService $recurring,
     ) {}
 
     public function index(): View
     {
+        $this->recurring->ensureUpcoming();
+
         $all = Partido::with('creator')
             ->orderByDesc('played_at')
             ->get()
@@ -40,6 +44,7 @@ class MatchController extends Controller
             'played_at' => ['required', 'date', 'after:now'],
             'venue' => ['nullable', 'string', 'max:120'],
             'size' => ['required', 'integer', 'in:3,4,5'],
+            'recurring' => ['nullable', 'boolean'],
         ]);
 
         $match = Partido::create([
@@ -49,7 +54,12 @@ class MatchController extends Controller
             'size' => $data['size'],
             'status' => Partido::STATUS_OPEN,
             'created_by' => $request->user()->id,
+            'recurring' => $request->boolean('recurring'),
         ]);
+
+        if ($match->recurring) {
+            $this->recurring->ensureUpcoming();
+        }
 
         return redirect()
             ->route('matches.show', $match)
@@ -97,6 +107,21 @@ class MatchController extends Controller
             'waGroup' => $waGroup,
             'shareMessage' => $shareMessage,
         ]);
+    }
+
+    public function toggleRecurring(Partido $match): RedirectResponse
+    {
+        $match->update(['recurring' => ! $match->recurring]);
+
+        if ($match->recurring) {
+            $match->update(['recurring_id' => null]);
+            $this->recurring->ensureUpcoming();
+        }
+
+        return back()->with(
+            'status',
+            $match->recurring ? 'Partido recurrente: se abre cada semana automáticamente.' : 'Se quitó la recurrencia.'
+        );
     }
 
     public function lock(Partido $match): RedirectResponse

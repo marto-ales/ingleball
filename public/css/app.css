@@ -84,6 +84,11 @@ h3 { font-size: 15px; margin: 0 0 8px; }
 .badge-open { background: #e7f4ec; color: var(--pitch-dark); }
 .badge-locked { background: #fff3e2; color: #8a5a00; }
 .badge-finished { background: #eceef1; color: #4a5560; }
+.badge-organizer { background: #e3eefe; color: #1a56db; }
+.badge-managed { background: #f0edfa; color: #6d4bb8; }
+.badge-active { background: #e7f4ec; color: var(--pitch-dark); }
+.badge-banned { background: #fde8e8; color: #b91c1c; }
+.badge-info { background: #e0f2fe; color: #0369a1; }
 .chip { display: inline-flex; align-items: center; gap: 6px; background: #f3f6f2; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 600; }
 .score-tag { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--pitch-dark); }
 

@@ -36,6 +36,13 @@
             <input id="venue" name="venue" value="{{ old('venue') }}" placeholder="Cancha del club">
             @error('venue')<div class="field-error">{{ $message }}</div>@enderror
         </div>
+        <div class="field">
+            <label class="checkbox-line">
+                <input type="hidden" name="recurring" value="0">
+                <input type="checkbox" name="recurring" value="1" {{ old('recurring') ? 'checked' : '' }}>
+                Partido recurrente (se abre solo cada semana con los mismos datos)
+            </label>
+        </div>
         <button class="btn btn-primary" type="submit">Crear partido</button>
     </form>
 </div>

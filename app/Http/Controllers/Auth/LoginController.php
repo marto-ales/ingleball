@@ -40,6 +40,15 @@ class LoginController extends Controller
             ]);
         }
 
+        if (Auth::user()->isBanned()) {
+            Auth::logout();
+            $request->session()->invalidate();
+
+            throw ValidationException::withMessages([
+                'username' => __('Tu cuenta fue bloqueada. Contactá a un organizador.'),
+            ]);
+        }
+
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard'));

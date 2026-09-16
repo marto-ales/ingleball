@@ -22,6 +22,8 @@ class User extends Authenticatable
         'phone',
         'whatsapp_group',
         'is_organizer',
+        'banned_at',
+        'is_managed',
         'password',
     ];
 
@@ -36,7 +38,14 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_organizer' => 'boolean',
+            'is_managed' => 'boolean',
+            'banned_at' => 'datetime',
         ];
+    }
+
+    public function isBanned(): bool
+    {
+        return $this->banned_at !== null;
     }
 
     public function player(): HasOne

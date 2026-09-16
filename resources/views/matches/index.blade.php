@@ -18,6 +18,7 @@
                 <div class="row">
                     <strong>{{ $match->title }}</strong>
                     @include('partials.status-badge', ['match' => $match])
+                    @if ($match->recurring) <span class="badge badge-info">Recurrente</span> @endif
                 </div>
                 <div class="muted small">{{ $match->played_at->format('D, d M Y H:i') }} · creó {{ $match->creator?->name }}</div>
             </div>
