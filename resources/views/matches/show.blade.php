@@ -21,7 +21,7 @@
 
 @if (auth()->user()->is_organizer)
     <div class="card row">
-        <strong>Herramientas de organización</strong>
+        <strong>Organización</strong>
         @if ($match->isCancelled())
             <form method="POST" action="{{ route('matches.reactivate', $match) }}" class="inline">
                 @csrf @method('PATCH')
@@ -40,6 +40,13 @@
                 </form>
             @endif
         @endif
+        @if ($match->isActive())
+            <a class="btn" href="{{ route('matches.edit', $match) }}">Editar</a>
+            <form method="POST" action="{{ route('matches.cancel', $match) }}" class="inline" onsubmit="return confirm('¿Cancelar este partido?');">
+                @csrf @method('PATCH')
+                <button class="btn btn-danger" type="submit">Cancelar partido</button>
+            </form>
+        @endif
         <form method="POST" action="{{ route('matches.remind', $match) }}" class="inline">
             @csrf
             <button class="btn" type="submit">Enviar recordatorios</button>
@@ -50,13 +57,6 @@
                 {{ $match->recurring ? '★ Recurrente: activado' : 'Activar recurrencia semanal' }}
             </button>
         </form>
-        @if ($match->isActive())
-            <a class="btn" href="{{ route('matches.edit', $match) }}">Editar</a>
-            <form method="POST" action="{{ route('matches.cancel', $match) }}" class="inline" onsubmit="return confirm('¿Cancelar este partido?');">
-                @csrf @method('PATCH')
-                <button class="btn btn-danger" type="submit">Cancelar partido</button>
-            </form>
-        @endif
     </div>
 @endif
 
@@ -74,12 +74,12 @@
                     <form method="POST" action="{{ route('entries.update', $match) }}" class="inline">
                         @csrf @method('PATCH')
                         <input type="hidden" name="role" value="substitute">
-                        <button class="btn btn-sm" type="submit" {{ ($myEntry?->role === 'substitute') ? 'disabled' : '' }}>🟡 Suplente</button>
+                        <button class="btn btn-sm" type="submit" {{ ($myEntry?->role === 'substitute') ? 'disabled' : '' }}>🟡 Soy suplente</button>
                     </form>
                     @if ($myEntry)
-                        <form method="POST" action="{{ route('entries.destroy', $match) }}" class="inline" onsubmit="return confirm('¿Quitar de la lista?');">
+                        <form method="POST" action="{{ route('entries.destroy', $match) }}" class="inline" onsubmit="return confirm('¿Quitarme de la lista?');">
                             @csrf @method('DELETE')
-                            <button class="btn btn-danger btn-sm" type="submit">Quitar</button>
+                            <button class="btn btn-danger btn-sm" type="submit">No voy</button>
                         </form>
                     @endif
                 </div>
