@@ -15,7 +15,7 @@ class MatchEntry extends Model
     public const ROLE_OUT = 'out';
 
     protected $fillable = [
-        'match_id', 'user_id', 'guest_id', 'role', 'list_order',
+        'match_id', 'user_id', 'guest_id', 'role',
     ];
 
     /**
@@ -23,7 +23,9 @@ class MatchEntry extends Model
      */
     protected function casts(): array
     {
-        return ['list_order' => 'integer'];
+        return [
+            //
+        ];
     }
 
     public function match(): BelongsTo

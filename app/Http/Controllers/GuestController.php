@@ -29,11 +29,9 @@ class GuestController extends Controller
             return back()->with('status', $guest->name . ' ya está en la lista.');
         }
 
-        $nextOrder = ((int) $match->entries()->max('list_order')) + 1;
         $match->entries()->create([
             'guest_id' => $guest->id,
             'role' => 'going',
-            'list_order' => $nextOrder,
         ]);
 
         return back()->with('status', 'Invitado a ' . $guest->name . '.');

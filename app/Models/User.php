@@ -76,7 +76,7 @@ class User extends Authenticatable
     public function matches(): BelongsToMany
     {
         return $this->belongsToMany(Partido::class, 'match_entries', 'user_id', 'match_id')
-            ->withPivot(['role', 'list_order'])
+            ->withPivot('role')
             ->withTimestamps();
     }
 }

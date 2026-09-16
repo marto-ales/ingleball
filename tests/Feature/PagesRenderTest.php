@@ -24,8 +24,8 @@ final class PagesRenderTest extends TestCase
         $players = User::factory(4)->create();
 
         $this->openMatch = Partido::factory()->create(['created_by' => $this->organizer->id]);
-        foreach ($players as $i => $p) {
-            $this->openMatch->entries()->create(['user_id' => $p->id, 'role' => 'going', 'list_order' => $i + 1]);
+        foreach ($players as $p) {
+            $this->openMatch->entries()->create(['user_id' => $p->id, 'role' => 'going']);
         }
     }
 

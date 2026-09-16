@@ -22,11 +22,9 @@ class EntryController extends Controller
             ->exists();
 
         if (! $exists && $data['role'] === 'going') {
-            $nextOrder = ((int) $match->entries()->max('list_order')) + 1;
             $match->entries()->create([
                 'user_id' => $me->id,
                 'role' => 'going',
-                'list_order' => $nextOrder,
             ]);
         } else {
             $match->entries()->updateOrCreate(
@@ -51,21 +49,5 @@ class EntryController extends Controller
             ->delete();
 
         return back()->with('status', 'Te quitaste de la lista.');
-    }
-
-    public function reorder(Request $request, Partido $match): RedirectResponse
-    {
-        abort_unless($match->isOpen() || $match->isLocked(), 403, 'No disponible.');
-
-        $orders = $request->validate([
-            'orders' => ['nullable', 'array'],
-            'orders.*' => ['integer', 'min:0'],
-        ]);
-
-        foreach ($orders['orders'] ?? [] as $entryId => $order) {
-            $match->entries()->whereKey($entryId)->update(['list_order' => (int) $order]);
-        }
-
-        return back()->with('status', 'Orden actualizado.');
     }
 }

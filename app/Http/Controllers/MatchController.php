@@ -79,8 +79,8 @@ class MatchController extends Controller
         $me = $request->user();
         $myEntry = $match->entries()->where('user_id', $me->id)->first();
 
-        $entriesGoing = $match->entries()->where('role', 'going')->orderBy('list_order')->get()->values();
-        $entriesSubstitute = $match->entries()->where('role', 'substitute')->orderBy('list_order')->get()->values();
+        $entriesGoing = $match->entries()->where('role', 'going')->get()->values();
+        $entriesSubstitute = $match->entries()->where('role', 'substitute')->get()->values();
 
         $teamA = $match->teams()->where('team', 'A')->get(['match_teams.*'])->load('user', 'guest');
         $teamB = $match->teams()->where('team', 'B')->get(['match_teams.*'])->load('user', 'guest');

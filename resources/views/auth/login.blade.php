@@ -29,8 +29,8 @@
             </div>
             @if (\App\Support\Captcha::enabled())
                 <div class="field">
-                    <label for="captcha">Seguridad: ¿cuánto es <strong>{{ $captcha->question() }}</strong>?</label>
-                    <img class="captcha-img" src="{{ $captcha->imageUri() }}" alt="Captcha: {{ $captcha->question() }} = ?">
+                    <label for="captcha">Seguridad: resolvé la operación de la imagen</label>
+                    <img class="captcha-img" src="{{ $captcha->imageUri() }}" alt="Captcha">
                     <input id="captcha" type="text" name="captcha" inputmode="numeric" autocomplete="off" required>
                     @error('captcha')<div class="field-error">{{ $message }}</div>@enderror
                     <span class="muted small">¿No se ve? Recargá la página para generar otro.</span>

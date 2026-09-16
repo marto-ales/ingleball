@@ -18,7 +18,7 @@ final class MatchFlowTest extends TestCase
         $match = Partido::factory()->create(['created_by' => $organizer->id]);
 
         foreach ($players as $p) {
-            $match->entries()->create(['user_id' => $p->id, 'role' => 'going', 'list_order' => 1]);
+            $match->entries()->create(['user_id' => $p->id, 'role' => 'going']);
         }
 
         $this->actingAs($organizer)

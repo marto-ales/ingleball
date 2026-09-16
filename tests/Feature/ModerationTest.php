@@ -110,7 +110,7 @@ final class ModerationTest extends TestCase
         ]);
 
         $match = Partido::factory()->createdBy(User::factory()->organizer()->create())->create(['played_at' => now()->addDay()]);
-        $match->entries()->create(['user_id' => $managed->id, 'role' => 'going', 'list_order' => 1]);
+        $match->entries()->create(['user_id' => $managed->id, 'role' => 'going']);
 
         $this->post('/register', [
             'name' => 'Pancho Real',

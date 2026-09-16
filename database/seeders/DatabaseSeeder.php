@@ -63,19 +63,17 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        $order = 0;
-
-        // Upcoming open match, 5v5 (9 registered + 1 guest = 10 going).
-        $saturday = Partido::factory()->create([
-            'created_by' => $organizers[0]->id,
-            'title' => 'Fútbol de los sábados',
-            'played_at' => now()->addDays(6)->setTime(18, 0),
-        ]);
-        foreach ($all->random(9) as $user) {
-            $saturday->entries()->create(['user_id' => $user->id, 'role' => 'going', 'list_order' => $order++]);
-        }
-        $guest = Guest::create(['name' => 'Cheto (invitado)', 'phone' => '+5491155550099', 'overall' => 7]);
-        $saturday->entries()->create(['guest_id' => $guest->id, 'role' => 'going', 'list_order' => $order++]);
+// Upcoming open match, 5v5 (9 registered + 1 guest = 10 going).
+$saturday = Partido::factory()->create([
+    'created_by' => $organizers[0]->id,
+    'title' => 'Fútbol de los sábados',
+    'played_at' => now()->addDays(6)->setTime(18, 0),
+]);
+foreach ($all->random(9) as $user) {
+    $saturday->entries()->create(['user_id' => $user->id, 'role' => 'going']);
+}
+$guest = Guest::create(['name' => 'Cheto (invitado)', 'phone' => '+5491155550099', 'overall' => 7]);
+$saturday->entries()->create(['guest_id' => $guest->id, 'role' => 'going']);
 
         // Managed player: sits in the list but has no password (cannot log in).
         $managed = User::factory()->create([
@@ -87,7 +85,7 @@ class DatabaseSeeder extends Seeder
         $managed->player()->create([
             'speed' => 6, 'skill' => 6, 'passing' => 6, 'shooting' => 6, 'defense' => 5, 'overall' => 6,
         ]);
-        $saturday->entries()->create(['user_id' => $managed->id, 'role' => 'going', 'list_order' => $order++]);
+        $saturday->entries()->create(['user_id' => $managed->id, 'role' => 'going']);
 
         // Upcoming open match, 4v4.
         $four = Partido::factory()->create([
@@ -96,7 +94,7 @@ class DatabaseSeeder extends Seeder
             'played_at' => now()->addDays(13)->setTime(20, 0),
         ]);
         foreach ($all->random(8) as $user) {
-            $four->entries()->create(['user_id' => $user->id, 'role' => 'going', 'list_order' => $order++]);
+            $four->entries()->create(['user_id' => $user->id, 'role' => 'going']);
         }
 
         // A finished match with result, goals and MVP (for stats/leaderboard).
@@ -109,7 +107,7 @@ class DatabaseSeeder extends Seeder
         ]);
         $five = $players->random(5)->values();
         foreach ($five as $user) {
-            $past->entries()->create(['user_id' => $user->id, 'role' => 'going', 'list_order' => $order++]);
+            $past->entries()->create(['user_id' => $user->id, 'role' => 'going']);
         }
         $past->result()->create(['winner' => 'A', 'diff' => 2, 'mvp_user_id' => $five->first()->id]);
         $past->goals()->create(['scorer_user_id' => $five->first()->id]);

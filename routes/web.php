@@ -47,7 +47,6 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('matches/{match}/entries', [EntryController::class, 'update'])->name('entries.update');
     Route::delete('matches/{match}/entries', [EntryController::class, 'destroy'])->name('entries.destroy');
-    Route::patch('matches/{match}/entries/reorder', [EntryController::class, 'reorder'])->middleware('organizer')->name('entries.reorder');
 
     Route::post('matches/{match}/guests', [GuestController::class, 'store'])->middleware('organizer')->name('guests.store');
     Route::delete('matches/{match}/guests/{guest}', [GuestController::class, 'destroy'])->middleware('organizer')->name('guests.destroy');

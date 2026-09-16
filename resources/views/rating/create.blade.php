@@ -5,7 +5,7 @@
 @section('content')
 <div class="page-head">
     <div>
-        <h1>Calificar rivales</h1>
+        <h1>Calificar jugadores</h1>
         <p class="lead">{{ $match->title }}</p>
     </div>
     <a class="btn btn-sm" href="{{ route('matches.show', $match) }}">← Volver</a>

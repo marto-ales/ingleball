@@ -129,21 +129,6 @@
             </div>
         @endif
 
-        @if (auth()->user()->is_organizer && $entriesGoing->count() >= 2)
-            <div class="card">
-                <h2>Orden de entrada</h2>
-                <form method="POST" action="{{ route('entries.reorder', $match) }}">
-                    @csrf @method('PATCH')
-                    @foreach ($entriesGoing as $entry)
-                        <div class="row" style="padding:6px 0;">
-                            <span class="who">{{ $entry->user?->name ?? $entry->guest?->name }}</span>
-                            <input type="number" name="orders[{{ $entry->id }}]" value="{{ $entry->list_order }}" min="0" style="width:80px;">
-                        </div>
-                    @endforeach
-                    <button class="btn mt" type="submit">Guardar orden</button>
-                </form>
-            </div>
-        @endif
     </div>
 
     <div class="section" style="min-width:0;">
@@ -221,7 +206,7 @@
         <div class="card">
             <div class="row between">
                 <h2 class="mb0">Calificar</h2>
-                <a class="btn btn-primary btn-sm" href="{{ route('ratings.create', $match) }}">Calificar rivales</a>
+                <a class="btn btn-primary btn-sm" href="{{ route('ratings.create', $match) }}">Calificar jugadores</a>
             </div>
             <p class="muted small mb0 mt">Cada jugador califica a los demás (velocidad, habilidad, pase, definición, defensa). Esto alimenta el ranking y el armado equilibrado.</p>
         </div>
