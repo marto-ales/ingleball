@@ -34,6 +34,8 @@ armado de equipos balanceado, calificaciones entre jugadores, ranking e historia
 - CSS plano en `public/css/app.css` (sin build, sin npm/vite)
 - PHPUnit para tests
 
+**Atribuciones**: el fondo de césped es "WIKI-Grass.jpg" por Ed. Markovich, dedicada al dominio público (PD); copia local en `public/img/grass.jpg`. Fuente: https://commons.wikimedia.org/wiki/File:WIKI-Grass.jpg
+
 ## Puesta en marcha local
 
 ```sh

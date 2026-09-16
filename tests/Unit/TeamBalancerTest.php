@@ -86,9 +86,18 @@ final class TeamBalancerTest extends TestCase
 
     public function test_goalies_do_not_break_score_balance(): void
     {
-        $participants = collect([9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 1.0])
-            ->map(fn ($s) => ['score' => $s, 'likes_goalie' => (bool) random_int(0, 1)])
-            ->all();
+        $participants = [
+            ['score' => 9.0, 'likes_goalie' => true],
+            ['score' => 8.0, 'likes_goalie' => true],
+            ['score' => 7.0, 'likes_goalie' => true],
+            ['score' => 6.0, 'likes_goalie' => false],
+            ['score' => 5.0, 'likes_goalie' => false],
+            ['score' => 4.0, 'likes_goalie' => false],
+            ['score' => 3.0, 'likes_goalie' => false],
+            ['score' => 2.0, 'likes_goalie' => false],
+            ['score' => 1.0, 'likes_goalie' => false],
+            ['score' => 1.0, 'likes_goalie' => true],
+        ];
 
         $result = $this->balancer->balance($participants, 5);
 
