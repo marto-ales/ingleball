@@ -61,6 +61,8 @@ final class MatchFlowTest extends TestCase
                 ->assertRedirect();
         }
 
+        $match->update(['status' => Partido::STATUS_LOCKED]);
+
         $this->actingAs($organizer)
             ->post(route('teams.generate', $match), ['size' => 5])
             ->assertRedirect();
@@ -70,11 +72,23 @@ final class MatchFlowTest extends TestCase
         $this->assertSame(5, $match->teams()->where('team', 'B')->count());
     }
 
+    public function test_teams_cannot_be_generated_while_list_is_open(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+
+        $this->actingAs($organizer)
+            ->post(route('teams.generate', $match), ['size' => 5])
+            ->assertForbidden();
+
+        $this->assertSame(0, $match->teams()->count());
+    }
+
     public function test_result_and_mvp_can_be_recorded(): void
     {
         $organizer = User::factory()->organizer()->create();
         $player = User::factory()->create();
-        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+        $match = Partido::factory()->create(['created_by' => $organizer->id, 'played_at' => now()->subDay()]);
 
         $this->actingAs($organizer)
             ->post(route('result.store', $match), [
@@ -95,7 +109,7 @@ final class MatchFlowTest extends TestCase
     public function test_tie_result_can_be_recorded(): void
     {
         $organizer = User::factory()->organizer()->create();
-        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+        $match = Partido::factory()->create(['created_by' => $organizer->id, 'played_at' => now()->subDay()]);
 
         $this->actingAs($organizer)
             ->post(route('result.store', $match), [
@@ -108,6 +122,19 @@ final class MatchFlowTest extends TestCase
         $this->assertNull($match->result->winner);
         $this->assertSame(0, $match->result->diff);
         $this->assertSame('Empate', $match->result->summary);
+    }
+
+    public function test_result_cannot_be_recorded_before_start_time(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id, 'played_at' => now()->addDay()]);
+
+        $this->actingAs($organizer)
+            ->post(route('result.store', $match), ['winner' => 'A'])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('match_results', ['match_id' => $match->id]);
+        $this->assertNotSame(Partido::STATUS_FINISHED, $match->refresh()->status);
     }
 
     public function test_player_cannot_rate_themselves(): void

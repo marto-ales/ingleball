@@ -15,7 +15,7 @@ class TeamController extends Controller
 
     public function generate(Request $request, Partido $match): RedirectResponse
     {
-        abort_unless($match->isOpen() || $match->isLocked(), 403, 'No disponible.');
+        abort_unless($match->isLocked(), 403, 'La lista debe estar cerrada para armar los equipos.');
 
         $preferred = $request->integer('size') ?: null;
         $this->service->generate($match, $preferred);

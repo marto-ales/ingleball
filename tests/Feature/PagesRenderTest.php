@@ -102,6 +102,22 @@ final class PagesRenderTest extends TestCase
             ->assertSee('wa.me/?text=', false);
     }
 
+    public function test_share_message_includes_substitutes(): void
+    {
+        $sub = User::factory()->create(['name' => 'Substituto']);
+        $match = Partido::factory()->create(['created_by' => $this->organizer->id]);
+        $match->entries()->create(['user_id' => $sub->id, 'role' => 'substitute']);
+
+        $fan = User::factory()->create();
+
+        $this->actingAs($fan)
+            ->get('/matches/' . $match->id)
+            ->assertOk()
+            ->assertSee('Compartir este partido')
+            ->assertSee('*Suplentes*')
+            ->assertSee('Substituto');
+    }
+
     public function test_share_message_lists_players_by_team_when_generated(): void
     {
         $alfa = User::factory()->create(['name' => 'Alfa']);

@@ -16,8 +16,9 @@ class MessagingService
      * @param  \Illuminate\Support\Collection<int, MatchTeam>  $teamA
      * @param  \Illuminate\Support\Collection<int, MatchTeam>  $teamB
      * @param  \Illuminate\Support\Collection<int, MatchEntry>  $entriesGoing
+     * @param  \Illuminate\Support\Collection<int, MatchEntry>  $entriesSubstitute
      */
-    public function message(Partido $match, Collection $teamA, Collection $teamB, Collection $entriesGoing): string
+    public function message(Partido $match, Collection $teamA, Collection $teamB, Collection $entriesGoing, Collection $entriesSubstitute): string
     {
         $lines = [
             '⚽ *Ingleball — ' . $match->title . '*',
@@ -46,6 +47,15 @@ class MessagingService
             $lines[] = '*Anotados* (' . $entriesGoing->count() . '):';
 
             foreach ($entriesGoing as $i => $entry) {
+                $lines[] = '   ' . ($i + 1) . '. ' . $this->entryName($entry);
+            }
+        }
+
+        if ($entriesSubstitute->isNotEmpty()) {
+            $lines[] = '';
+            $lines[] = '*Suplentes* (' . $entriesSubstitute->count() . '):';
+
+            foreach ($entriesSubstitute as $i => $entry) {
                 $lines[] = '   ' . ($i + 1) . '. ' . $this->entryName($entry);
             }
         }

@@ -92,7 +92,7 @@ class MatchController extends Controller
 
         $waGroup = $me->is_organizer ? $me->whatsapp_group : null;
 
-        $shareMessage = $this->messaging->message($match, $teamA, $teamB, $entriesGoing);
+        $shareMessage = $this->messaging->message($match, $teamA, $teamB, $entriesGoing, $entriesSubstitute);
 
         return view('matches.show', [
             'match' => $match,

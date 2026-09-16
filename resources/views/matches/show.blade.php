@@ -136,7 +136,7 @@
             <div class="card">
                 <div class="row between">
                     <h2>Equipos</h2>
-                    @if (auth()->user()->is_organizer && ! $match->isFinished())
+                    @if (auth()->user()->is_organizer && $match->isLocked())
                         <form method="POST" action="{{ route('teams.generate', $match) }}" class="inline" onsubmit="return confirm('¿Regenerar equipos? Se reemplazará el armado actual.');">
                             @csrf
                             <button class="btn btn-sm" type="submit">🔄 Regenerar</button>
@@ -163,7 +163,7 @@
                         @endforeach
                     </div>
                 </div>
-                @if (auth()->user()->is_organizer && ! $match->isFinished())
+                @if (auth()->user()->is_organizer && $match->isLocked())
                     <div class="divider"></div>
                     <h3>Intercambiar jugadores</h3>
                     @foreach ($teamA as $t)
@@ -187,12 +187,12 @@
                 <h2>Equipos</h2>
                 <p class="muted mb0">
                     @if ($match->isOpen())
-                        Cuando haya al menos {{ ($autoSize * 2) }} anotados, el organizador puede armar los equipos automáticamente.
+                        Los equipos se arman recién cuando el organizador cierra la lista.
                     @else
                         El armado todavía no se generó.
                     @endif
                 </p>
-                @if (auth()->user()->is_organizer && $goingCount >= 4)
+                @if (auth()->user()->is_organizer && $match->isLocked() && $goingCount >= 4)
                     <div class="row mt">
                         <form method="POST" action="{{ route('teams.generate', $match) }}" class="inline">
                             @csrf
