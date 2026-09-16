@@ -44,4 +44,34 @@ php artisan boost:install
 ```
 
 Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
+
+# Deploy
+
+Environment: Proxmox LXC, Debian 13, PHP 8.4, SQLite, served with `php artisan serve`, behind an nginx reverse proxy on the host.
+
+## One-time setup (on the container)
+
+```
+apt install php8.4-cli php8.4-sqlite3 php8.4-mbstring php8.4-xml php8.4-curl php8.4-fpm unzip git composer
+git clone <repo> /srv/ingleball
+cd /srv/ingleball
+cp .env.example .env && php8.4 artisan key:generate
+# .env: APP_ENV=production, APP_DEBUG=false, APP_URL=https://..., MAIL_MAILER=smtp...
+touch database/database.sqlite
+chown -R www-data:www-data storage bootstrap/cache database
+php8.4 artisan migrate --force
+cp deploy/ingleball.service /etc/systemd/system/
+systemctl daemon-reload && systemctl enable --now ingleball.service
+```
+
+The systemd unit runs `php8.4 artisan serve --host=0.0.0.0 --port=8000` as `www-data`; the front nginx proxies to `<LXC_IP>:8000` (see `deploy/nginx-front.conf`).
+
+## Each release
+
+```
+sudo ./deploy.sh
+```
+
+`deploy.sh` does: `git pull --ff-only` (as `www-data`, needs an SSH deploy key to the repo), `composer install --no-dev --optimize-autoloader`, `migrate --force`, `config:cache`/`route:cache`/`view:cache`, then restarts the unit. No npm/vite build: CSS is a static file in `public/css`.
+</laravel-boost-guidelines>
 </laravel-boost-guidelines>
