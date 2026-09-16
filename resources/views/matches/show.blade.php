@@ -227,10 +227,16 @@
                 </p>
             @endif
         @else
-            <p class="muted mb0">Aún no se registró el resultado.</p>
+            <p class="muted mb0">
+                @if ($match->isFinished())
+                    Aún no se registró el resultado.
+                @else
+                    El resultado se podrá registrar recién cuando el partido esté finalizado.
+                @endif
+            </p>
         @endif
 
-        @if (auth()->user()->is_organizer)
+        @if (auth()->user()->is_organizer && $match->isFinished())
             <div class="divider"></div>
             @php
                 $resultRow = $match->result;

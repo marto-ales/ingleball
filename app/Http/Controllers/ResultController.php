@@ -10,6 +10,7 @@ class ResultController extends Controller
 {
     public function store(Request $request, Partido $match): RedirectResponse
     {
+        abort_unless($match->isFinished(), 403, 'El resultado se puede cargar recién cuando el partido está finalizado.');
         abort_unless($match->played_at->isPast(), 403, 'El resultado se puede cargar recién pasada la hora de inicio del partido.');
 
         $data = $request->validate([

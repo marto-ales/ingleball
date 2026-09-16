@@ -88,7 +88,7 @@ final class MatchFlowTest extends TestCase
     {
         $organizer = User::factory()->organizer()->create();
         $player = User::factory()->create();
-        $match = Partido::factory()->create(['created_by' => $organizer->id, 'played_at' => now()->subDay()]);
+        $match = Partido::factory()->create(['created_by' => $organizer->id, 'played_at' => now()->subDay(), 'status' => Partido::STATUS_FINISHED]);
 
         $this->actingAs($organizer)
             ->post(route('result.store', $match), [
@@ -109,7 +109,7 @@ final class MatchFlowTest extends TestCase
     public function test_tie_result_can_be_recorded(): void
     {
         $organizer = User::factory()->organizer()->create();
-        $match = Partido::factory()->create(['created_by' => $organizer->id, 'played_at' => now()->subDay()]);
+        $match = Partido::factory()->create(['created_by' => $organizer->id, 'played_at' => now()->subDay(), 'status' => Partido::STATUS_FINISHED]);
 
         $this->actingAs($organizer)
             ->post(route('result.store', $match), [
@@ -135,6 +135,18 @@ final class MatchFlowTest extends TestCase
 
         $this->assertDatabaseMissing('match_results', ['match_id' => $match->id]);
         $this->assertNotSame(Partido::STATUS_FINISHED, $match->refresh()->status);
+    }
+
+    public function test_result_cannot_be_recorded_when_match_is_not_finished(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id, 'played_at' => now()->subDay()]);
+
+        $this->actingAs($organizer)
+            ->post(route('result.store', $match), ['winner' => 'A'])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('match_results', ['match_id' => $match->id]);
     }
 
     public function test_player_cannot_rate_themselves(): void

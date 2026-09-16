@@ -26,6 +26,11 @@ class RecurringMatchService
                 $lastPlayed = $lastCopy;
             }
 
+            // Current occurrence is still upcoming: nothing to open yet.
+            if ($lastPlayed->isFuture()) {
+                continue;
+            }
+
             $next = (clone $lastPlayed)->addWeek();
             while ($next->lessThanOrEqualTo(now())) {
                 $next = (clone $next)->addWeek();

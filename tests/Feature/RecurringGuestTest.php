@@ -53,6 +53,24 @@ final class RecurringGuestTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_ensure_upcoming_does_not_open_next_week_while_current_is_upcoming(): void
+    {
+        Carbon::setTestNow('2026-09-16 12:00:00');
+
+        $organizer = User::factory()->organizer()->create();
+        Partido::factory()->createdBy($organizer)->create([
+            'title' => 'Lunes 21/09',
+            'played_at' => '2026-09-21 22:00:00',
+            'recurring' => true,
+        ]);
+
+        $service = app(RecurringMatchService::class);
+        $this->assertSame(0, $service->ensureUpcoming());
+        $this->assertSame(1, Partido::count());
+
+        Carbon::setTestNow();
+    }
+
     public function test_toggle_recurring_route_works_for_organizer(): void
     {
         $organizer = User::factory()->organizer()->create();
