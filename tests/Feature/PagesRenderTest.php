@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\MatchTeam;
 use App\Models\Partido;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -77,5 +78,40 @@ final class PagesRenderTest extends TestCase
             ->get('/profile')
             ->assertOk()
             ->assertSee('scale-opt', false);
+    }
+
+    public function test_share_message_shows_for_any_user_with_going_list_when_no_teams(): void
+    {
+        $fan = User::factory()->create();
+
+        $this->actingAs($fan)
+            ->get('/matches/' . $this->openMatch->id)
+            ->assertOk()
+            ->assertSee('Compartir este partido')
+            ->assertSee('Anotados')
+            ->assertSee('wa.me/?text=', false);
+    }
+
+    public function test_share_message_lists_players_by_team_when_generated(): void
+    {
+        $alfa = User::factory()->create(['name' => 'Alfa']);
+        $beta = User::factory()->create(['name' => 'Beta']);
+        $match = Partido::factory()->create([
+            'created_by' => $this->organizer->id,
+            'status' => Partido::STATUS_FINISHED,
+        ]);
+        $match->teams()->create(['user_id' => $alfa->id, 'team' => MatchTeam::TEAM_A]);
+        $match->teams()->create(['user_id' => $beta->id, 'team' => MatchTeam::TEAM_B]);
+
+        $fan = User::factory()->create();
+
+        $this->actingAs($fan)
+            ->get('/matches/' . $match->id)
+            ->assertOk()
+            ->assertSee('*Equipo A*')
+            ->assertSee('Alfa')
+            ->assertSee('*Equipo B*')
+            ->assertSee('Beta')
+            ->assertDontSee('Anotados');
     }
 }

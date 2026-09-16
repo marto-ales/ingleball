@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Partido;
+use App\Services\MessagingService;
 use App\Services\ReminderService;
 use App\Services\TeamService;
 use Illuminate\Http\RedirectResponse;
@@ -14,6 +15,7 @@ class MatchController extends Controller
     public function __construct(
         private TeamService $teams,
         private ReminderService $reminders,
+        private MessagingService $messaging,
     ) {}
 
     public function index(): View
@@ -80,6 +82,8 @@ class MatchController extends Controller
 
         $waGroup = $me->is_organizer ? $me->whatsapp_group : null;
 
+        $shareMessage = $this->messaging->message($match, $teamA, $teamB, $entriesGoing);
+
         return view('matches.show', [
             'match' => $match,
             'myEntry' => $myEntry,
@@ -91,6 +95,7 @@ class MatchController extends Controller
             'autoSize' => $autoSize,
             'participants' => $participants,
             'waGroup' => $waGroup,
+            'shareMessage' => $shareMessage,
         ]);
     }
 

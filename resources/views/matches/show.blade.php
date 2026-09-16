@@ -277,17 +277,49 @@
     </div>
 </div>
 
-@if (auth()->user()->is_organizer)
+@auth
     <div class="section">
         <div class="card">
-            <h2>Recordatorio de WhatsApp</h2>
-            @if ($waGroup)
-                <p class="muted">Abrí el grupo y pegalo para avisarles del partido.</p>
-                <a class="btn wa-link" target="_blank" rel="noopener" href="{{ $waGroup }}">📲 Abrir grupo de WhatsApp</a>
-            @else
-                <p class="muted">Definí el enlace del grupo de WhatsApp en tu <a href="{{ route('profile.edit') }}">perfil</a> para usarlo en los recordatorios.</p>
-            @endif
+            <h2>Compartir este partido</h2>
+            <p class="muted small">Mensaje pre-escrito con los datos del partido y la lista actualizada por equipos, listo para reenviar al grupo.</p>
+            <div class="share-box" id="share-msg">{{ $shareMessage }}</div>
+            <div class="row mt">
+                <a class="btn btn-primary" target="_blank" rel="noopener" href="{{ 'https://wa.me/?text=' . rawurlencode($shareMessage) }}">📲 Enviar a un chat</a>
+                <button type="button" class="btn" id="copy-share">Copiar mensaje</button>
+                @if ($waGroup)
+                    <a class="btn wa-link" target="_blank" rel="noopener" href="{{ $waGroup }}">Abrir el grupo</a>
+                @elseif (auth()->user()->is_organizer)
+                    <span class="muted small">Definí el enlace del grupo en tu <a href="{{ route('profile.edit') }}">perfil</a>.</span>
+                @endif
+            </div>
         </div>
     </div>
-@endif
+
+    <script>
+        (function () {
+            var btn = document.getElementById('copy-share');
+            if (!btn) return;
+            btn.addEventListener('click', function () {
+                var box = document.getElementById('share-msg');
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(box.textContent).then(function () {
+                        var old = btn.textContent;
+                        btn.textContent = '¡Copiado!';
+                        setTimeout(function () { btn.textContent = old; }, 1500);
+                    });
+                } else {
+                    var range = document.createRange();
+                    range.selectNodeContents(box);
+                    var sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                    document.execCommand('copy');
+                    sel.removeAllRanges();
+                    btn.textContent = '¡Copiado!';
+                    setTimeout(function () { btn.textContent = 'Copiar mensaje'; }, 1500);
+                }
+            });
+        })();
+    </script>
+@endauth
 @endsection
