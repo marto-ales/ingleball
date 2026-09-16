@@ -175,17 +175,18 @@
                     <div class="divider"></div>
                     <h3>Intercambiar jugadores</h3>
                     @foreach ($teamA as $t)
-                        <form method="POST" action="{{ route('teams.swap', $match) }}" class="row" style="padding:6px 0;">
+                        <form method="POST" action="{{ route('teams.swap', $match) }}" class="row swap-form" style="padding:6px 0;align-items:center;" data-swap>
                             @csrf
                             <input type="hidden" name="from" value="{{ $t->id }}">
                             <span class="who">{{ $t->user?->name ?? $t->guest?->name }}</span>
                             <span class="muted">⇄</span>
-                            <select name="to">
+                            <div class="pick-grid" style="flex:1;justify-content:flex-start;">
+                                <input type="hidden" name="to" value="">
                                 @foreach ($teamB as $t2)
-                                    <option value="{{ $t2->id }}">{{ $t2->user?->name ?? $t2->guest?->name }}</option>
+                                    <button type="button" class="pick pick-sm" data-to="{{ $t2->id }}">{{ $t2->user?->name ?? $t2->guest?->name }}</button>
                                 @endforeach
-                            </select>
-                            <button class="btn btn-sm" type="submit">Cambiar</button>
+                            </div>
+                            <button class="btn btn-sm" type="submit" disabled>Cambiar</button>
                         </form>
                     @endforeach
                 @endif
@@ -252,6 +253,7 @@
                 $resultRow = $match->result;
                 $winnerVal = old('winner', $resultRow ? ($resultRow->winner ?? 'tie') : 'A');
                 $diffVal = old('diff', $resultRow?->diff ?? 0);
+                $mvpToken = old('mvp', $resultRow && $resultRow->mvpUser ? 'user:' . $resultRow->mvpUser->id : ($resultRow && $resultRow->mvpGuest ? 'guest:' . $resultRow->mvpGuest->id : ''));
             @endphp
             <form method="POST" action="{{ route('result.store', $match) }}">
                 @csrf
@@ -270,13 +272,14 @@
                     </div>
                 </div>
                 <div class="field">
-                    <label>MVP del partido</label>
-                    <select name="mvp">
-                        <option value="">— Sin MVP —</option>
+                    <label>MVP del partido <span class="muted small">(opcional, tocá su tarjeta)</span></label>
+                    <div class="pick-grid" data-mvp>
+                        <input type="hidden" name="mvp" id="mvp" value="{{ $mvpToken }}">
                         @foreach ($participants as $p)
-                            <option value="{{ $p['token'] }}">{{ $p['name'] }}</option>
+                            <button type="button" class="pick {{ $mvpToken === $p['token'] ? 'selected' : '' }}" data-token="{{ $p['token'] }}">{{ $p['name'] }}</button>
                         @endforeach
-                    </select>
+                    </div>
+                    <button type="button" class="btn btn-ghost btn-sm mt" data-mvp-clear>Quitar MVP</button>
                 </div>
                 <button class="btn btn-primary" type="submit">{{ $match->result ? 'Actualizar resultado' : 'Registrar resultado' }}</button>
             </form>
@@ -325,6 +328,39 @@
                     btn.textContent = '¡Copiado!';
                     setTimeout(function () { btn.textContent = 'Copiar mensaje'; }, 1500);
                 }
+            });
+        })();
+
+        (function () {
+            var mvpGrid = document.querySelector('[data-mvp]');
+            if (mvpGrid) {
+                var mvpInput = document.getElementById('mvp');
+                mvpGrid.querySelectorAll('.pick').forEach(function (b) {
+                    b.addEventListener('click', function () {
+                        mvpGrid.querySelectorAll('.pick').forEach(function (x) { x.classList.remove('selected'); });
+                        b.classList.add('selected');
+                        mvpInput.value = b.dataset.token;
+                    });
+                });
+                var clearMvp = document.querySelector('[data-mvp-clear]');
+                if (clearMvp) {
+                    clearMvp.addEventListener('click', function () {
+                        mvpGrid.querySelectorAll('.pick').forEach(function (x) { x.classList.remove('selected'); });
+                        mvpInput.value = '';
+                    });
+                }
+            }
+            document.querySelectorAll('[data-swap]').forEach(function (form) {
+                var toInput = form.querySelector('input[name="to"]');
+                var submit = form.querySelector('button[type="submit"]');
+                form.querySelectorAll('.pick').forEach(function (b) {
+                    b.addEventListener('click', function () {
+                        form.querySelectorAll('.pick').forEach(function (x) { x.classList.remove('selected'); });
+                        b.classList.add('selected');
+                        toInput.value = b.dataset.to;
+                        submit.disabled = false;
+                    });
+                });
             });
         })();
     </script>

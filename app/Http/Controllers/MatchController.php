@@ -60,7 +60,7 @@ class MatchController extends Controller
             'title' => ['required', 'string', 'max:120'],
             'played_at' => ['required', 'date', 'after:now'],
             'venue' => ['nullable', 'string', 'max:120'],
-            'size' => ['required', 'integer', 'in:3,4,5'],
+            'size' => ['required', 'integer', 'in:4,5,6'],
         ]);
 
         $match->update([
@@ -99,7 +99,7 @@ class MatchController extends Controller
             'title' => ['required', 'string', 'max:120'],
             'played_at' => ['required', 'date', 'after:now'],
             'venue' => ['nullable', 'string', 'max:120'],
-            'size' => ['required', 'integer', 'in:3,4,5'],
+            'size' => ['required', 'integer', 'in:4,5,6'],
             'recurring' => ['nullable', 'boolean'],
         ]);
 

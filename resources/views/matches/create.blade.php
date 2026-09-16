@@ -24,11 +24,11 @@
             </div>
             <div class="field">
                 <label for="size">Jugadores por equipo</label>
-                <select id="size" name="size">
-                    <option value="5" {{ (old('size') ?? '5') == '5' ? 'selected' : '' }}>5 (5v5)</option>
-                    <option value="4" {{ (old('size') ?? '') == '4' ? 'selected' : '' }}>4 (4v4)</option>
-                    <option value="3" {{ (old('size') ?? '') == '3' ? 'selected' : '' }}>3 (3v3)</option>
-                </select>
+                <div class="segmented">
+                    <label><input type="radio" name="size" value="4" @checked((old('size') ?? '5') == '4')><span>4v4</span></label>
+                    <label><input type="radio" name="size" value="5" @checked((old('size') ?? '5') == '5')><span>5v5</span></label>
+                    <label><input type="radio" name="size" value="6" @checked((old('size') ?? '5') == '6')><span>6v6</span></label>
+                </div>
             </div>
         </div>
         <div class="field">

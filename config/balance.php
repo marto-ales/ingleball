@@ -17,7 +17,7 @@ return [
     | Team sizes (players per team) the generator can produce, tried from
     | largest to smallest as attendance falls short.
     */
-    'sizes' => [5, 4, 3],
+    'sizes' => [6, 5, 4],
 
     /*
     | Attribute keys shared by self-assessment and peer ratings.

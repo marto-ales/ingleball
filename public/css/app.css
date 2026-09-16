@@ -150,6 +150,7 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
 .range-badge { min-width: 26px; text-align: center; background: #eef2ee; color: var(--pitch-dark); border-radius: 7px; padding: 2px 8px; font-weight: 700; font-size: 13px; }
 .pick-grid { display: flex; flex-wrap: wrap; gap: 8px; }
 .pick { border: 1px solid #cdd5cd; background: #fff; color: var(--ink); border-radius: 999px; padding: 7px 14px; font-size: 14px; font-weight: 600; cursor: pointer; transition: border-color .12s ease, color .12s ease, background .12s ease; font-family: inherit; }
+.pick-sm { padding: 4px 11px; font-size: 13px; }
 .pick:hover { border-color: var(--accent); color: var(--accent); }
 .pick.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
 .segmented { display: inline-flex; flex-wrap: wrap; gap: 6px; }

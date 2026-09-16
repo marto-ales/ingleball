@@ -130,6 +130,21 @@ final class MatchFlowTest extends TestCase
             ->assertSee('Cancelado');
     }
 
+    public function test_create_match_rejects_size_outside_4_5_6(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+
+        $this->actingAs($organizer)
+            ->post('/matches', [
+                'title' => 'x',
+                'played_at' => now()->addDays(2)->format('Y-m-d H:i'),
+                'size' => 3,
+            ])
+            ->assertSessionHasErrors('size');
+
+        $this->assertDatabaseMissing('matches', ['title' => 'x']);
+    }
+
     public function test_regular_player_cannot_create_match(): void
     {
         $player = User::factory()->create();
