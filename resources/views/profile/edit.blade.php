@@ -57,7 +57,7 @@
             </div>
             <p class="muted small mb0">Al armar los equipos se busca que a cada uno le toque al menos un jugador que quiera atajar.</p>
         </div>
-        @foreach (['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'overall' => 'General', 'goalkeeping' => 'Arco'] as $key => $label)
+        @foreach (['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'goalkeeping' => 'Arco', 'overall' => 'General'] as $key => $label)
             <div class="field">
                 <label>{{ $label }}</label>
                 @include('partials.scale', ['name' => $key, 'label' => $label, 'value' => old($key, $p?->{$key} ?? 5)])

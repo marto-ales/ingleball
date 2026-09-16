@@ -13,6 +13,11 @@ class DashboardController extends Controller
     {
         $recurring->ensureUpcoming();
 
+        Partido::whereIn('status', [Partido::STATUS_OPEN, Partido::STATUS_LOCKED])
+            ->where('played_at', '<', now())
+            ->get()
+            ->each(fn (Partido $match) => $match->autoFinish());
+
         $upcoming = Partido::whereIn('status', [Partido::STATUS_OPEN, Partido::STATUS_LOCKED])
             ->where('played_at', '>=', now()->subDay())
             ->orderBy('played_at')

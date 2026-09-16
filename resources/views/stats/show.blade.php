@@ -20,7 +20,7 @@
             <h2>Autoevaluación</h2>
             @if ($player->player)
                 <ul class="list">
-                    @foreach (['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'overall' => 'General', 'goalkeeping' => 'Arco'] as $key => $label)
+                    @foreach (['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'goalkeeping' => 'Arco', 'overall' => 'General'] as $key => $label)
                         <li><span>{{ $label }}</span><span class="score-tag">{{ $player->player->{$key} }}</span></li>
                     @endforeach
                     <li><span>¿Le gusta ir al arco?</span><span class="score-tag">{{ $player->player->likes_goalie ? 'Sí' : 'No' }}</span></li>

@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\NewRegistration;
+use App\Mail\Welcome;
 use App\Models\User;
 use App\Rules\ValidCaptcha;
 use App\Support\Captcha;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -77,6 +80,15 @@ class RegisterController extends Controller
             $user->player()->create([
                 'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'overall' => 5,
             ]);
+        }
+
+        if ($user->email) {
+            Mail::to($user)->send(new Welcome($user));
+        }
+
+        $organizers = User::where('is_organizer', true)->whereNotNull('email')->get();
+        if ($organizers->isNotEmpty()) {
+            Mail::to($organizers)->send(new NewRegistration($user));
         }
 
         Auth::login($user);

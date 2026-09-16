@@ -23,6 +23,10 @@ class MatchController extends Controller
     public function index(): View
     {
         $this->recurring->ensureUpcoming();
+        Partido::whereIn('status', [Partido::STATUS_OPEN, Partido::STATUS_LOCKED])
+            ->where('played_at', '<', now())
+            ->get()
+            ->each(fn (Partido $match) => $match->autoFinish());
 
         $all = Partido::with('creator')
             ->orderByDesc('played_at')
@@ -68,6 +72,8 @@ class MatchController extends Controller
 
     public function show(Request $request, Partido $match): View
     {
+        $match->autoFinish();
+
         $match->load([
             'entries.user', 'entries.guest',
             'guests',
@@ -136,13 +142,6 @@ class MatchController extends Controller
         $match->update(['status' => Partido::STATUS_OPEN, 'locked_at' => null]);
 
         return back()->with('status', 'Lista reabierta.');
-    }
-
-    public function finish(Partido $match): RedirectResponse
-    {
-        $match->update(['status' => Partido::STATUS_FINISHED]);
-
-        return back()->with('status', 'Partido finalizado.');
     }
 
     public function remind(Partido $match): RedirectResponse

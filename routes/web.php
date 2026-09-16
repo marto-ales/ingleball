@@ -41,7 +41,6 @@ Route::middleware('auth')->group(function () {
     Route::get('matches/{match}', [MatchController::class, 'show'])->name('matches.show');
     Route::patch('matches/{match}/lock', [MatchController::class, 'lock'])->middleware('organizer')->name('matches.lock');
     Route::patch('matches/{match}/unlock', [MatchController::class, 'unlock'])->middleware('organizer')->name('matches.unlock');
-    Route::patch('matches/{match}/finish', [MatchController::class, 'finish'])->middleware('organizer')->name('matches.finish');
     Route::post('matches/{match}/remind', [MatchController::class, 'remind'])->middleware('organizer')->name('matches.remind');
     Route::post('matches/{match}/recurring', [MatchController::class, 'toggleRecurring'])->middleware('organizer')->name('matches.recurring');
 

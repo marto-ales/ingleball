@@ -124,6 +124,23 @@ final class MatchFlowTest extends TestCase
         $this->assertSame('Empate', $match->result->summary);
     }
 
+    public function test_open_match_auto_finishes_after_start_time(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $match = Partido::factory()->create([
+            'created_by' => $organizer->id,
+            'played_at' => now()->subDay(),
+            'status' => Partido::STATUS_LOCKED,
+        ]);
+
+        $this->actingAs($organizer)
+            ->get(route('matches.show', $match))
+            ->assertOk()
+            ->assertSee('Finalizado');
+
+        $this->assertSame(Partido::STATUS_FINISHED, $match->refresh()->status);
+    }
+
     public function test_result_cannot_be_recorded_before_start_time(): void
     {
         $organizer = User::factory()->organizer()->create();

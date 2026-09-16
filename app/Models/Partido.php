@@ -93,4 +93,23 @@ class Partido extends Model
     {
         return $this->status === self::STATUS_FINISHED;
     }
+
+    /**
+     * Matches are finalized automatically once their start time has passed.
+     * Returns true when the status changed.
+     */
+    public function autoFinish(): bool
+    {
+        if (! in_array($this->status, [self::STATUS_OPEN, self::STATUS_LOCKED], true)) {
+            return false;
+        }
+
+        if ($this->played_at->isFuture()) {
+            return false;
+        }
+
+        $this->forceFill(['status' => self::STATUS_FINISHED])->save();
+
+        return true;
+    }
 }

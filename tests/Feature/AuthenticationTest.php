@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Mail\NewRegistration;
+use App\Mail\Welcome;
 use App\Models\Partido;
 use App\Models\User;
 use App\Support\Captcha;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 final class AuthenticationTest extends TestCase
@@ -30,6 +33,23 @@ final class AuthenticationTest extends TestCase
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', ['username' => 'marta']);
         $response->assertRedirect(route('dashboard'));
+    }
+
+    public function test_registration_mails_user_and_notifies_organizers(): void
+    {
+        Mail::fake();
+        User::factory()->organizer()->create(['email' => 'org@example.com', 'username' => 'orga']);
+
+        $this->post('/register', [
+            'name' => 'Marta',
+            'username' => 'marta',
+            'email' => 'marta@example.com',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+        ]);
+
+        Mail::assertSent(Welcome::class, fn ($mail) => $mail->hasTo('marta@example.com'));
+        Mail::assertSent(NewRegistration::class, fn ($mail) => $mail->hasTo('org@example.com'));
     }
 
     public function test_users_can_login_with_username_and_password(): void

@@ -37,12 +37,6 @@
             @csrf
             <button class="btn" type="submit">Enviar recordatorios</button>
         </form>
-        @unless ($match->isFinished())
-            <form method="POST" action="{{ route('matches.finish', $match) }}" class="inline">
-                @csrf @method('PATCH')
-                <button class="btn btn-ghost" type="submit">Marcar finalizado</button>
-            </form>
-        @endunless
         <form method="POST" action="{{ route('matches.recurring', $match) }}" class="inline">
             @csrf
             <button class="btn {{ $match->recurring ? 'btn-primary' : '' }}" type="submit">
@@ -121,8 +115,8 @@
                         </div>
                     </div>
                     <div class="field">
-                        <label>Calificación general (1-10, opcional)</label>
-                        <input type="number" name="overall" min="1" max="10" value="{{ old('overall', 6) }}">
+                        <label>Calificación general <span class="muted small">(opcional)</span></label>
+                        @include('partials.scale', ['name' => 'overall', 'label' => 'Calificación general', 'value' => old('overall', 6)])
                     </div>
                     <button class="btn btn-primary" type="submit">Añadir a la lista</button>
                 </form>
