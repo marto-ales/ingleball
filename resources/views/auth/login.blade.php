@@ -7,7 +7,7 @@
 @section('content')
 <div class="auth-wrap">
     <div class="auth-brand">⚽ Ingleball</div>
-    <div class="auth-sub">Organiza el fútbol de tus amigos</div>
+    <div class="auth-sub">Organicemo el fulbito</div>
     <div class="card">
         <h2>Ingresar</h2>
         <form method="POST" action="{{ route('login') }}">
