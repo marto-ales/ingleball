@@ -29,6 +29,8 @@ class MatchController extends Controller
             ->each(fn (Partido $match) => $match->autoFinish());
 
         $all = Partido::with('creator')
+            ->withCount(['teams'])
+            ->withCount(['entries as going_count' => fn ($q) => $q->where('role', 'going')])
             ->orderByDesc('played_at')
             ->get()
             ->groupBy(fn (Partido $match): string => match (true) {
@@ -60,6 +62,7 @@ class MatchController extends Controller
             'title' => ['required', 'string', 'max:120'],
             'played_at' => ['required', 'date', 'after:now'],
             'venue' => ['nullable', 'string', 'max:120'],
+            'field_value' => ['nullable', 'integer', 'min:0', 'max:99999999'],
             'size' => ['required', 'integer', 'in:4,5,6'],
         ]);
 
@@ -67,6 +70,7 @@ class MatchController extends Controller
             'title' => $data['title'],
             'played_at' => $data['played_at'],
             'venue' => $data['venue'] ?? null,
+            'field_value' => $data['field_value'] ?? null,
             'size' => $data['size'],
         ]);
 
@@ -99,6 +103,7 @@ class MatchController extends Controller
             'title' => ['required', 'string', 'max:120'],
             'played_at' => ['required', 'date', 'after:now'],
             'venue' => ['nullable', 'string', 'max:120'],
+            'field_value' => ['nullable', 'integer', 'min:0', 'max:99999999'],
             'size' => ['required', 'integer', 'in:4,5,6'],
             'recurring' => ['nullable', 'boolean'],
         ]);
@@ -107,6 +112,7 @@ class MatchController extends Controller
             'title' => $data['title'],
             'played_at' => $data['played_at'],
             'venue' => $data['venue'] ?? null,
+            'field_value' => $data['field_value'] ?? null,
             'size' => $data['size'],
             'status' => Partido::STATUS_OPEN,
             'created_by' => $request->user()->id,
@@ -146,9 +152,17 @@ class MatchController extends Controller
         $goingCount = $match->entries()->where('role', 'going')->count();
         $autoSize = $this->teams->chooseTeamSize($goingCount);
 
-        $participants = $this->participants($match);
+$participants = $this->participants($match);
 
-        $waGroup = $me->is_organizer ? $me->whatsapp_group : null;
+// Valor de la cancha dividido por los jugadores: equipos generados si los hay,
+// si no la lista de anotados.
+$playerCount = ($teamA->isNotEmpty() || $teamB->isNotEmpty())
+    ? $teamA->count() + $teamB->count()
+    : $goingCount;
+
+$costPerPlayer = $match->costPerPlayer($playerCount);
+
+$waGroup = $me->is_organizer ? $me->whatsapp_group : null;
 
         $shareMessage = $this->messaging->message($match, $teamA, $teamB, $entriesGoing, $entriesSubstitute);
 
@@ -162,6 +176,8 @@ class MatchController extends Controller
             'goingCount' => $goingCount,
             'autoSize' => $autoSize,
             'participants' => $participants,
+            'costPerPlayer' => $costPerPlayer,
+            'playerCount' => $playerCount,
             'waGroup' => $waGroup,
             'shareMessage' => $shareMessage,
         ]);

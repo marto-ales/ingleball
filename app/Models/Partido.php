@@ -21,7 +21,7 @@ class Partido extends Model
     public const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
-        'title', 'played_at', 'venue', 'size', 'status', 'created_by', 'locked_at',
+        'title', 'played_at', 'venue', 'field_value', 'size', 'status', 'created_by', 'locked_at',
         'recurring', 'recurring_id',
     ];
 
@@ -34,6 +34,7 @@ class Partido extends Model
             'played_at' => 'datetime',
             'locked_at' => 'datetime',
             'size' => 'integer',
+            'field_value' => 'integer',
             'recurring' => 'boolean',
         ];
     }
@@ -103,6 +104,19 @@ class Partido extends Model
     public function isActive(): bool
     {
         return $this->isOpen() || $this->isLocked();
+    }
+
+    /**
+     * Cost per player = field value divided by the given number of players.
+     * Returns null when there is no field value or no players yet.
+     */
+    public function costPerPlayer(int $playerCount): ?int
+    {
+        if ($this->field_value === null || $playerCount <= 0) {
+            return null;
+        }
+
+        return (int) round($this->field_value / $playerCount);
     }
 
     /**

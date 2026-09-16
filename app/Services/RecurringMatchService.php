@@ -48,6 +48,7 @@ class RecurringMatchService
                 'title' => $template->title,
                 'played_at' => $next,
                 'venue' => $template->venue,
+                'field_value' => $template->field_value,
                 'size' => $template->size,
                 'status' => Partido::STATUS_OPEN,
                 'created_by' => $template->created_by,

@@ -29,6 +29,11 @@ class DashboardController extends Controller
             ->take(6)
             ->get();
 
+        $upcoming->loadCount(['teams'])
+            ->loadCount(['entries as going_count' => fn ($q) => $q->where('role', 'going')]);
+        $finished->loadCount(['teams'])
+            ->loadCount(['entries as going_count' => fn ($q) => $q->where('role', 'going')]);
+
         $myEntries = $request->user()
             ->entries()
             ->whereIn('match_id', $upcoming->pluck('id'))

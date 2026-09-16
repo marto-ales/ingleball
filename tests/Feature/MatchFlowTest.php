@@ -154,6 +154,35 @@ final class MatchFlowTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_field_value_is_saved_and_shows_cost_per_person(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $players = User::factory(4)->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id, 'field_value' => 10000]);
+
+        foreach ($players as $player) {
+            $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
+        }
+
+        $this->actingAs($organizer)
+            ->get(route('matches.show', $match))
+            ->assertOk()
+            ->assertSee('Valor:')
+            ->assertSee('$2.500 por persona');
+
+        $this->actingAs($organizer)
+            ->patch(route('matches.update', $match), [
+                'title' => $match->title,
+                'played_at' => now()->addDays(2)->format('Y-m-d H:i'),
+                'venue' => $match->venue,
+                'field_value' => 12000,
+                'size' => 5,
+            ])
+            ->assertRedirect();
+
+        $this->assertSame(12000, $match->refresh()->field_value);
+    }
+
     public function test_players_sign_up_and_teams_are_balanced(): void
     {
         $organizer = User::factory()->organizer()->create();

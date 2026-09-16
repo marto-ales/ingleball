@@ -71,6 +71,29 @@ final class RecurringGuestTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_recurring_copy_inherits_field_value(): void
+    {
+        Carbon::setTestNow('2026-09-16 12:00:00');
+
+        $organizer = User::factory()->organizer()->create();
+        $template = Partido::factory()->createdBy($organizer)->create([
+            'title' => 'Fútbol de los sábados',
+            'played_at' => '2026-08-26 12:00:00',
+            'recurring' => true,
+            'field_value' => 30000,
+        ]);
+
+        app(RecurringMatchService::class)->ensureUpcoming();
+
+        $this->assertDatabaseHas('matches', [
+            'recurring' => false,
+            'recurring_id' => $template->id,
+            'field_value' => 30000,
+        ]);
+
+        Carbon::setTestNow();
+    }
+
     public function test_toggle_recurring_route_works_for_organizer(): void
     {
         $organizer = User::factory()->organizer()->create();

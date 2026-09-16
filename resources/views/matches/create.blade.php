@@ -37,6 +37,12 @@
             @error('venue')<div class="field-error">{{ $message }}</div>@enderror
         </div>
         <div class="field">
+            <label for="field_value">Valor de la cancha ($)</label>
+            <input id="field_value" type="number" name="field_value" min="0" step="500" inputmode="numeric"
+                value="{{ old('field_value') }}" placeholder="10000">
+            @error('field_value')<div class="field-error">{{ $message }}</div>@enderror
+        </div>
+        <div class="field">
             <label class="checkbox-line">
                 <input type="hidden" name="recurring" value="0">
                 <input type="checkbox" name="recurring" value="1" {{ old('recurring') ? 'checked' : '' }}>

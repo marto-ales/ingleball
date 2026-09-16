@@ -29,6 +29,18 @@ class MessagingService
             $lines[] = '📍 ' . $match->venue;
         }
 
+        if ($match->field_value !== null) {
+            $playerCount = ($teamA->isNotEmpty() || $teamB->isNotEmpty())
+                ? $teamA->count() + $teamB->count()
+                : $entriesGoing->count();
+
+            $cost = $match->costPerPlayer($playerCount);
+
+            $lines[] = $cost !== null
+                ? '💰 Valor: $' . number_format($cost, 0, ',', '.') . ' por persona'
+                : '💰 Valor de la cancha: $' . number_format($match->field_value, 0, ',', '.');
+        }
+
         $lines[] = '';
 
         if ($teamA->isNotEmpty()) {

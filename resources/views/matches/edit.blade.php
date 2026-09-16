@@ -37,6 +37,12 @@
             <input id="venue" name="venue" value="{{ old('venue', $match->venue) }}" placeholder="Cancha del club">
             @error('venue')<div class="field-error">{{ $message }}</div>@enderror
         </div>
+        <div class="field">
+            <label for="field_value">Valor de la cancha ($)</label>
+            <input id="field_value" type="number" name="field_value" min="0" step="500" inputmode="numeric"
+                value="{{ old('field_value', $match->field_value) }}" placeholder="10000">
+            @error('field_value')<div class="field-error">{{ $message }}</div>@enderror
+        </div>
         <button class="btn btn-primary" type="submit">Guardar cambios</button>
     </form>
 </div>

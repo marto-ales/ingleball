@@ -140,4 +140,46 @@ final class PagesRenderTest extends TestCase
             ->assertSee('Beta')
             ->assertDontSee('Anotados');
     }
+
+    public function test_share_message_includes_cost_per_person(): void
+    {
+        $alfa = User::factory()->create();
+        $beta = User::factory()->create();
+        $match = Partido::factory()->create(['created_by' => $this->organizer->id, 'field_value' => 10000]);
+        $match->entries()->create(['user_id' => $alfa->id, 'role' => 'going']);
+        $match->entries()->create(['user_id' => $beta->id, 'role' => 'going']);
+
+        $this->actingAs($this->organizer)
+            ->get('/matches/' . $match->id)
+            ->assertOk()
+            ->assertSee('Valor: $5.000 por persona', false);
+    }
+
+    public function test_index_lists_cost_per_person(): void
+    {
+        $match = Partido::factory()->create(['created_by' => $this->organizer->id, 'field_value' => 10000]);
+        $players = User::factory(4)->create();
+        foreach ($players as $p) {
+            $match->entries()->create(['user_id' => $p->id, 'role' => 'going']);
+        }
+
+        $this->actingAs($this->organizer)
+            ->get('/matches')
+            ->assertOk()
+            ->assertSee('Valor: $2.500 por persona', false);
+    }
+
+    public function test_dashboard_lists_cost_per_person(): void
+    {
+        $match = Partido::factory()->create(['created_by' => $this->organizer->id, 'field_value' => 10000]);
+        $players = User::factory(4)->create();
+        foreach ($players as $p) {
+            $match->entries()->create(['user_id' => $p->id, 'role' => 'going']);
+        }
+
+        $this->actingAs($this->organizer)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Valor: $2.500 por persona', false);
+    }
 }
