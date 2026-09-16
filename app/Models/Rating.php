@@ -13,6 +13,7 @@ class Rating extends Model
     protected $fillable = [
         'rater_user_id', 'rated_user_id', 'rated_guest_id', 'match_id',
         'speed', 'skill', 'passing', 'shooting', 'defense', 'overall',
+        'goalkeeping',
     ];
 
     /**
@@ -23,6 +24,7 @@ class Rating extends Model
         return [
             'speed' => 'integer', 'skill' => 'integer', 'passing' => 'integer',
             'shooting' => 'integer', 'defense' => 'integer', 'overall' => 'integer',
+            'goalkeeping' => 'integer',
         ];
     }
 

@@ -34,6 +34,8 @@ class ProfileController extends Controller
             'shooting' => ['required', 'integer', 'between:1,10'],
             'defense' => ['required', 'integer', 'between:1,10'],
             'overall' => ['required', 'integer', 'between:1,10'],
+            'likes_goalie' => ['nullable', 'boolean'],
+            'goalkeeping' => ['required', 'integer', 'between:1,10'],
         ]);
 
         $update = [
@@ -57,6 +59,8 @@ class ProfileController extends Controller
                 'shooting' => (int) $data['shooting'],
                 'defense' => (int) $data['defense'],
                 'overall' => (int) $data['overall'],
+                'likes_goalie' => (bool) ($data['likes_goalie'] ?? false),
+                'goalkeeping' => (int) $data['goalkeeping'],
             ],
         );
 

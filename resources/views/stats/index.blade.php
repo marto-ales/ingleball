@@ -23,6 +23,7 @@
                 <th class="num">Asist.</th>
                 <th class="num">MVP</th>
                 <th class="num">Media calif.</th>
+                <th class="num">Arco</th>
                 <th class="num">Acierto</th>
             </tr>
         </thead>
@@ -37,10 +38,11 @@
                     <td class="num">{{ $row['assists'] }}</td>
                     <td class="num">{{ $row['mvp'] }}</td>
                     <td class="num">{{ $row['avg_rating'] ? number_format($row['avg_rating'], 1) : '—' }}</td>
+                    <td class="num">{{ $row['avg_goalkeeping'] ? number_format($row['avg_goalkeeping'], 1) : '—' }}</td>
                     <td class="num">{{ $row['attendance'] }}%</td>
                 </tr>
             @empty
-                <tr><td colspan="9" class="empty">Todavía no hay jugadores.</td></tr>
+                <tr><td colspan="10" class="empty">Todavía no hay jugadores.</td></tr>
             @endforelse
         </tbody>
     </table>

@@ -35,17 +35,18 @@ class StatsService
                     'goals' => Goal::where('scorer_user_id', $user->id)->count(),
                     'assists' => Goal::where('assister_user_id', $user->id)->count(),
                     'mvp' => MatchResult::where('mvp_user_id', $user->id)->count(),
-                    'avg_rating' => $this->avgRating($user),
+                    'avg_rating' => $this->avgOf($user, 'overall'),
+                    'avg_goalkeeping' => $this->avgOf($user, 'goalkeeping'),
                 ];
             })
             ->sortByDesc('score')
             ->values();
     }
 
-    private function avgRating(User $user): ?float
+    private function avgOf(User $user, string $column): ?float
     {
         $received = $user->ratingsReceived()->whereNotNull('rated_user_id');
 
-        return $received->count() > 0 ? round((float) $received->avg('overall'), 2) : null;
+        return $received->count() > 0 ? round((float) $received->avg($column), 2) : null;
     }
 }

@@ -55,4 +55,46 @@ final class TeamBalancerTest extends TestCase
 
         $this->assertSame(4, count($result['teamA']) + count($result['teamB']));
     }
+
+    public function test_spreads_two_goalies_one_per_team(): void
+    {
+        $goalies = collect([9.0, 8.0])->map(fn ($s) => ['score' => $s, 'likes_goalie' => true])->all();
+        $others = collect(range(1, 8))->map(fn ($s) => ['score' => (float) $s])->all();
+
+        $result = $this->balancer->balance(array_merge($goalies, $others), 5);
+
+        $gkA = collect($result['teamA'])->where('likes_goalie', true)->count();
+        $gkB = collect($result['teamB'])->where('likes_goalie', true)->count();
+
+        $this->assertSame(1, $gkA);
+        $this->assertSame(1, $gkB);
+    }
+
+    public function test_goalies_are_distributed_when_many_are_available(): void
+    {
+        $goalies = collect([9.0, 8.0, 7.0, 6.0])->map(fn ($s) => ['score' => $s, 'likes_goalie' => true])->all();
+        $others = collect([5.0, 4.0, 3.0, 2.0, 1.0, 1.0])->map(fn ($s) => ['score' => (float) $s])->all();
+
+        $result = $this->balancer->balance(array_merge($goalies, $others), 5);
+
+        $gkA = collect($result['teamA'])->where('likes_goalie', true)->count();
+        $gkB = collect($result['teamB'])->where('likes_goalie', true)->count();
+
+        $this->assertSame(2, $gkA);
+        $this->assertSame(2, $gkB);
+    }
+
+    public function test_goalies_do_not_break_score_balance(): void
+    {
+        $participants = collect([9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 1.0])
+            ->map(fn ($s) => ['score' => $s, 'likes_goalie' => (bool) random_int(0, 1)])
+            ->all();
+
+        $result = $this->balancer->balance($participants, 5);
+
+        $sumA = collect($result['teamA'])->sum('score');
+        $sumB = collect($result['teamB'])->sum('score');
+
+        $this->assertLessThanOrEqual(2.0, abs($sumA - $sumB));
+    }
 }

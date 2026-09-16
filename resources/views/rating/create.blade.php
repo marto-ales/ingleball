@@ -15,6 +15,7 @@
     $existingMap = $existing->map(fn ($r) => [
         'speed' => $r->speed, 'skill' => $r->skill, 'passing' => $r->passing,
         'shooting' => $r->shooting, 'defense' => $r->defense, 'overall' => $r->overall,
+        'goalkeeping' => $r->goalkeeping,
     ])->toArray();
 @endphp
 
@@ -37,7 +38,7 @@
                 @enderror
             </div>
 
-            @foreach (['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'overall' => 'General'] as $key => $label)
+            @foreach (['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'overall' => 'General', 'goalkeeping' => 'Arco'] as $key => $label)
                 <div class="field">
                     <label>{{ $label }}</label>
                     @include('partials.scale', ['name' => $key, 'label' => $label, 'value' => old($key, 5)])
@@ -54,7 +55,7 @@
     (function () {
         const hidden = document.getElementById('rated');
         const buttons = document.querySelectorAll('#pick-rated .pick');
-        const fields = ['speed', 'skill', 'passing', 'shooting', 'defense', 'overall'];
+        const fields = ['speed', 'skill', 'passing', 'shooting', 'defense', 'overall', 'goalkeeping'];
 
         function setScale(name, val) {
             document.querySelectorAll('[name="' + name + '"]').forEach(function (el) {

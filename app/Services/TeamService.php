@@ -24,15 +24,15 @@ class TeamService
 
     /**
      * Collect the "going" participants of a match as plain arrays carrying a
-     * stable identity (user_id or guest_id), their name, composite score and
-     * the list order the organizer assigned.
+     * stable identity (user_id or guest_id), their name, composite score, list
+     * order and whether they like playing goalkeeper.
      *
-     * @return array<int, array{user_id: int|null, guest_id: int|null, name: string, score: float, list_order: int}>
+     * @return array<int, array{user_id: int|null, guest_id: int|null, name: string, score: float, list_order: int, likes_goalie: bool}>
      */
     public function collect(Partido $match): array
     {
         $entries = $match->entries()
-            ->with(['user', 'guest'])
+            ->with(['user', 'user.player', 'guest'])
             ->where('role', 'going')
             ->orderBy('list_order')
             ->get();
@@ -47,6 +47,7 @@ class TeamService
                     'name' => $entry->user->name,
                     'score' => $this->scorer->forUser($entry->user),
                     'list_order' => (int) $entry->list_order,
+                    'likes_goalie' => (bool) ($entry->user->player?->likes_goalie ?? false),
                 ];
             } elseif ($entry->guest !== null) {
                 $participants[] = [
@@ -55,6 +56,7 @@ class TeamService
                     'name' => $entry->guest->name,
                     'score' => $this->scorer->forGuest($entry->guest),
                     'list_order' => (int) $entry->list_order,
+                    'likes_goalie' => false,
                 ];
             }
         }

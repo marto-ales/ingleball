@@ -48,12 +48,19 @@ final class PagesRenderTest extends TestCase
             'email' => null,
             'phone' => null,
             'whatsapp_group' => 'https://chat.whatsapp.com/AbCd1234',
-            'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'overall' => 5,
+            'likes_goalie' => 1,
+            'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'overall' => 5, 'goalkeeping' => 8,
         ]);
 
         $this->assertDatabaseHas('users', [
             'id' => $this->organizer->id,
             'whatsapp_group' => 'https://chat.whatsapp.com/AbCd1234',
+        ]);
+
+        $this->assertDatabaseHas('players', [
+            'user_id' => $this->organizer->id,
+            'likes_goalie' => 1,
+            'goalkeeping' => 8,
         ]);
 
         $this->actingAs($this->organizer)
@@ -72,12 +79,15 @@ final class PagesRenderTest extends TestCase
         $this->actingAs($this->organizer)
             ->get('/matches/' . $this->openMatch->id . '/ratings')
             ->assertOk()
-            ->assertSee('scale-opt', false);
+            ->assertSee('scale-opt', false)
+            ->assertSee('Arco');
 
         $this->actingAs($this->organizer)
             ->get('/profile')
             ->assertOk()
-            ->assertSee('scale-opt', false);
+            ->assertSee('scale-opt', false)
+            ->assertSee('¿Te gusta ir al arco?')
+            ->assertSee('Arco');
     }
 
     public function test_share_message_shows_for_any_user_with_going_list_when_no_teams(): void

@@ -10,7 +10,10 @@
     </div>
 </div>
 
-@php $p = $profile ?? null; @endphp
+@php
+    $p = $profile ?? null;
+    $likesGoalie = (bool) old('likes_goalie', $p?->likes_goalie ?? false);
+@endphp
 
 <div class="card" style="max-width: 640px;">
     <form method="POST" action="{{ route('profile.update') }}">
@@ -46,7 +49,15 @@
 
         <div class="divider"></div>
         <h2>Cómo jugás (autoevaluación)</h2>
-        @foreach (['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'overall' => 'General'] as $key => $label)
+        <div class="field">
+            <label>¿Te gusta ir al arco?</label>
+            <div class="segmented">
+                <label><input type="radio" name="likes_goalie" value="1" @checked($likesGoalie)><span>Sí</span></label>
+                <label><input type="radio" name="likes_goalie" value="0" @checked(! $likesGoalie)><span>No</span></label>
+            </div>
+            <p class="muted small mb0">Al armar los equipos se busca que a cada uno le toque al menos un jugador que quiera atajar.</p>
+        </div>
+        @foreach (['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'overall' => 'General', 'goalkeeping' => 'Arco'] as $key => $label)
             <div class="field">
                 <label>{{ $label }}</label>
                 @include('partials.scale', ['name' => $key, 'label' => $label, 'value' => old($key, $p?->{$key} ?? 5)])

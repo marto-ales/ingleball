@@ -12,6 +12,7 @@ class Player extends Model
 
     protected $fillable = [
         'user_id', 'speed', 'skill', 'passing', 'shooting', 'defense', 'overall',
+        'likes_goalie', 'goalkeeping',
     ];
 
     /**
@@ -22,6 +23,7 @@ class Player extends Model
         return [
             'speed' => 'integer', 'skill' => 'integer', 'passing' => 'integer',
             'shooting' => 'integer', 'defense' => 'integer', 'overall' => 'integer',
+            'likes_goalie' => 'boolean', 'goalkeeping' => 'integer',
         ];
     }
 

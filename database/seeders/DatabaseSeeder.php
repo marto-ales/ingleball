@@ -40,6 +40,8 @@ class DatabaseSeeder extends Seeder
                 'shooting' => fake()->numberBetween(4, 9),
                 'defense' => fake()->numberBetween(4, 9),
                 'overall' => fake()->numberBetween(5, 9),
+                'likes_goalie' => fake()->boolean(30),
+                'goalkeeping' => fake()->numberBetween(3, 9),
             ]);
         }
 
@@ -55,6 +57,7 @@ class DatabaseSeeder extends Seeder
                     'shooting' => fake()->numberBetween(4, 9),
                     'defense' => fake()->numberBetween(4, 9),
                     'overall' => fake()->numberBetween(5, 9),
+                    'goalkeeping' => fake()->numberBetween(3, 9),
                 ]);
             }
         }

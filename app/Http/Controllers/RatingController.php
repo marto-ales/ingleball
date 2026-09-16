@@ -56,6 +56,7 @@ class RatingController extends Controller
             'shooting' => ['required', 'integer', 'between:1,10'],
             'defense' => ['required', 'integer', 'between:1,10'],
             'overall' => ['required', 'integer', 'between:1,10'],
+            'goalkeeping' => ['required', 'integer', 'between:1,10'],
         ]);
 
         [$type, $id] = explode(':', $data['rated']);
@@ -69,6 +70,7 @@ class RatingController extends Controller
             'shooting' => (int) $data['shooting'],
             'defense' => (int) $data['defense'],
             'overall' => (int) $data['overall'],
+            'goalkeeping' => (int) $data['goalkeeping'],
         ];
 
         if ($type === 'user') {
