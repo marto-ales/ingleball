@@ -11,7 +11,7 @@
 #   PHP_BIN   binario de PHP (default: php — en Debian 13 apunta a php8.4)
 #   SERVICE   unidad systemd a reiniciar (default: ingleball.service)
 #
-# Requerimientos (LXC Debian 13 / Proxmox):
+# Requerimientos (LXC Debian / Proxmox):
 #   - composer + extensiones php8.4 (sqlite3, mbstring, xml, curl)
 #   - acceso a systemctl (ejecutar como root o con sudo)
 

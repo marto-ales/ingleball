@@ -1,58 +1,77 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ⚽ Ingleball — fútbol de amigos
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplicación web para organizar el partido semanal con amigos: lista de anotados,
+armado de equipos balanceado, calificaciones entre jugadores, ranking e historial.
 
-## About Laravel
+## Funcionalidades
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Partidos y anotados**: cada jugador se anota como *voy* o *suplente*; el
+  organizador puede cerrar la lista, armar equipos 4v4, 5v5 o 6v6 de forma
+  balanceada (por puntaje y preferencia de arco) e intercambiar jugadores.
+- **Partidos recurrentes**: un partido marcado como recurrente se reabre solo,
+  una vez por semana, con los mismos datos.
+- **Finalización automática**: al pasar la hora de inicio deja de aceptar
+  anotaciones y el partido pasa a *finalizado*; recién ahí se puede cargar el
+  resultado (ganador, diferencia, MVP y goles).
+- **Invitados globales**: invitados manejados por el organizador con historial
+  propio; se identifican por teléfono y se reutilizan entre partidos.
+- **Calificaciones**: autoevaluación de cada jugador y calificaciones de los
+  rivales (velocidad, habilidad, pase, definición, defensa, arco y general) que
+  alimentan un ranking combinado.
+- **Mensaje compartible**: mensaje pre-escrito con lista y equipos para reenviar
+  al grupo por WhatsApp.
+- **Usuarios administrados**: el organizador puede crear jugadores sin cuenta
+  (no loguean) que, si después se registran con el mismo usuario, recuperan su
+  historial; también puede bloquear o eliminar usuarios.
+- **Notificaciones por email**: bienvenida al registrarse, aviso a los
+  organizadores de cada nuevo jugador y recordatorios de partido.
+- **Captcha de imagen** en registro y login (configurable).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Laravel 13 · PHP ≥ 8.3
+- SQLite
+- CSS plano en `public/css/app.css` (sin build, sin npm/vite)
+- PHPUnit para tests
 
-## Learning Laravel
+## Puesta en marcha local
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```sh
+composer install
+cp .env.example .env && php artisan key:generate
+touch database/database.sqlite
+php artisan migrate --seed
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+La app queda en `http://127.0.0.1:8000`.
 
-## Contributing
+## Tests
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```sh
+php artisan test
+```
 
-## Code of Conduct
+## Deploy
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Entorno de producción: PHP 8.4 y SQLite, servidor
+`php artisan serve --host=0.0.0.0 --port=8000` (systemd `ingleball.service`)
+detrás de un nginx HTTPS en el host (un `ing.ingleball.service`, configuración de
+front en `deploy/nginx-front.conf`).
 
-## Security Vulnerabilities
+Cada release:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```sh
+sudo ./deploy.sh
+```
 
-## License
+`deploy.sh` actualiza el repositorio, corrige el dueño de `vendor`, instala
+dependencias de producción, migra, reconstruye cachés y reinicia el servicio.
+Variables de entorno opcionales: `APP_DIR`, `APP_USER` (default `www-data`),
+`PHP_BIN` y `SERVICE`.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Configuración
+
+- `config/balance.php`: pesos del puntaje combinado, tamaños de equipo (`[6,5,4]`)
+  y atributos de calificación.
+- `CAPTCHA_ENABLED`: activa/desactiva el captcha (tests corren con `false`).
