@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Partido;
+use App\Models\Player;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -210,6 +211,54 @@ final class MatchFlowTest extends TestCase
         $this->assertSame(5, $match->teams()->where('team', 'B')->count());
     }
 
+    public function test_teams_are_paired_by_characteristics_and_split_the_goalies(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id, 'size' => 5]);
+
+        $speeds = [10, 10, 8, 8, 6, 6, 4, 4, 2, 2];
+        $speedByUser = [];
+
+        foreach ($speeds as $index => $speed) {
+            $player = User::factory()->create();
+
+            Player::factory()->forUser($player)->create([
+                'speed' => $speed,
+                'skill' => 5,
+                'passing' => 5,
+                'shooting' => 5,
+                'defense' => 5,
+                'overall' => $speed,
+                'likes_goalie' => $index < 2,
+            ]);
+
+            $speedByUser[$player->id] = $speed;
+            $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
+        }
+
+        $match->update(['status' => Partido::STATUS_LOCKED]);
+
+        $this->actingAs($organizer)
+            ->post(route('teams.generate', $match), ['size' => 5])
+            ->assertRedirect();
+
+        $teamA = $match->teams()->where('team', 'A')->pluck('user_id');
+        $teamB = $match->teams()->where('team', 'B')->pluck('user_id');
+
+        $this->assertSame(5, $teamA->count());
+        $this->assertSame(5, $teamB->count());
+
+        // Every speed band is duplicated, so a balanced split gives each team
+        // the same total speed: 10 + 8 + 6 + 4 + 2 = 30.
+        $this->assertSame(30, $teamA->sum(fn ($id) => $speedByUser[$id]));
+        $this->assertSame(30, $teamB->sum(fn ($id) => $speedByUser[$id]));
+
+        // The two goalie-likers land one per team.
+        $goalieIds = Player::where('likes_goalie', true)->pluck('user_id');
+        $this->assertSame(1, $teamA->intersect($goalieIds)->count());
+        $this->assertSame(1, $teamB->intersect($goalieIds)->count());
+    }
+
     public function test_teams_cannot_be_generated_while_list_is_open(): void
     {
         $organizer = User::factory()->organizer()->create();
@@ -232,7 +281,7 @@ final class MatchFlowTest extends TestCase
             ->post(route('result.store', $match), [
                 'winner' => 'A',
                 'diff' => 2,
-                'mvp' => 'user:' . $player->id,
+                'mvp' => 'user:'.$player->id,
             ])
             ->assertRedirect();
 
@@ -314,7 +363,7 @@ final class MatchFlowTest extends TestCase
 
         $this->actingAs($me)
             ->post(route('ratings.store', $match), [
-                'rated' => 'user:' . $me->id,
+                'rated' => 'user:'.$me->id,
                 'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'overall' => 5, 'goalkeeping' => 5,
             ])
             ->assertStatus(422);

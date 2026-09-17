@@ -143,43 +143,32 @@ final class PagesRenderTest extends TestCase
 
     public function test_share_message_includes_cost_per_person(): void
     {
-        $alfa = User::factory()->create();
-        $beta = User::factory()->create();
-        $match = Partido::factory()->create(['created_by' => $this->organizer->id, 'field_value' => 10000]);
-        $match->entries()->create(['user_id' => $alfa->id, 'role' => 'going']);
-        $match->entries()->create(['user_id' => $beta->id, 'role' => 'going']);
+        // 4v4 → 8 jugadores → 10000 / 8 = 1250 (independiente de los anotados)
+        $match = Partido::factory()->create(['created_by' => $this->organizer->id, 'field_value' => 10000, 'size' => 4]);
 
         $this->actingAs($this->organizer)
             ->get('/matches/' . $match->id)
             ->assertOk()
-            ->assertSee('Valor: $5.000 por persona', false);
+            ->assertSee('Valor: $1.250 por persona', false);
     }
 
     public function test_index_lists_cost_per_person(): void
     {
-        $match = Partido::factory()->create(['created_by' => $this->organizer->id, 'field_value' => 10000]);
-        $players = User::factory(4)->create();
-        foreach ($players as $p) {
-            $match->entries()->create(['user_id' => $p->id, 'role' => 'going']);
-        }
+        $match = Partido::factory()->create(['created_by' => $this->organizer->id, 'field_value' => 10000, 'size' => 4]);
 
         $this->actingAs($this->organizer)
             ->get('/matches')
             ->assertOk()
-            ->assertSee('Valor: $2.500 por persona', false);
+            ->assertSee('Valor: $1.250 por persona', false);
     }
 
     public function test_dashboard_lists_cost_per_person(): void
     {
-        $match = Partido::factory()->create(['created_by' => $this->organizer->id, 'field_value' => 10000]);
-        $players = User::factory(4)->create();
-        foreach ($players as $p) {
-            $match->entries()->create(['user_id' => $p->id, 'role' => 'going']);
-        }
+        $match = Partido::factory()->create(['created_by' => $this->organizer->id, 'field_value' => 10000, 'size' => 4]);
 
         $this->actingAs($this->organizer)
             ->get('/dashboard')
             ->assertOk()
-            ->assertSee('Valor: $2.500 por persona', false);
+            ->assertSee('Valor: $1.250 por persona', false);
     }
 }

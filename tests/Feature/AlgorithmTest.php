@@ -1,0 +1,55 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\User;
+use App\Services\AlgorithmSettings;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+final class AlgorithmTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_organizer_can_open_and_update_the_algorithm_screen(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+
+        $this->actingAs($organizer)
+            ->get('/algorithm')
+            ->assertOk()
+            ->assertSee('Orden de peso');
+
+        $this->actingAs($organizer)
+            ->patch('/algorithm', [
+                'order' => ['skill', 'speed', 'passing', 'shooting', 'defense'],
+                'random_tie_break' => '1',
+            ])
+            ->assertRedirect();
+
+        $settings = new AlgorithmSettings;
+
+        $this->assertSame('skill', $settings->order()[0]);
+        $this->assertSame('speed', $settings->order()[1]);
+        $this->assertTrue($settings->randomTieBreak());
+        $this->assertFalse($settings->spreadGoalies());
+    }
+
+    public function test_duplicate_positions_are_rejected(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+
+        $this->actingAs($organizer)
+            ->patch('/algorithm', [
+                'order' => ['speed', 'speed', 'passing', 'shooting', 'defense'],
+            ])
+            ->assertSessionHasErrors('order');
+    }
+
+    public function test_players_cannot_open_the_algorithm_screen(): void
+    {
+        $player = User::factory()->create();
+
+        $this->actingAs($player)->get('/algorithm')->assertForbidden();
+    }
+}

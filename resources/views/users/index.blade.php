@@ -10,7 +10,7 @@
 
 <p class="muted">Los jugadores sin cuenta (marcados "gestionado") no pueden iniciar sesión; si se registran con su nombre, adoptan su historial.</p>
 
-<div class="section">
+<div class="card">
     <div class="table-wrap">
         <table class="table">
             <thead>

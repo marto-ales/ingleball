@@ -18,6 +18,7 @@
                 <a href="{{ route('stats.index') }}">Ranking</a>
                 @if (auth()->user()->is_organizer)
                     <a href="{{ route('users.manage.index') }}">Jugadores</a>
+                    <a href="{{ route('algorithm.index') }}">Algoritmo</a>
                     <a class="btn btn-primary btn-sm" href="{{ route('matches.create') }}">+ Nuevo partido</a>
                 @endif
                 <a href="{{ route('profile.edit') }}">{{ auth()->user()->name }}</a>

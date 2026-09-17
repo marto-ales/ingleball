@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AlgorithmController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
@@ -70,6 +71,9 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware('auth', 'organizer')->group(function () {
+    Route::get('algorithm', [AlgorithmController::class, 'index'])->name('algorithm.index');
+    Route::patch('algorithm', [AlgorithmController::class, 'update'])->name('algorithm.update');
+
     Route::get('users', [UserManagementController::class, 'index'])->name('users.manage.index');
     Route::get('users/create', [UserManagementController::class, 'create'])->name('users.manage.create');
     Route::post('users', [UserManagementController::class, 'store'])->name('users.manage.store');

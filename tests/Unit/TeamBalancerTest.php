@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use App\Services\TeamBalancer;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 final class TeamBalancerTest extends TestCase
 {
@@ -11,7 +11,24 @@ final class TeamBalancerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->balancer = new TeamBalancer();
+        parent::setUp();
+
+        $this->balancer = new TeamBalancer;
+    }
+
+    /**
+     * @param  array<string, int>  $overrides
+     * @return array<string, int>
+     */
+    private function attributes(array $overrides = []): array
+    {
+        return array_merge([
+            'speed' => 5,
+            'skill' => 5,
+            'passing' => 5,
+            'shooting' => 5,
+            'defense' => 5,
+        ], $overrides);
     }
 
     public function test_produces_two_teams_of_the_requested_size(): void
@@ -105,5 +122,102 @@ final class TeamBalancerTest extends TestCase
         $sumB = collect($result['teamB'])->sum('score');
 
         $this->assertLessThanOrEqual(2.0, abs($sumA - $sumB));
+    }
+
+    public function test_every_characteristic_is_evenly_split(): void
+    {
+        $profiles = [
+            $this->attributes(['speed' => 10, 'skill' => 6, 'passing' => 5, 'shooting' => 7, 'defense' => 4]),
+            $this->attributes(['speed' => 8, 'skill' => 3, 'passing' => 6, 'shooting' => 2, 'defense' => 8]),
+            $this->attributes(['speed' => 6, 'skill' => 9, 'passing' => 4, 'shooting' => 5, 'defense' => 3]),
+            $this->attributes(['speed' => 4, 'skill' => 4, 'passing' => 8, 'shooting' => 6, 'defense' => 6]),
+        ];
+
+        $participants = [];
+
+        foreach ($profiles as $index => $profile) {
+            $participants[] = ['name' => "a{$index}", 'attributes' => $profile, 'score' => 0.0];
+            $participants[] = ['name' => "b{$index}", 'attributes' => $profile, 'score' => 0.0];
+        }
+
+        $result = $this->balancer->balance($participants, 4);
+
+        foreach (['speed', 'skill', 'passing', 'shooting', 'defense'] as $attribute) {
+            $sumA = collect($result['teamA'])->sum(fn ($p) => $p['attributes'][$attribute]);
+            $sumB = collect($result['teamB'])->sum(fn ($p) => $p['attributes'][$attribute]);
+
+            $this->assertSame($sumA, $sumB, "{$attribute} is not evenly split");
+        }
+    }
+
+    public function test_a_strong_shooter_is_answered_by_a_strong_shooter(): void
+    {
+        $participants = [
+            ['name' => 'shooter-strong', 'attributes' => $this->attributes(['shooting' => 10]), 'score' => 0.0],
+            ['name' => 'shooter-close', 'attributes' => $this->attributes(['shooting' => 9]), 'score' => 0.0],
+            ['name' => 'weak-3', 'attributes' => $this->attributes(['shooting' => 3]), 'score' => 0.0],
+            ['name' => 'weak-2', 'attributes' => $this->attributes(['shooting' => 2]), 'score' => 0.0],
+        ];
+
+        $result = $this->balancer->balance($participants, 2);
+
+        $shootersA = collect($result['teamA'])->where(fn ($p) => $p['attributes']['shooting'] >= 9)->count();
+        $shootersB = collect($result['teamB'])->where(fn ($p) => $p['attributes']['shooting'] >= 9)->count();
+
+        $this->assertSame(1, $shootersA);
+        $this->assertSame(1, $shootersB);
+    }
+
+    public function test_the_teams_do_not_depend_on_signup_order(): void
+    {
+        $participants = [
+            ['name' => 'one', 'attributes' => $this->attributes(['speed' => 10, 'skill' => 2]), 'score' => 0.0],
+            ['name' => 'two', 'attributes' => $this->attributes(['speed' => 9, 'skill' => 4]), 'score' => 0.0],
+            ['name' => 'three', 'attributes' => $this->attributes(['speed' => 7, 'skill' => 6]), 'score' => 0.0],
+            ['name' => 'four', 'attributes' => $this->attributes(['speed' => 6, 'skill' => 9]), 'score' => 0.0],
+            ['name' => 'five', 'attributes' => $this->attributes(['speed' => 3, 'skill' => 3]), 'score' => 0.0],
+            ['name' => 'six', 'attributes' => $this->attributes(['speed' => 2, 'skill' => 8]), 'score' => 0.0],
+        ];
+
+        $sums = function (array $team): array {
+            $result = [];
+
+            foreach (['speed', 'skill', 'passing', 'shooting', 'defense'] as $attribute) {
+                $result[$attribute] = collect($team)->sum(fn ($p) => $p['attributes'][$attribute]);
+            }
+
+            return $result;
+        };
+
+        $first = $this->balancer->balance($participants, 3);
+        $second = $this->balancer->balance(array_reverse($participants), 3);
+
+        $this->assertContains($sums($second['teamA']), [$sums($first['teamA']), $sums($first['teamB'])]);
+    }
+
+    public function test_odd_attendance_gives_the_extra_player_to_the_weaker_team(): void
+    {
+        $participants = [
+            ['name' => 'a', 'score' => 10.0],
+            ['name' => 'b', 'score' => 5.0],
+            ['name' => 'c', 'score' => 5.0],
+            ['name' => 'd', 'score' => 5.0],
+            ['name' => 'e', 'score' => 1.0],
+        ];
+
+        $result = $this->balancer->balance($participants, 3);
+
+        $teamA = collect($result['teamA']);
+        $teamB = collect($result['teamB']);
+
+        $sizes = [$teamA->count(), $teamB->count()];
+        sort($sizes);
+        $this->assertSame([2, 3], $sizes);
+
+        $extraTeam = $teamA->contains('name', 'e') ? $teamA : $teamB;
+        $otherTeam = $extraTeam === $teamA ? $teamB : $teamA;
+
+        // Without the extra player the team that received it was the weaker one.
+        $this->assertLessThanOrEqual($otherTeam->sum('score'), $extraTeam->sum('score') - 1.0);
     }
 }
