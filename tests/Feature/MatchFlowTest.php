@@ -157,30 +157,34 @@ final class MatchFlowTest extends TestCase
     public function test_field_value_is_saved_and_shows_cost_per_person(): void
     {
         $organizer = User::factory()->organizer()->create();
-        $players = User::factory(4)->create();
         $match = Partido::factory()->create(['created_by' => $organizer->id, 'field_value' => 10000]);
 
-        foreach ($players as $player) {
-            $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
-        }
-
+        // 5v5 → 10 jugadores → 10000 / 10 = 1000
         $this->actingAs($organizer)
             ->get(route('matches.show', $match))
             ->assertOk()
             ->assertSee('Valor:')
-            ->assertSee('$2.500 por persona');
+            ->assertSee('$1.000 por persona');
 
+        // Cambiar a 4v4 con otro valor de cancha recalcula al instante.
         $this->actingAs($organizer)
             ->patch(route('matches.update', $match), [
                 'title' => $match->title,
                 'played_at' => now()->addDays(2)->format('Y-m-d H:i'),
                 'venue' => $match->venue,
                 'field_value' => 12000,
-                'size' => 5,
+                'size' => 4,
             ])
             ->assertRedirect();
 
-        $this->assertSame(12000, $match->refresh()->field_value);
+        $match->refresh();
+        $this->assertSame(12000, $match->field_value);
+        $this->assertSame(4, $match->size);
+
+        // 4v4 → 8 jugadores → 12000 / 8 = 1500
+        $this->actingAs($organizer)
+            ->get(route('matches.show', $match))
+            ->assertSee('$1.500 por persona');
     }
 
     public function test_players_sign_up_and_teams_are_balanced(): void

@@ -13,10 +13,6 @@
 <div class="section">
     <h2>Próximos</h2>
     @forelse ($upcoming as $match)
-        @php
-            $dbPlayers = $match->teams_count > 0 ? $match->teams_count : $match->going_count;
-            $dbCost = $match->costPerPlayer($dbPlayers);
-        @endphp
         <div class="card row between">
             <div>
                 <div class="row">
@@ -28,7 +24,7 @@
                     @if ($match->venue) · {{ $match->venue }} @endif
                 </div>
                 @if ($match->field_value !== null)
-                    <div class="muted small">💰 @if ($dbCost !== null) Valor: ${{ number_format($dbCost, 0, ',', '.') }} por persona @else Valor de la cancha: ${{ number_format($match->field_value, 0, ',', '.') }} @endif</div>
+                    <div class="muted small">💰 Valor: ${{ number_format($match->costPerPerson(), 0, ',', '.') }} por persona</div>
                 @endif
             </div>
             <div class="row">
@@ -48,10 +44,6 @@
 <div class="section">
     <h2>Finalizados</h2>
     @forelse ($finished as $match)
-        @php
-            $dbPlayers = $match->teams_count > 0 ? $match->teams_count : $match->going_count;
-            $dbCost = $match->costPerPlayer($dbPlayers);
-        @endphp
         <div class="card row between">
             <div>
                 <strong>{{ $match->title }}</strong>
@@ -60,7 +52,7 @@
                     <span class="chip">🏆 {{ $match->result->summary }}</span>
                 @endif
                 @if ($match->field_value !== null)
-                    <div class="muted small">💰 @if ($dbCost !== null) Valor: ${{ number_format($dbCost, 0, ',', '.') }} por persona @else Valor de la cancha: ${{ number_format($match->field_value, 0, ',', '.') }} @endif</div>
+                    <div class="muted small">💰 Valor: ${{ number_format($match->costPerPerson(), 0, ',', '.') }} por persona</div>
                 @endif
             </div>
             <a class="btn btn-sm" href="{{ route('matches.show', $match) }}">Ver</a>

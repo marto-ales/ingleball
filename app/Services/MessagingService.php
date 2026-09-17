@@ -30,11 +30,7 @@ class MessagingService
         }
 
         if ($match->field_value !== null) {
-            $playerCount = ($teamA->isNotEmpty() || $teamB->isNotEmpty())
-                ? $teamA->count() + $teamB->count()
-                : $entriesGoing->count();
-
-            $cost = $match->costPerPlayer($playerCount);
+            $cost = $match->costPerPerson();
 
             $lines[] = $cost !== null
                 ? '💰 Valor: $' . number_format($cost, 0, ',', '.') . ' por persona'

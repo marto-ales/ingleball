@@ -29,8 +29,6 @@ class MatchController extends Controller
             ->each(fn (Partido $match) => $match->autoFinish());
 
         $all = Partido::with('creator')
-            ->withCount(['teams'])
-            ->withCount(['entries as going_count' => fn ($q) => $q->where('role', 'going')])
             ->orderByDesc('played_at')
             ->get()
             ->groupBy(fn (Partido $match): string => match (true) {
@@ -154,14 +152,6 @@ class MatchController extends Controller
 
 $participants = $this->participants($match);
 
-// Valor de la cancha dividido por los jugadores: equipos generados si los hay,
-// si no la lista de anotados.
-$playerCount = ($teamA->isNotEmpty() || $teamB->isNotEmpty())
-    ? $teamA->count() + $teamB->count()
-    : $goingCount;
-
-$costPerPlayer = $match->costPerPlayer($playerCount);
-
 $waGroup = $me->is_organizer ? $me->whatsapp_group : null;
 
         $shareMessage = $this->messaging->message($match, $teamA, $teamB, $entriesGoing, $entriesSubstitute);
@@ -176,8 +166,6 @@ $waGroup = $me->is_organizer ? $me->whatsapp_group : null;
             'goingCount' => $goingCount,
             'autoSize' => $autoSize,
             'participants' => $participants,
-            'costPerPlayer' => $costPerPlayer,
-            'playerCount' => $playerCount,
             'waGroup' => $waGroup,
             'shareMessage' => $shareMessage,
         ]);

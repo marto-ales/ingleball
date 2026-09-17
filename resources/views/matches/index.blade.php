@@ -3,13 +3,6 @@
 @section('title', 'Partidos')
 
 @section('content')
-@php
-    $costs = $matches->flatten()->mapWithKeys(function ($match) {
-        $players = $match->teams_count > 0 ? $match->teams_count : $match->going_count;
-
-        return [$match->id => $match->costPerPlayer($players)];
-    });
-@endphp
 <div class="page-head">
     <div><h1>Partidos</h1></div>
     @if (auth()->user()->is_organizer)
@@ -29,7 +22,7 @@
                 </div>
                 <div class="muted small">{{ $match->played_at->format('D, d M Y H:i') }} · creó {{ $match->creator?->name }}</div>
                 @if ($match->field_value !== null)
-                    <div class="muted small">💰 @if (($costs[$match->id] ?? null) !== null) Valor: ${{ number_format($costs[$match->id], 0, ',', '.') }} por persona @else Valor de la cancha: ${{ number_format($match->field_value, 0, ',', '.') }} @endif</div>
+                    <div class="muted small">💰 Valor: ${{ number_format($match->costPerPerson(), 0, ',', '.') }} por persona</div>
                 @endif
             </div>
             <a class="btn btn-primary btn-sm" href="{{ route('matches.show', $match) }}">Abrir</a>
@@ -51,7 +44,7 @@
                     </div>
                     <div class="muted small">{{ $match->played_at->format('d M Y') }}</div>
                     @if ($match->field_value !== null)
-                        <div class="muted small">💰 @if (($costs[$match->id] ?? null) !== null) Valor: ${{ number_format($costs[$match->id], 0, ',', '.') }} por persona @else Valor de la cancha: ${{ number_format($match->field_value, 0, ',', '.') }} @endif</div>
+                        <div class="muted small">💰 Valor: ${{ number_format($match->costPerPerson(), 0, ',', '.') }} por persona</div>
                     @endif
                 </div>
                 <a class="btn btn-sm" href="{{ route('matches.show', $match) }}">Ver</a>
@@ -74,7 +67,7 @@
                     @if ($match->result) · {{ $match->result->summary }} @endif
                 </div>
                 @if ($match->field_value !== null)
-                    <div class="muted small">💰 @if (($costs[$match->id] ?? null) !== null) Valor: ${{ number_format($costs[$match->id], 0, ',', '.') }} por persona @else Valor de la cancha: ${{ number_format($match->field_value, 0, ',', '.') }} @endif</div>
+                    <div class="muted small">💰 Valor: ${{ number_format($match->costPerPerson(), 0, ',', '.') }} por persona</div>
                 @endif
             </div>
             <a class="btn btn-sm" href="{{ route('matches.show', $match) }}">Ver</a>

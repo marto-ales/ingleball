@@ -15,14 +15,8 @@
         </p>
         @if ($match->field_value !== null)
             <p class="muted small" style="margin:6px 0 0;">
-                💰
-                @if ($costPerPlayer !== null)
-                    Valor: <strong>${{ number_format($costPerPlayer, 0, ',', '.') }} por persona</strong>
-                    · <span class="muted">{{ $playerCount }} jugadores</span>
-                @else
-                    Valor de la cancha: <strong>${{ number_format($match->field_value, 0, ',', '.') }}</strong>
-                    @if ($goingCount === 0) <span class="muted">(todavía sin anotados)</span> @endif
-                @endif
+                💰 Valor: <strong>${{ number_format($match->costPerPerson(), 0, ',', '.') }} por persona</strong>
+                · {{ $match->size }}v{{ $match->size }}
             </p>
         @endif
     </div>

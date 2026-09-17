@@ -107,16 +107,19 @@ class Partido extends Model
     }
 
     /**
-     * Cost per player = field value divided by the given number of players.
-     * Returns null when there is no field value or no players yet.
+     * Cost per person = field value divided by the configured team sizes
+     * (5v5 → field / 10, 4v4 → field / 8, 6v6 → field / 12). It follows the
+     * match format, not the current signups.
      */
-    public function costPerPlayer(int $playerCount): ?int
+    public function costPerPerson(): ?int
     {
-        if ($this->field_value === null || $playerCount <= 0) {
+        $players = (int) $this->size * 2;
+
+        if ($this->field_value === null || $players <= 0) {
             return null;
         }
 
-        return (int) round($this->field_value / $playerCount);
+        return (int) round($this->field_value / $players);
     }
 
     /**
