@@ -13,7 +13,7 @@
 <div class="section">
     <h2>Próximos / en curso</h2>
     @forelse ($matches->get('upcoming', collect()) as $match)
-        <div class="card row between">
+        <div class="card card--live row between">
             <div>
                 <div class="row">
                     <strong>{{ $match->title }}</strong>
@@ -36,7 +36,7 @@
     <div class="section">
         <h2>Cancelados</h2>
         @foreach ($matches->get('cancelled') as $match)
-            <div class="card row between">
+            <div class="card card--cancelled row between">
                 <div>
                     <div class="row">
                         <strong>{{ $match->title }}</strong>
@@ -56,7 +56,7 @@
 <div class="section">
     <h2>Historial</h2>
     @forelse ($matches->get('finished', collect()) as $match)
-        <div class="card row between">
+        <div class="card card--history row between">
             <div>
                 <div class="row">
                     <strong>{{ $match->title }}</strong>

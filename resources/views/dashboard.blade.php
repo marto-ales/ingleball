@@ -13,7 +13,7 @@
 <div class="section">
     <h2>Próximos</h2>
     @forelse ($upcoming as $match)
-        <div class="card row between">
+        <div class="card card--live row between">
             <div>
                 <div class="row">
                     <strong>{{ $match->title }}</strong>
@@ -44,7 +44,7 @@
 <div class="section">
     <h2>Finalizados</h2>
     @forelse ($finished as $match)
-        <div class="card row between">
+        <div class="card card--history row between">
             <div>
                 <strong>{{ $match->title }}</strong>
                 <span class="muted small"> · {{ $match->played_at->format('d M Y') }}</span>

@@ -26,7 +26,7 @@
 </div>
 
 @if (auth()->user()->is_organizer)
-    <div class="card row">
+    <div class="card card--info row">
         <strong>Organización</strong>
         @if ($match->isCancelled())
             <form method="POST" action="{{ route('matches.reactivate', $match) }}" class="inline">
@@ -68,7 +68,7 @@
 
 <div class="grid grid-2">
     <div class="section" style="min-width:0;">
-        <div class="card">
+        <div class="card card--live">
             <h2>Lista de anotados</h2>
             @if ($match->isOpen())
                 <div class="row" style="margin-bottom:14px;">
@@ -120,7 +120,7 @@
         </div>
 
         @if (auth()->user()->is_organizer && $match->isOpen())
-            <div class="card">
+            <div class="card card--info">
                 <h2>Añadir invitado</h2>
                 <form method="POST" action="{{ route('guests.store', $match) }}">
                     @csrf
@@ -218,7 +218,7 @@
             </div>
         @endif
 
-        <div class="card">
+        <div class="card card--ranking">
             <div class="row between">
                 <h2 class="mb0">Calificar</h2>
                 <a class="btn btn-primary btn-sm" href="{{ route('ratings.create', $match) }}">Calificar jugadores</a>
@@ -229,7 +229,7 @@
 </div>
 
 <div class="section">
-    <div class="card">
+    <div class="card card--ranking">
         <h2>Resultado</h2>
         @if ($match->result)
             <div class="row" style="margin-bottom:14px;">
@@ -295,7 +295,7 @@
 
 @auth
     <div class="section">
-        <div class="card">
+        <div class="card card--info">
             <h2>Compartir este partido</h2>
             <p class="muted small">Mensaje pre-escrito con los datos del partido y la lista actualizada por equipos, listo para reenviar al grupo.</p>
             <div class="share-box" id="share-msg">{{ $shareMessage }}</div>

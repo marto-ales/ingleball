@@ -20,7 +20,7 @@
     }
 @endphp
 
-<div class="card" style="max-width: 640px;">
+<div class="card card--profile" style="max-width: 640px;">
     <form method="POST" action="{{ route('evaluation.update', $player) }}">
         @csrf
         @method('PATCH')

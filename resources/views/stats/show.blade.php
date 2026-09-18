@@ -21,7 +21,7 @@
 
 <div class="grid grid-2">
     <div>
-        <div class="card">
+        <div class="card card--profile">
             <h2>Autoevaluación</h2>
             @if ($player->player)
                 <ul class="list">
@@ -35,7 +35,7 @@
             @endif
         </div>
 
-        <div class="card">
+        <div class="card card--profile">
             <h2>Perfil</h2>
             <p class="muted small">Autoevaluación + evaluaciones de organizadores, ajustado por el rendimiento reciente.</p>
 
@@ -55,14 +55,14 @@
             </ul>
         </div>
 
-        <div class="card">
+        <div class="card card--ranking">
             <h2>Logros</h2>
             <p class="mb0">🥅 {{ $goals->count() }} gol(s) · 🏅 {{ $mvp->count() }} MVP</p>
         </div>
     </div>
 
     <div>
-        <div class="card">
+        <div class="card card--history">
             <h2>Participaciones</h2>
             @forelse ($matches as $match)
                 <div class="row" style="padding:6px 0;border-bottom:1px solid var(--line);">

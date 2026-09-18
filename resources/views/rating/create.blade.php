@@ -17,7 +17,7 @@
     ])->toArray();
 @endphp
 
-<div class="card" style="max-width: 640px;">
+<div class="card card--ranking" style="max-width: 640px;">
     @if ($participants->isEmpty())
         <div class="empty">No hay rivales para calificar todavía.</div>
     @else

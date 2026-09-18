@@ -19,7 +19,7 @@
 
 <p class="muted">Definí cómo se arman los equipos. El orden de los atributos decide su peso: el primero pesa 0,30, el segundo 0,25 y el resto 0,15.</p>
 
-<form class="card" method="POST" action="{{ route('algorithm.update') }}">
+<form class="card card--info" method="POST" action="{{ route('algorithm.update') }}">
     @csrf
     @method('PATCH')
 
