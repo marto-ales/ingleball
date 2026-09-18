@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Rules\ValidCaptcha;
 use App\Support\Captcha;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -21,7 +23,7 @@ class LoginController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $rules = [
-            'username' => ['required', 'string'],
+            'identity' => ['required', 'string'],
             'password' => ['required', 'string'],
         ];
 
@@ -31,12 +33,18 @@ class LoginController extends Controller
 
         $credentials = $request->validate($rules);
 
-        if (! Auth::attempt(
-            ['username' => $credentials['username'], 'password' => $credentials['password']],
+        $identity = trim($credentials['identity']);
+
+        $user = str_contains($identity, '@')
+            ? User::query()->where('email', $identity)->first()
+            : User::query()->whereRaw('LOWER(username) = ?', [Str::lower($identity)])->first();
+
+        if (! $user || ! Auth::attempt(
+            ['username' => $user->username, 'password' => $credentials['password']],
             $request->boolean('remember'),
         )) {
             throw ValidationException::withMessages([
-                'username' => __('Credenciales incorrectas.'),
+                'identity' => __('Credenciales incorrectas.'),
             ]);
         }
 
@@ -45,7 +53,7 @@ class LoginController extends Controller
             $request->session()->invalidate();
 
             throw ValidationException::withMessages([
-                'username' => __('Tu cuenta fue bloqueada. Contactá a un organizador.'),
+                'identity' => __('Tu cuenta fue bloqueada. Contactá a un organizador.'),
             ]);
         }
 

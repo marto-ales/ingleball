@@ -223,7 +223,7 @@
                 <h2 class="mb0">Calificar</h2>
                 <a class="btn btn-primary btn-sm" href="{{ route('ratings.create', $match) }}">Calificar jugadores</a>
             </div>
-            <p class="muted small mb0 mt">Cada jugador califica a los demás (velocidad, habilidad, pase, definición, defensa). Esto alimenta el ranking y el armado equilibrado.</p>
+            <p class="muted small mb0 mt">Cada jugador califica a los demás. Esto alimenta el ranking y el armado equilibrado.</p>
         </div>
     </div>
 </div>

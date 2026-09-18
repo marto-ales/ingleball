@@ -124,7 +124,7 @@ class UserManagementController extends Controller
 
     private function uniqueUsername(string $name): string
     {
-        $base = Str::slug($name, '_');
+        $base = Str::lower(Str::slug($name, '_'));
 
         if ($base === '') {
             $base = 'jugador';

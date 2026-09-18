@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -38,7 +39,9 @@ class RegisterController extends Controller
 
         $data = $request->validate($rules);
 
-        $usernameOwner = User::where('username', $data['username'])->first();
+        $data['username'] = Str::lower($data['username']);
+
+        $usernameOwner = User::whereRaw('LOWER(username) = ?', [$data['username']])->first();
         if ($usernameOwner && ! $usernameOwner->is_managed) {
             throw ValidationException::withMessages([
                 'username' => __('El nombre de usuario ya está en uso.'),

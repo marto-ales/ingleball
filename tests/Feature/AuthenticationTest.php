@@ -56,17 +56,48 @@ final class AuthenticationTest extends TestCase
     {
         User::factory()->create(['username' => 'marta', 'password' => Hash::make('secret123')]);
 
-        $response = $this->post('/login', ['username' => 'marta', 'password' => 'secret123']);
+        $response = $this->post('/login', ['identity' => 'marta', 'password' => 'secret123']);
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard'));
+    }
+
+    public function test_users_can_login_with_email(): void
+    {
+        User::factory()->create(['username' => 'marta', 'email' => 'marta@example.com', 'password' => Hash::make('secret123')]);
+
+        $this->post('/login', ['identity' => 'marta@example.com', 'password' => 'secret123']);
+
+        $this->assertAuthenticated();
+    }
+
+    public function test_username_login_is_case_insensitive(): void
+    {
+        User::factory()->create(['username' => 'marta', 'password' => Hash::make('secret123')]);
+
+        $this->post('/login', ['identity' => 'MaRtA', 'password' => 'secret123']);
+
+        $this->assertAuthenticated();
+    }
+
+    public function test_register_stores_username_in_lowercase(): void
+    {
+        $this->post('/register', [
+            'name' => 'Marta',
+            'username' => 'Marta_88',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+        ]);
+
+        $this->assertAuthenticated();
+        $this->assertDatabaseHas('users', ['username' => 'marta_88']);
     }
 
     public function test_users_cannot_login_with_wrong_password(): void
     {
         User::factory()->create(['username' => 'marta', 'password' => Hash::make('secret123')]);
 
-        $this->post('/login', ['username' => 'marta', 'password' => 'wrong']);
+        $this->post('/login', ['identity' => 'marta', 'password' => 'wrong']);
 
         $this->assertGuest();
     }
@@ -77,7 +108,7 @@ final class AuthenticationTest extends TestCase
         User::factory()->create(['username' => 'marta', 'password' => Hash::make('secret123')]);
 
         $this->from('/login')->post('/login', [
-            'username' => 'marta',
+            'identity' => 'marta',
             'password' => 'secret123',
         ]);
 
@@ -92,7 +123,7 @@ final class AuthenticationTest extends TestCase
         User::factory()->create(['username' => 'marta', 'password' => Hash::make('secret123')]);
 
         $response = $this->post('/login', [
-            'username' => 'marta',
+            'identity' => 'marta',
             'password' => 'secret123',
             'captcha' => '14',
         ]);

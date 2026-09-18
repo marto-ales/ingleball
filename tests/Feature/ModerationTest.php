@@ -48,7 +48,7 @@ final class ModerationTest extends TestCase
     {
         $managed = User::factory()->create(['is_managed' => true, 'password' => bcrypt(Str::random(32))]);
 
-        $this->post('/login', ['username' => $managed->username, 'password' => 'nadie_sabe_esto']);
+        $this->post('/login', ['identity' => $managed->username, 'password' => 'nadie_sabe_esto']);
 
         $this->assertGuest();
     }
@@ -61,8 +61,8 @@ final class ModerationTest extends TestCase
             'banned_at' => now(),
         ]);
 
-        $this->from('/login')->post('/login', ['username' => 'marta', 'password' => 'secret123'])
-            ->assertSessionHasErrors('username');
+        $this->from('/login')->post('/login', ['identity' => 'marta', 'password' => 'secret123'])
+            ->assertSessionHasErrors('identity');
 
         $this->assertGuest();
     }

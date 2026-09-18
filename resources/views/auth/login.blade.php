@@ -13,14 +13,15 @@
         <form method="POST" action="{{ route('login') }}">
             @csrf
             <div class="field">
-                <label for="username">Usuario</label>
-                <input id="username" type="text" name="username" value="{{ old('username') }}" required autofocus>
-                @error('username')<div class="field-error">{{ $message }}</div>@enderror
+                <label for="identity">Usuario o correo</label>
+                <input id="identity" type="text" name="identity" value="{{ old('identity') }}" placeholder="tu_usuario o tu@correo" required autofocus>
+                @error('identity')<div class="field-error">{{ $message }}</div>@enderror
             </div>
             <div class="field">
                 <label for="password">Contraseña</label>
                 <input id="password" type="password" name="password" required>
                 @error('password')<div class="field-error">{{ $message }}</div>@enderror
+                <a class="small muted" href="{{ route('password.request') }}">¿Olvidaste tu contraseña?</a>
             </div>
             <div class="field">
                 <label style="display:flex;gap:8px;align-items:center;font-weight:500;">
