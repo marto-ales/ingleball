@@ -102,6 +102,47 @@ final class ModerationTest extends TestCase
         $this->assertDatabaseHas('users', ['id' => $organizer->id]);
     }
 
+    public function test_user_list_shows_self_evaluation_status_and_evaluate_button(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $without = User::factory()->create();
+        $without->player()->create([
+            'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'goalkeeping' => 5,
+        ]);
+        $with = User::factory()->create();
+        $with->player()->create([
+            'speed' => 6, 'skill' => 6, 'passing' => 6, 'shooting' => 6, 'defense' => 6, 'goalkeeping' => 7,
+            'self_eval_completed_at' => now(),
+        ]);
+
+        $this->actingAs($organizer)
+            ->get(route('users.manage.index'))
+            ->assertOk()
+            ->assertSee('Autoevaluación')
+            ->assertSee('<span class="muted">No</span>', false)
+            ->assertSee('>Sí</span>', false)
+            ->assertSee(route('evaluation.edit', $with))
+            ->assertSee(route('evaluation.edit', $without));
+    }
+
+    public function test_saving_profile_marks_self_evaluation_as_completed(): void
+    {
+        $user = User::factory()->create();
+        $user->player()->create([
+            'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'goalkeeping' => 5,
+        ]);
+
+        $this->actingAs($user)->patch('/profile', [
+            'name' => $user->name,
+            'email' => null,
+            'phone' => null,
+            'likes_goalie' => 1,
+            'speed' => 6, 'skill' => 6, 'passing' => 6, 'shooting' => 6, 'defense' => 6, 'goalkeeping' => 7,
+        ]);
+
+        $this->assertNotNull($user->player->fresh()->self_eval_completed_at);
+    }
+
     public function test_registration_adopts_managed_user_and_keeps_player_history(): void
     {
         $managed = User::factory()->create(['name' => 'Pancho', 'username' => 'pancho', 'is_managed' => true]);

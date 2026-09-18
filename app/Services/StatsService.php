@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Goal;
 use App\Models\MatchResult;
 use App\Models\Partido;
 use App\Models\User;
@@ -33,8 +32,6 @@ class StatsService
                     'score' => $this->scorer->scoreForUser($user, $form),
                     'matches' => $matches,
                     'attendance' => $totalMatches > 0 ? round($matches / $totalMatches * 100) : 0,
-                    'goals' => Goal::where('scorer_user_id', $user->id)->count(),
-                    'assists' => Goal::where('assister_user_id', $user->id)->count(),
                     'mvp' => MatchResult::where('mvp_user_id', $user->id)->count(),
                     'general' => $form['general'],
                     'form' => $form['multiplier'],

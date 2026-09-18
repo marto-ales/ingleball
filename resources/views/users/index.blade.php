@@ -18,6 +18,7 @@
                     <th>Nombre</th>
                     <th>Usuario</th>
                     <th>Estado</th>
+                    <th>Autoevaluación</th>
                     <th>Partidos</th>
                     <th></th>
                 </tr>
@@ -38,8 +39,18 @@
                                 <span class="badge badge-active">Activo</span>
                             @endif
                         </td>
+                        <td>
+                            @if ($user->player?->self_eval_completed_at)
+                                <span class="badge badge-active">Sí</span>
+                            @else
+                                <span class="muted">No</span>
+                            @endif
+                        </td>
                         <td>{{ $user->entries_count }}</td>
                         <td class="row gap-sm justify-end">
+                            @if (! $user->is(auth()->user()))
+                                <a class="btn btn-sm" href="{{ route('evaluation.edit', $user) }}">Calificar</a>
+                            @endif
                             <a class="btn btn-sm" href="{{ route('users.manage.edit', $user) }}">Editar</a>
                             @if ($user->isBanned())
                                 <form class="inline" method="POST" action="{{ route('users.manage.unblock', $user) }}">

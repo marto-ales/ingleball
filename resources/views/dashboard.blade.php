@@ -10,6 +10,16 @@
     </div>
 </div>
 
+@if ($needsSelfEval)
+    <div class="card card--ranking row between">
+        <div>
+            <strong>Completá tu autoevaluación</strong>
+            <p class="muted small mb0 mt">Contanos tu nivel para que el armado de equipos te ubique mejor y las notas reflejen tu rendimiento real.</p>
+        </div>
+        <a class="btn btn-primary" href="{{ route('profile.edit') }}">Completar ahora</a>
+    </div>
+@endif
+
 <div class="section">
     <h2>Próximos</h2>
     @forelse ($upcoming as $match)

@@ -17,9 +17,6 @@ class ResultController extends Controller
             'winner' => ['required', 'string', 'in:A,B,tie'],
             'diff' => ['nullable', 'integer', 'between:0,20'],
             'mvp' => ['nullable', 'string', 'regex:/(user|guest):\d+/'],
-            'goals' => ['nullable', 'array'],
-            'goals.*.scorer' => ['nullable', 'string', 'regex:/(user|guest):\d+/'],
-            'goals.*.assister' => ['nullable', 'string', 'regex:/(user|guest):\d+/'],
         ]);
 
         $match->result()->updateOrCreate(
@@ -31,26 +28,6 @@ class ResultController extends Controller
                 'mvp_guest_id' => $this->guestId($data['mvp'] ?? null),
             ],
         );
-
-        if (isset($data['goals'])) {
-            $match->goals()->delete();
-
-            foreach ($data['goals'] as $goal) {
-                $scorerUser = $this->userId($goal['scorer'] ?? null);
-                $scorerGuest = $this->guestId($goal['scorer'] ?? null);
-
-                if ($scorerUser === null && $scorerGuest === null) {
-                    continue;
-                }
-
-                $match->goals()->create([
-                    'scorer_user_id' => $scorerUser,
-                    'scorer_guest_id' => $scorerGuest,
-                    'assister_user_id' => $this->userId($goal['assister'] ?? null),
-                    'assister_guest_id' => $this->guestId($goal['assister'] ?? null),
-                ]);
-            }
-        }
 
         $match->update(['status' => Partido::STATUS_FINISHED]);
 

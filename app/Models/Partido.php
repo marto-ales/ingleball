@@ -74,11 +74,6 @@ class Partido extends Model
         return $this->hasMany(MatchTeam::class, 'match_id');
     }
 
-    public function goals(): HasMany
-    {
-        return $this->hasMany(Goal::class, 'match_id');
-    }
-
     public function template(): BelongsTo
     {
         return $this->belongsTo(self::class, 'recurring_id');

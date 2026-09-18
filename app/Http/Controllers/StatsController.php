@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Goal;
 use App\Models\MatchResult;
 use App\Models\User;
 use App\Services\Scorer;
@@ -32,13 +31,11 @@ class StatsController extends Controller
             ->sortByDesc('played_at')
             ->values();
 
-        $goals = Goal::where('scorer_user_id', $user->id)->with('match')->orderByDesc('created_at')->get();
         $mvp = MatchResult::where('mvp_user_id', $user->id)->with('match')->get();
 
         return view('stats.show', [
             'player' => $user,
             'matches' => $matches,
-            'goals' => $goals,
             'mvp' => $mvp,
             'profile' => $this->scorer->attributesForUser($user),
             'goalkeeping' => $this->scorer->goalkeepingForUser($user),

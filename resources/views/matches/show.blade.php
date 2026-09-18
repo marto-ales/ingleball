@@ -135,8 +135,8 @@
                         </div>
                     </div>
                     <div class="field">
-                        <label>Calificación general <span class="muted small">(opcional)</span></label>
-                        @include('partials.scale', ['name' => 'overall', 'label' => 'Calificación general', 'value' => old('overall', 6)])
+                        <label>Calificación general</label>
+                        @include('partials.scale', ['name' => 'overall', 'label' => 'Calificación general', 'value' => old('overall', 5)])
                     </div>
                     <button class="btn btn-primary" type="submit">Añadir a la lista</button>
                 </form>
@@ -238,7 +238,6 @@
             @if ($match->result->mvpUser ?? $match->result->mvpGuest)
                 <p class="muted">
                     🏅 MVP: {{ $match->result->mvpUser?->name ?? $match->result->mvpGuest?->name }}
-                    @if ($match->goals->count()) · {{ $match->goals->count() }} gol(s) registrados @endif
                 </p>
             @endif
         @else

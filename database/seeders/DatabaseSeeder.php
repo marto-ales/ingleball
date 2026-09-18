@@ -97,7 +97,7 @@ class DatabaseSeeder extends Seeder
             $four->entries()->create(['user_id' => $user->id, 'role' => 'going']);
         }
 
-        // A finished match with result, goals and MVP (for stats/leaderboard).
+        // A finished match with result and MVP (for stats/leaderboard).
         $past = Partido::factory()->create([
             'created_by' => $organizers[0]->id,
             'title' => 'Amistoso pasado',
@@ -110,7 +110,5 @@ class DatabaseSeeder extends Seeder
             $past->entries()->create(['user_id' => $user->id, 'role' => 'going']);
         }
         $past->result()->create(['winner' => 'A', 'diff' => 2, 'mvp_user_id' => $five->first()->id]);
-        $past->goals()->create(['scorer_user_id' => $five->first()->id]);
-        $past->goals()->create(['scorer_user_id' => $five->get(1)->id, 'assister_user_id' => $five->get(2)->id]);
     }
 }

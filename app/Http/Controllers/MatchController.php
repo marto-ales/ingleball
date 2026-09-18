@@ -135,7 +135,6 @@ class MatchController extends Controller
             'guests',
             'result.mvpUser', 'result.mvpGuest',
             'teams.user', 'teams.guest',
-            'goals',
         ]);
 
         $me = $request->user();

@@ -35,6 +35,9 @@ class DashboardController extends Controller
             ->get()
             ->keyBy('match_id');
 
-        return view('dashboard', compact('upcoming', 'finished', 'myEntries'));
+        $needsSelfEval = $request->user()->player === null
+            || $request->user()->player->self_eval_completed_at === null;
+
+        return view('dashboard', compact('upcoming', 'finished', 'myEntries', 'needsSelfEval'));
     }
 }

@@ -27,7 +27,7 @@
             <nav class="nav">
                 <a href="{{ route('dashboard') }}">Inicio</a>
                 <a href="{{ route('matches.index') }}">Partidos</a>
-                <a href="{{ route('stats.index') }}">Ranking</a>
+                <a href="{{ route('stats.index') }}">Estadísticas</a>
                 @if (auth()->user()->is_organizer)
                     <a href="{{ route('users.manage.index') }}">Usuarios</a>
                     <a href="{{ route('algorithm.index') }}">Algoritmo</a>
@@ -72,6 +72,12 @@
         @yield('content')
     </main>
 
+    @auth
+        @if (session('attendance'))
+            @include('partials.attendance-modal')
+        @endif
+    @endauth
+
     <footer class="footer">
         <div class="container">Ingleball — organicemo el fulbito</div>
     </footer>
@@ -108,12 +114,15 @@
                 var value = parseFloat(range.value || '0');
                 var pct = max > min ? (value - min) / (max - min) * 100 : 0;
                 range.style.setProperty('--fill', pct + '%');
+                var hue = pct / 100 * 105;
+                range.style.setProperty('--fill-color', 'hsl(' + hue.toFixed(0) + ', 72%, 42%)');
 
                 if (!out) return;
                 if (range.hasAttribute('data-percent')) {
                     out.value = Math.round(value * 100) + '%';
                 } else {
-                    out.value = range.value;
+                    var raw = parseInt(range.value, 10);
+                    out.value = Math.max(1, Number.isNaN(raw) ? 0 : raw);
                 }
             }
 

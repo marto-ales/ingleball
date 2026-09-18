@@ -155,6 +155,83 @@ final class MatchFlowTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_attendance_change_proposes_sending_message_to_group(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $player = User::factory()->create();
+        $other = User::factory()->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id, 'venue' => 'Cancha 1', 'field_value' => 10000]);
+        $match->entries()->create(['user_id' => $other->id, 'role' => 'going']);
+
+        $this->actingAs($player)
+            ->patch(route('entries.update', $match), ['role' => 'going'])
+            ->assertRedirect()
+            ->assertSessionHas('attendance', function (array $att) use ($match, $player, $other) {
+                return $att['role'] === 'going'
+                    && $att['title'] === '¡Te anotaste!'
+                    && str_contains($att['message'], $match->title)
+                    && str_contains($att['message'], 'Cancha 1')
+                    && str_contains($att['message'], '$1.000 por persona')
+                    && str_contains($att['message'], 'Anotados')
+                    && str_contains($att['message'], $player->name)
+                    && str_contains($att['message'], $other->name)
+                    && $att['wa_group'] === null;
+            });
+
+        $this->actingAs($player)
+            ->patch(route('entries.update', $match), ['role' => 'substitute'])
+            ->assertRedirect()
+            ->assertSessionHas('attendance.role', 'substitute')
+            ->assertSessionHas('attendance.message', function ($message) use ($player, $other) {
+                return str_contains($message, '*Anotados* (1)')
+                    && str_contains($message, '*Suplentes* (1)')
+                    && substr_count($message, $player->name) === 1
+                    && substr_count($message, $other->name) === 1;
+            });
+
+        $this->actingAs($player)
+            ->delete(route('entries.destroy', $match))
+            ->assertRedirect()
+            ->assertSessionHas('attendance.role', 'out')
+            ->assertSessionHas('attendance.message', function ($message) use ($player, $other) {
+                return ! str_contains($message, $player->name)
+                    && str_contains($message, $other->name);
+            });
+    }
+
+    public function test_organizer_group_link_appears_in_attendance_suggestion(): void
+    {
+        $organizer = User::factory()->organizer()->create([
+            'whatsapp_group' => 'https://chat.whatsapp.com/Grupo1',
+        ]);
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+
+        $this->actingAs($organizer)
+            ->patch(route('entries.update', $match), ['role' => 'going'])
+            ->assertSessionHas('attendance.wa_group', 'https://chat.whatsapp.com/Grupo1');
+    }
+
+    public function test_attendance_modal_renders_on_page_when_suggested(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $player = User::factory()->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+
+        $this->actingAs($player)
+            ->withSession(['attendance' => [
+                'role' => 'going',
+                'title' => '¡Te anotaste!',
+                'message' => 'Voy a jugar',
+                'wa_group' => null,
+            ]])
+            ->get(route('matches.show', $match))
+            ->assertOk()
+            ->assertSee('attendance-modal', false)
+            ->assertSee('¿Querés avisarle al grupo de WhatsApp?')
+            ->assertSee('Enviar a un chat')
+            ->assertSee('Copiar mensaje');
+    }
+
     public function test_field_value_is_saved_and_shows_cost_per_person(): void
     {
         $organizer = User::factory()->organizer()->create();

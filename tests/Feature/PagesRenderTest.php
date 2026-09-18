@@ -80,7 +80,9 @@ final class PagesRenderTest extends TestCase
             ->get('/matches/'.$this->openMatch->id.'/ratings')
             ->assertOk()
             ->assertSee('type="range"', false)
-            ->assertSee('Calificación general');
+            ->assertSee('Calificación general')
+            ->assertSee('current-name', false)
+            ->assertSee('pick-rated', false);
 
         $this->actingAs($this->organizer)
             ->get('/profile')
@@ -177,5 +179,30 @@ final class PagesRenderTest extends TestCase
             ->get('/dashboard')
             ->assertOk()
             ->assertSee('Valor: $1.250 por persona', false);
+    }
+
+    public function test_dashboard_prompts_self_evaluation_when_missing(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Completá tu autoevaluación')
+            ->assertSee(route('profile.edit'));
+    }
+
+    public function test_dashboard_hides_prompt_after_self_evaluation(): void
+    {
+        $user = User::factory()->create();
+        $user->player()->create([
+            'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'goalkeeping' => 5,
+            'self_eval_completed_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertDontSee('Completá tu autoevaluación');
     }
 }

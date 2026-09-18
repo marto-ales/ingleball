@@ -59,6 +59,7 @@ class ProfileController extends Controller
                 'defense' => (int) $data['defense'],
                 'likes_goalie' => (bool) ($data['likes_goalie'] ?? false),
                 'goalkeeping' => (int) $data['goalkeeping'],
+                'self_eval_completed_at' => now(),
             ],
         );
 

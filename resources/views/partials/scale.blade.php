@@ -1,5 +1,7 @@
 @php
     $current = max(0, min(10, (int) old($name, $value ?? 5)));
+    $pct = $current / 10 * 100;
+    $hue = (int) round($current / 10 * 105);
 @endphp
 <div class="slider">
     <input
@@ -11,7 +13,7 @@
         step="1"
         value="{{ $current }}"
         aria-label="{{ $label }}"
-        style="--fill: {{ $current / 10 * 100 }}%"
+        style="--fill: {{ $pct }}%; --fill-color: hsl({{ $hue }}, 72%, 42%);"
     >
-    <output for="{{ $name }}">{{ $current }}</output>
 </div>
+<div class="scale-range"><span>Flojo</span><span>Crack</span></div>

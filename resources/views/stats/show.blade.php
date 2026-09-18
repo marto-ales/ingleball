@@ -12,7 +12,7 @@
         </p>
     </div>
     <div class="row between" style="gap:8px;flex-wrap:wrap;">
-        <a class="btn btn-sm" href="{{ route('stats.index') }}">← Ranking</a>
+        <a class="btn btn-sm" href="{{ route('stats.index') }}">← Estadísticas</a>
         @if (auth()->user()->is_organizer && ! auth()->user()->is($player))
             <a class="btn btn-primary btn-sm" href="{{ route('evaluation.edit', $player) }}">Evaluar jugador</a>
         @endif
@@ -72,7 +72,7 @@
         </div>
         <div class="card card--ranking">
             <h2>Logros</h2>
-            <p class="mb0">🥅 {{ $goals->count() }} gol(s) · 🏅 {{ $mvp->count() }} MVP</p>
+            <p class="mb0">🏅 {{ $mvp->count() }} MVP</p>
         </div>
     </div>
 </div>

@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Ranking')
+@section('title', 'Estadísticas')
 
 @section('content')
 <div class="page-head">
     <div>
-        <h1>Ranking</h1>
+        <h1>Estadísticas</h1>
         <p class="lead">Puntaje combinado: tu autoevaluación + las calificaciones de tus compañeros.</p>
     </div>
 </div>
@@ -19,13 +19,10 @@
                 <th>Jugador</th>
                 <th class="num">Puntaje</th>
                 <th class="num">Partidos</th>
-                <th class="num">Goles</th>
-                <th class="num">Asist.</th>
                 <th class="num">MVP</th>
-                <th class="num">Arco</th>
                 <th class="num">General</th>
                 <th class="num">Rendimiento</th>
-                <th class="num">Acierto</th>
+                <th class="num">Participación</th>
             </tr>
         </thead>
         <tbody>
@@ -35,16 +32,13 @@
                     <td><a href="{{ route('stats.show', $row['user']) }}">{{ $row['user']->name }}</a></td>
                     <td class="num">{{ number_format($row['score'], 1) }}</td>
                     <td class="num">{{ $row['matches'] }}</td>
-                    <td class="num">{{ $row['goals'] }}</td>
-                    <td class="num">{{ $row['assists'] }}</td>
                     <td class="num">{{ $row['mvp'] }}</td>
-                    <td class="num">{{ $row['goalkeeping'] ? number_format($row['goalkeeping'], 1) : '—' }}</td>
                     <td class="num">{{ $row['general'] ? number_format($row['general'], 1) : '—' }}</td>
                     <td class="num">×{{ number_format($row['form'], 2) }}</td>
                     <td class="num">{{ $row['attendance'] }}%</td>
                 </tr>
             @empty
-                <tr><td colspan="11" class="empty">Todavía no hay jugadores.</td></tr>
+                <tr><td colspan="8" class="empty">Todavía no hay jugadores.</td></tr>
             @endforelse
         </tbody>
     </table>

@@ -37,8 +37,12 @@
             </div>
 
             <div class="field">
+                <p class="muted mb0">Estás calificando a <strong id="current-name">Elegí un jugador para empezar</strong></p>
+            </div>
+
+            <div class="field">
                 <label>Calificación general</label>
-                <p class="muted small mb0">¿Qué nivel mostró en este partido? Es un solo puntaje, del 0 al 10.</p>
+                <p class="muted small mb0">¿Qué nivel mostró en este partido?</p>
                 @include('partials.scale', ['name' => 'overall', 'label' => 'Calificación general', 'value' => old('overall', 5)])
             </div>
 
@@ -51,6 +55,7 @@
     window.__existing = @json($existingMap);
     (function () {
         const hidden = document.getElementById('rated');
+        const currentName = document.getElementById('current-name');
         const buttons = document.querySelectorAll('#pick-rated .pick');
         const fields = ['overall'];
 
@@ -72,21 +77,34 @@
             });
         }
 
+        function selectButton(btn) {
+            buttons.forEach(function (b) { b.classList.remove('selected'); });
+            btn.classList.add('selected');
+            hidden.value = btn.dataset.token;
+            currentName.textContent = btn.textContent.trim();
+            apply(btn.dataset.token);
+        }
+
         buttons.forEach(function (btn) {
             btn.addEventListener('click', function () {
-                buttons.forEach(function (b) { b.classList.remove('selected'); });
-                btn.classList.add('selected');
-                hidden.value = btn.dataset.token;
-                apply(btn.dataset.token);
+                selectButton(btn);
             });
         });
 
-        const prev = hidden.value;
-        if (prev) {
-            buttons.forEach(function (b) {
-                if (b.dataset.token === prev) b.classList.add('selected');
+        Object.keys(window.__existing).forEach(function (token) {
+            buttons.forEach(function (btn) {
+                if (btn.dataset.token === token) btn.classList.add('rated');
             });
+        });
+
+        let target = null;
+        if (hidden.value) {
+            target = Array.prototype.find.call(buttons, function (b) { return b.dataset.token === hidden.value; }) || null;
         }
+        if (!target) {
+            target = Array.prototype.find.call(buttons, function (b) { return ! b.classList.contains('rated'); }) || buttons[0];
+        }
+        if (target) selectButton(target);
     })();
 </script>
 @endsection
