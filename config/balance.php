@@ -3,15 +3,26 @@
 return [
     /*
     |--------------------------------------------------------------------------
-    | Balancing weights
+    | Profile weights
     |--------------------------------------------------------------------------
-    | A player's composite score blends their own self-assessment with the
-    | ratings that other players have given them. Weights must add up to 1.
-    | When a player has no ratings from others, their self-assessment is
-    | used on its own.
+    | A player's attribute profile blends their own self-assessment with the
+    | average of the evaluations organizers have given them. self_weight is
+    | the share of the self-assessment; the rest goes to the organizers. When
+    | no organizer has evaluated the player, the self-assessment is used alone.
     */
-    'self_weight' => 0.4,
-    'others_weight' => 0.6,
+    'self_weight' => 0.5,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Recent form
+    |--------------------------------------------------------------------------
+    | The profile is scaled by the general rating the player received in their
+    | last matches, relative to the group's average in those same matches. The
+    | ratio is clamped so a single bad night does not wreck a profile.
+    */
+    'form_window' => 3,
+    'form_min' => 0.5,
+    'form_max' => 1.5,
 
     /*
     |--------------------------------------------------------------------------

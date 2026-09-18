@@ -106,7 +106,7 @@ final class ModerationTest extends TestCase
     {
         $managed = User::factory()->create(['name' => 'Pancho', 'username' => 'pancho', 'is_managed' => true]);
         $managed->player()->create([
-            'speed' => 6, 'skill' => 6, 'passing' => 6, 'shooting' => 6, 'defense' => 5, 'overall' => 6,
+            'speed' => 6, 'skill' => 6, 'passing' => 6, 'shooting' => 6, 'defense' => 5,
         ]);
 
         $match = Partido::factory()->createdBy(User::factory()->organizer()->create())->create(['played_at' => now()->addDay()]);

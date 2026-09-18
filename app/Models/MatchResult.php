@@ -29,7 +29,7 @@ class MatchResult extends Model
     {
         return Attribute::get(fn (): string => $this->winner === null
             ? 'Empate'
-            : 'Ganó Equipo ' . $this->winner . ($this->diff > 0 ? ' por ' . $this->diff : ''));
+            : 'Ganó Equipo '.$this->winner.($this->diff > 0 ? ' por '.$this->diff : ''));
     }
 
     public function match(): BelongsTo

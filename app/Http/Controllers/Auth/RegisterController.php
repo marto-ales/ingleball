@@ -33,7 +33,7 @@ class RegisterController extends Controller
         ];
 
         if (Captcha::enabled()) {
-            $rules['captcha'] = ['required', 'string', new ValidCaptcha()];
+            $rules['captcha'] = ['required', 'string', new ValidCaptcha];
         }
 
         $data = $request->validate($rules);
@@ -78,7 +78,7 @@ class RegisterController extends Controller
 
         if (! $user->player()->exists()) {
             $user->player()->create([
-                'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'overall' => 5,
+                'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5,
             ]);
         }
 
@@ -96,7 +96,7 @@ class RegisterController extends Controller
 
         return redirect()->route('dashboard')->with(
             'status',
-            $managed ? '¡Bienvenido a Ingleball! Recuperaste tu historial como ' . $user->name . '.' : '¡Bienvenido a Ingleball, ' . $user->name . '!'
+            $managed ? '¡Bienvenido a Ingleball! Recuperaste tu historial como '.$user->name.'.' : '¡Bienvenido a Ingleball, '.$user->name.'!'
         );
     }
 }

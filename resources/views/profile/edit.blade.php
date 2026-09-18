@@ -13,6 +13,11 @@
 @php
     $p = $profile ?? null;
     $likesGoalie = (bool) old('likes_goalie', $p?->likes_goalie ?? false);
+    $radarKeys = ['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'goalkeeping' => 'Arco'];
+    $radarValues = [];
+    foreach ($radarKeys as $key => $label) {
+        $radarValues[$key] = (int) old($key, $p?->{$key} ?? 5);
+    }
 @endphp
 
 <div class="card" style="max-width: 640px;">
@@ -57,7 +62,14 @@
             </div>
             <p class="muted small mb0">Al armar los equipos se busca que a cada uno le toque al menos un jugador que quiera atajar.</p>
         </div>
-        @foreach (['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'goalkeeping' => 'Arco', 'overall' => 'General'] as $key => $label)
+        @include('partials.radar', [
+            'values' => $radarValues,
+            'labels' => $radarKeys,
+            'live' => true,
+            'ariaLabel' => 'Vista previa de tu perfil',
+        ])
+
+        @foreach ($radarKeys as $key => $label)
             <div class="field">
                 <label>{{ $label }}</label>
                 @include('partials.scale', ['name' => $key, 'label' => $label, 'value' => old($key, $p?->{$key} ?? 5)])

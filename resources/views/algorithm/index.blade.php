@@ -61,6 +61,29 @@
         <p class="muted small mb0">Busca que a cada equipo le toque al menos un jugador que le guste atajar.</p>
     </div>
 
+    <div class="divider"></div>
+
+    <h2>Perfil</h2>
+
+    <div class="field">
+        <label for="self_weight">Peso de la autoevaluación</label>
+        <div class="slider">
+            <input id="self_weight" type="range" name="self_weight" min="0" max="1" step="0.05" value="{{ old('self_weight', $selfWeight) }}" data-percent="1" aria-label="Peso de la autoevaluación">
+            <output for="self_weight">{{ (int) round((float) old('self_weight', $selfWeight) * 100) }}%</output>
+        </div>
+        <div class="row between muted small" style="gap:6px;"><span>0% · solo organizadores</span><span>100% · solo el jugador</span></div>
+        <p class="muted small mb0 mt">El resto se reparte entre las evaluaciones de los organizadores.</p>
+    </div>
+
+    <div class="field">
+        <label>Ajustar por rendimiento reciente</label>
+        <div class="segmented">
+            <label><input type="radio" name="weight_by_form" value="1" @checked($weightByForm)><span>Sí</span></label>
+            <label><input type="radio" name="weight_by_form" value="0" @checked(! $weightByForm)><span>No</span></label>
+        </div>
+        <p class="muted small mb0">Escala el perfil con la calificación general de los últimos 3 partidos, comparada con el promedio del grupo en esos mismos partidos.</p>
+    </div>
+
     <button type="submit" class="btn btn-primary">Guardar</button>
 </form>
 

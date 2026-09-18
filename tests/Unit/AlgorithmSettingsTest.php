@@ -17,6 +17,8 @@ final class AlgorithmSettingsTest extends TestCase
         $this->assertSame(config('balance.attributes'), $settings->order());
         $this->assertTrue($settings->randomTieBreak());
         $this->assertTrue($settings->spreadGoalies());
+        $this->assertSame((float) config('balance.self_weight'), $settings->selfWeight());
+        $this->assertTrue($settings->weightByForm());
     }
 
     public function test_weights_follow_the_configured_order(): void
@@ -40,6 +42,8 @@ final class AlgorithmSettingsTest extends TestCase
             'order' => ['skill', 'speed', 'passing', 'shooting', 'defense'],
             'random_tie_break' => false,
             'spread_goalies' => false,
+            'self_weight' => 0.3,
+            'weight_by_form' => false,
         ]);
 
         $fresh = new AlgorithmSettings;
@@ -48,5 +52,7 @@ final class AlgorithmSettingsTest extends TestCase
         $this->assertSame('speed', $fresh->order()[1]);
         $this->assertFalse($fresh->randomTieBreak());
         $this->assertFalse($fresh->spreadGoalies());
+        $this->assertSame(0.3, $fresh->selfWeight());
+        $this->assertFalse($fresh->weightByForm());
     }
 }

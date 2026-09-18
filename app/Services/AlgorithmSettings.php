@@ -24,7 +24,7 @@ class AlgorithmSettings
     private const RANKED_WEIGHTS = [0.30, 0.25, 0.15, 0.15, 0.15];
 
     /**
-     * @return array{order: array<int, string>, random_tie_break: bool, spread_goalies: bool}
+     * @return array{order: array<int, string>, random_tie_break: bool, spread_goalies: bool, self_weight: float, weight_by_form: bool}
      */
     public function all(): array
     {
@@ -57,6 +57,20 @@ class AlgorithmSettings
     }
 
     /**
+     * Share of the self-assessment in the attribute profile; the rest is the
+     * average of the organizers' evaluations.
+     */
+    public function selfWeight(): float
+    {
+        return $this->all()['self_weight'];
+    }
+
+    public function weightByForm(): bool
+    {
+        return $this->all()['weight_by_form'];
+    }
+
+    /**
      * Attribute weights derived from the configured order.
      *
      * @return array<string, float>
@@ -73,7 +87,7 @@ class AlgorithmSettings
     }
 
     /**
-     * @param  array{order?: array<int, string>, random_tie_break?: bool, spread_goalies?: bool}  $data
+     * @param  array{order?: array<int, string>, random_tie_break?: bool, spread_goalies?: bool, self_weight?: float|int|string, weight_by_form?: bool}  $data
      */
     public function update(array $data): void
     {
@@ -87,7 +101,7 @@ class AlgorithmSettings
 
     /**
      * @param  array<string, mixed>  $data
-     * @return array{order: array<int, string>, random_tie_break: bool, spread_goalies: bool}
+     * @return array{order: array<int, string>, random_tie_break: bool, spread_goalies: bool, self_weight: float, weight_by_form: bool}
      */
     private function normalize(array $data): array
     {
@@ -104,10 +118,14 @@ class AlgorithmSettings
             }
         }
 
+        $selfWeight = $data['self_weight'] ?? config('balance.self_weight');
+
         return [
             'order' => $order === [] ? $known : $order,
             'random_tie_break' => (bool) ($data['random_tie_break'] ?? true),
             'spread_goalies' => (bool) ($data['spread_goalies'] ?? true),
+            'self_weight' => max(0.0, min(1.0, (float) $selfWeight)),
+            'weight_by_form' => (bool) ($data['weight_by_form'] ?? true),
         ];
     }
 }

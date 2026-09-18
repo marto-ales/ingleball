@@ -16,8 +16,11 @@ class Partido extends Model
     protected $table = 'matches';
 
     public const STATUS_OPEN = 'open';
+
     public const STATUS_LOCKED = 'locked';
+
     public const STATUS_FINISHED = 'finished';
+
     public const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [

@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EntryController;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\MatchController;
+use App\Http\Controllers\PlayerEvaluationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\ResultController;
@@ -73,6 +74,9 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth', 'organizer')->group(function () {
     Route::get('algorithm', [AlgorithmController::class, 'index'])->name('algorithm.index');
     Route::patch('algorithm', [AlgorithmController::class, 'update'])->name('algorithm.update');
+
+    Route::get('players/{user}/evaluation', [PlayerEvaluationController::class, 'edit'])->name('evaluation.edit');
+    Route::patch('players/{user}/evaluation', [PlayerEvaluationController::class, 'update'])->name('evaluation.update');
 
     Route::get('users', [UserManagementController::class, 'index'])->name('users.manage.index');
     Route::get('users/create', [UserManagementController::class, 'create'])->name('users.manage.create');

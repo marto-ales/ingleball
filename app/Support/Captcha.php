@@ -52,7 +52,7 @@ class Captcha
 
     public function imageUri(): string
     {
-        return 'data:image/svg+xml;base64,' . base64_encode($this->svg());
+        return 'data:image/svg+xml;base64,'.base64_encode($this->svg());
     }
 
     private function svg(): string
@@ -77,10 +77,10 @@ class Captcha
             $rotation = random_int(-16, 16);
             $size = random_int(22, 30);
             $color = $ink[array_rand($ink)];
-            $parts[] = '<text x="' . $x . '" y="' . $y . '" font-size="' . $size . '" font-family="monospace" font-weight="bold" fill="' . $color . '" transform="rotate(' . $rotation . ' ' . $x . ' ' . $y . ')">' . htmlspecialchars($ch, ENT_QUOTES) . '</text>';
+            $parts[] = '<text x="'.$x.'" y="'.$y.'" font-size="'.$size.'" font-family="monospace" font-weight="bold" fill="'.$color.'" transform="rotate('.$rotation.' '.$x.' '.$y.')">'.htmlspecialchars($ch, ENT_QUOTES).'</text>';
             $x += random_int(20, 27);
         }
 
-        return '<svg xmlns="http://www.w3.org/2000/svg" width="220" height="60" viewBox="0 0 220 60">' . implode('', $parts) . '</svg>';
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="220" height="60" viewBox="0 0 220 60">'.implode('', $parts).'</svg>';
     }
 }

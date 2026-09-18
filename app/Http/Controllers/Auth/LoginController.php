@@ -26,7 +26,7 @@ class LoginController extends Controller
         ];
 
         if (Captcha::enabled()) {
-            $rules['captcha'] = ['required', 'string', new ValidCaptcha()];
+            $rules['captcha'] = ['required', 'string', new ValidCaptcha];
         }
 
         $credentials = $request->validate($rules);

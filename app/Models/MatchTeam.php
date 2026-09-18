@@ -11,6 +11,7 @@ class MatchTeam extends Model
     use HasFactory;
 
     public const TEAM_A = 'A';
+
     public const TEAM_B = 'B';
 
     protected $fillable = ['match_id', 'team', 'user_id', 'guest_id'];

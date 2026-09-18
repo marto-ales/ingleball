@@ -13,9 +13,7 @@ class Welcome extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public User $user)
-    {
-    }
+    public function __construct(public User $user) {}
 
     public function envelope(): Envelope
     {

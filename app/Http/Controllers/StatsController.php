@@ -5,14 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Goal;
 use App\Models\MatchResult;
 use App\Models\User;
+use App\Services\Scorer;
 use App\Services\StatsService;
 use Illuminate\View\View;
 
 class StatsController extends Controller
 {
-    public function __construct(private StatsService $stats)
-    {
-    }
+    public function __construct(private StatsService $stats, private Scorer $scorer) {}
 
     public function index(): View
     {
@@ -41,6 +40,9 @@ class StatsController extends Controller
             'matches' => $matches,
             'goals' => $goals,
             'mvp' => $mvp,
+            'profile' => $this->scorer->attributesForUser($user),
+            'goalkeeping' => $this->scorer->goalkeepingForUser($user),
+            'form' => $this->scorer->formForUser($user),
         ]);
     }
 }

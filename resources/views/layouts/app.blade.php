@@ -67,6 +67,103 @@
                 });
             });
         });
+
+        document.querySelectorAll('.slider input[type="range"]').forEach(function (range) {
+            var out = range.parentElement.querySelector('output');
+
+            function sync() {
+                var min = parseFloat(range.min || '0');
+                var max = parseFloat(range.max || '100');
+                var value = parseFloat(range.value || '0');
+                var pct = max > min ? (value - min) / (max - min) * 100 : 0;
+                range.style.setProperty('--fill', pct + '%');
+
+                if (!out) return;
+                if (range.hasAttribute('data-percent')) {
+                    out.value = Math.round(value * 100) + '%';
+                } else {
+                    out.value = range.value;
+                }
+            }
+
+            range.addEventListener('input', sync);
+            sync();
+        });
+
+        document.querySelectorAll('svg.radar[data-live]').forEach(function (svg) {
+            var keys = (svg.getAttribute('data-keys') || '').split(',').filter(Boolean);
+            if (!keys.length || !svg.querySelector('[data-shape]')) return;
+
+            var cx = parseFloat(svg.getAttribute('data-cx'));
+            var cy = parseFloat(svg.getAttribute('data-cy'));
+            var radius = parseFloat(svg.getAttribute('data-radius'));
+            var shape = svg.querySelector('[data-shape]');
+            var initials = {};
+            try { initials = JSON.parse(svg.getAttribute('data-values') || '{}'); } catch (e) { initials = {}; }
+
+            var cos = {}, sin = {}, dots = {}, inputs = {};
+
+            function clamp(v) { return Math.max(0, Math.min(10, v)); }
+
+            keys.forEach(function (key, i) {
+                var angle = -Math.PI / 2 + i * (2 * Math.PI / keys.length);
+                cos[key] = Math.cos(angle);
+                sin[key] = Math.sin(angle);
+                dots[key] = svg.querySelector('[data-dot="' + key + '"]');
+                inputs[key] = document.querySelector('[name="' + key + '"]');
+            });
+
+            var current = {}, target = {};
+            keys.forEach(function (key) {
+                var v = inputs[key] ? parseFloat(inputs[key].value) : parseFloat(initials[key]);
+                if (Number.isNaN(v)) v = 5;
+                v = clamp(v);
+                current[key] = v;
+                target[key] = v;
+            });
+
+            function render(values) {
+                var points = [];
+                keys.forEach(function (key) {
+                    var r = radius * clamp(values[key]) / 10;
+                    var x = cx + r * cos[key];
+                    var y = cy + r * sin[key];
+                    points.push(x.toFixed(1) + ',' + y.toFixed(1));
+                    if (dots[key]) {
+                        dots[key].setAttribute('cx', x.toFixed(1));
+                        dots[key].setAttribute('cy', y.toFixed(1));
+                    }
+                });
+                shape.setAttribute('points', points.join(' '));
+            }
+
+            var frame = null;
+            function tick() {
+                var moving = false;
+                keys.forEach(function (key) {
+                    var diff = target[key] - current[key];
+                    if (Math.abs(diff) > 0.02) {
+                        current[key] += diff * 0.18;
+                        moving = true;
+                    } else {
+                        current[key] = target[key];
+                    }
+                });
+                render(current);
+                frame = moving ? requestAnimationFrame(tick) : null;
+            }
+
+            keys.forEach(function (key) {
+                if (!inputs[key]) return;
+                inputs[key].addEventListener('input', function () {
+                    var v = parseFloat(inputs[key].value);
+                    target[key] = Number.isNaN(v) ? 0 : clamp(v);
+                    if (frame === null) frame = requestAnimationFrame(tick);
+                });
+            });
+
+            render(current);
+        });
     </script>
 </body>
 </html>

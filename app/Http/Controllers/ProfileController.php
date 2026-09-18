@@ -28,14 +28,13 @@ class ProfileController extends Controller
             'email' => ['nullable', 'email', 'max:120'],
             'phone' => ['nullable', 'string', 'max:20'],
             'whatsapp_group' => ['nullable', 'string', 'max:255'],
-            'speed' => ['required', 'integer', 'between:1,10'],
-            'skill' => ['required', 'integer', 'between:1,10'],
-            'passing' => ['required', 'integer', 'between:1,10'],
-            'shooting' => ['required', 'integer', 'between:1,10'],
-            'defense' => ['required', 'integer', 'between:1,10'],
-            'overall' => ['required', 'integer', 'between:1,10'],
+            'speed' => ['required', 'integer', 'between:0,10'],
+            'skill' => ['required', 'integer', 'between:0,10'],
+            'passing' => ['required', 'integer', 'between:0,10'],
+            'shooting' => ['required', 'integer', 'between:0,10'],
+            'defense' => ['required', 'integer', 'between:0,10'],
             'likes_goalie' => ['nullable', 'boolean'],
-            'goalkeeping' => ['required', 'integer', 'between:1,10'],
+            'goalkeeping' => ['required', 'integer', 'between:0,10'],
         ]);
 
         $update = [
@@ -58,7 +57,6 @@ class ProfileController extends Controller
                 'passing' => (int) $data['passing'],
                 'shooting' => (int) $data['shooting'],
                 'defense' => (int) $data['defense'],
-                'overall' => (int) $data['overall'],
                 'likes_goalie' => (bool) ($data['likes_goalie'] ?? false),
                 'goalkeeping' => (int) $data['goalkeeping'],
             ],

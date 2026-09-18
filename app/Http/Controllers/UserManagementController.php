@@ -33,7 +33,7 @@ class UserManagementController extends Controller
             'name' => ['required', 'string', 'max:80'],
             'phone' => ['nullable', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:120'],
-            'goalkeeping' => ['nullable', 'integer', 'between:1,10'],
+            'goalkeeping' => ['nullable', 'integer', 'between:0,10'],
         ]);
 
         $username = $this->uniqueUsername($data['name']);
@@ -50,11 +50,11 @@ class UserManagementController extends Controller
 
         $user->player()->create([
             'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5,
-            'overall' => 5, 'goalkeeping' => $data['goalkeeping'] ?? 5,
+            'goalkeeping' => $data['goalkeeping'] ?? 5,
         ]);
 
         return redirect()->route('users.manage.index')
-            ->with('status', 'Jugador ' . $user->name . ' creado (usuario ' . $username . '). Si se registra con ese nombre, recupera su historial.');
+            ->with('status', 'Jugador '.$user->name.' creado (usuario '.$username.'). Si se registra con ese nombre, recupera su historial.');
     }
 
     public function edit(User $user): View
@@ -71,7 +71,7 @@ class UserManagementController extends Controller
             'phone' => ['nullable', 'string', 'max:20'],
             'email' => ['sometimes', 'nullable', 'email', 'max:120'],
             'is_organizer' => ['nullable', 'boolean'],
-            'goalkeeping' => ['nullable', 'integer', 'between:1,10'],
+            'goalkeeping' => ['nullable', 'integer', 'between:0,10'],
         ]);
 
         $user->forceFill([
@@ -93,7 +93,7 @@ class UserManagementController extends Controller
             $user->player()->update(['goalkeeping' => $data['goalkeeping']]);
         }
 
-        return back()->with('status', 'Datos de ' . $user->name . ' actualizados.');
+        return back()->with('status', 'Datos de '.$user->name.' actualizados.');
     }
 
     public function block(User $user): RedirectResponse
@@ -102,14 +102,14 @@ class UserManagementController extends Controller
 
         $user->forceFill(['banned_at' => now()])->save();
 
-        return back()->with('status', $user->name . ' bloqueado (no puede iniciar sesión).');
+        return back()->with('status', $user->name.' bloqueado (no puede iniciar sesión).');
     }
 
     public function unblock(User $user): RedirectResponse
     {
         $user->forceFill(['banned_at' => null])->save();
 
-        return back()->with('status', $user->name . ' desbloqueado.');
+        return back()->with('status', $user->name.' desbloqueado.');
     }
 
     public function destroy(User $user): RedirectResponse
@@ -119,7 +119,7 @@ class UserManagementController extends Controller
         $name = $user->name;
         $user->delete();
 
-        return back()->with('status', 'Cuenta de ' . $name . ' eliminada.');
+        return back()->with('status', 'Cuenta de '.$name.' eliminada.');
     }
 
     private function uniqueUsername(string $name): string
@@ -134,7 +134,7 @@ class UserManagementController extends Controller
         $suffix = 1;
 
         while (User::where('username', $candidate)->exists()) {
-            $candidate = $base . '_' . $suffix++;
+            $candidate = $base.'_'.$suffix++;
         }
 
         return $candidate;

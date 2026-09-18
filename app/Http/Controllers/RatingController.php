@@ -24,11 +24,11 @@ class RatingController extends Controller
                         return null;
                     }
 
-                    return ['token' => 'user:' . $entry->user->id, 'name' => $entry->user->name];
+                    return ['token' => 'user:'.$entry->user->id, 'name' => $entry->user->name];
                 }
 
                 if ($entry->guest !== null) {
-                    return ['token' => 'guest:' . $entry->guest->id, 'name' => $entry->guest->name];
+                    return ['token' => 'guest:'.$entry->guest->id, 'name' => $entry->guest->name];
                 }
 
                 return null;
@@ -40,8 +40,8 @@ class RatingController extends Controller
             ->where('match_id', $match->id)
             ->get()
             ->keyBy(fn (Rating $rating): string => $rating->rated_user_id !== null
-                ? 'user:' . $rating->rated_user_id
-                : 'guest:' . $rating->rated_guest_id);
+                ? 'user:'.$rating->rated_user_id
+                : 'guest:'.$rating->rated_guest_id);
 
         return view('rating.create', compact('match', 'participants', 'existing'));
     }
@@ -50,13 +50,7 @@ class RatingController extends Controller
     {
         $data = $request->validate([
             'rated' => ['required', 'string', 'regex:/(user|guest):\d+/'],
-            'speed' => ['required', 'integer', 'between:1,10'],
-            'skill' => ['required', 'integer', 'between:1,10'],
-            'passing' => ['required', 'integer', 'between:1,10'],
-            'shooting' => ['required', 'integer', 'between:1,10'],
-            'defense' => ['required', 'integer', 'between:1,10'],
-            'overall' => ['required', 'integer', 'between:1,10'],
-            'goalkeeping' => ['required', 'integer', 'between:1,10'],
+            'overall' => ['required', 'integer', 'between:0,10'],
         ]);
 
         [$type, $id] = explode(':', $data['rated']);
@@ -64,13 +58,7 @@ class RatingController extends Controller
         $me = $request->user();
 
         $attributes = [
-            'speed' => (int) $data['speed'],
-            'skill' => (int) $data['skill'],
-            'passing' => (int) $data['passing'],
-            'shooting' => (int) $data['shooting'],
-            'defense' => (int) $data['defense'],
             'overall' => (int) $data['overall'],
-            'goalkeeping' => (int) $data['goalkeeping'],
         ];
 
         if ($type === 'user') {

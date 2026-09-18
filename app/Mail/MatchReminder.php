@@ -13,13 +13,11 @@ class MatchReminder extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Partido $match)
-    {
-    }
+    public function __construct(public Partido $match) {}
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Recordatorio: ' . $this->match->title);
+        return new Envelope(subject: 'Recordatorio: '.$this->match->title);
     }
 
     public function content(): Content

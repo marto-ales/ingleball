@@ -24,6 +24,7 @@ final class AlgorithmTest extends TestCase
             ->patch('/algorithm', [
                 'order' => ['skill', 'speed', 'passing', 'shooting', 'defense'],
                 'random_tie_break' => '1',
+                'self_weight' => 0.5,
             ])
             ->assertRedirect();
 
@@ -33,6 +34,7 @@ final class AlgorithmTest extends TestCase
         $this->assertSame('speed', $settings->order()[1]);
         $this->assertTrue($settings->randomTieBreak());
         $this->assertFalse($settings->spreadGoalies());
+        $this->assertSame(0.5, $settings->selfWeight());
     }
 
     public function test_duplicate_positions_are_rejected(): void
@@ -42,6 +44,7 @@ final class AlgorithmTest extends TestCase
         $this->actingAs($organizer)
             ->patch('/algorithm', [
                 'order' => ['speed', 'speed', 'passing', 'shooting', 'defense'],
+                'self_weight' => 0.5,
             ])
             ->assertSessionHasErrors('order');
     }

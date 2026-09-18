@@ -228,7 +228,6 @@ final class MatchFlowTest extends TestCase
                 'passing' => 5,
                 'shooting' => 5,
                 'defense' => 5,
-                'overall' => $speed,
                 'likes_goalie' => $index < 2,
             ]);
 
@@ -364,7 +363,7 @@ final class MatchFlowTest extends TestCase
         $this->actingAs($me)
             ->post(route('ratings.store', $match), [
                 'rated' => 'user:'.$me->id,
-                'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'overall' => 5, 'goalkeeping' => 5,
+                'overall' => 5,
             ])
             ->assertStatus(422);
     }

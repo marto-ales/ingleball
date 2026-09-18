@@ -8,15 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('ratings', function (Blueprint $table) {
-            $table->unsignedTinyInteger('goalkeeping')->nullable()->after('overall');
+        Schema::table('players', function (Blueprint $table) {
+            $table->dropColumn('overall');
         });
     }
 
     public function down(): void
     {
-        Schema::table('ratings', function (Blueprint $table) {
-            $table->dropColumn('goalkeeping');
+        Schema::table('players', function (Blueprint $table) {
+            $table->unsignedTinyInteger('overall')->default(5);
         });
     }
 };

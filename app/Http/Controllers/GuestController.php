@@ -16,17 +16,17 @@ class GuestController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:80'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'speed' => ['nullable', 'integer', 'between:1,10'],
-            'skill' => ['nullable', 'integer', 'between:1,10'],
-            'passing' => ['nullable', 'integer', 'between:1,10'],
-            'shooting' => ['nullable', 'integer', 'between:1,10'],
-            'defense' => ['nullable', 'integer', 'between:1,10'],
-            'overall' => ['nullable', 'integer', 'between:1,10'],
+            'speed' => ['nullable', 'integer', 'between:0,10'],
+            'skill' => ['nullable', 'integer', 'between:0,10'],
+            'passing' => ['nullable', 'integer', 'between:0,10'],
+            'shooting' => ['nullable', 'integer', 'between:0,10'],
+            'defense' => ['nullable', 'integer', 'between:0,10'],
+            'overall' => ['nullable', 'integer', 'between:0,10'],
         ]);
 
         $guest = $this->findOrGlobal($data);
         if ($match->entries()->where('guest_id', $guest->id)->exists()) {
-            return back()->with('status', $guest->name . ' ya está en la lista.');
+            return back()->with('status', $guest->name.' ya está en la lista.');
         }
 
         $match->entries()->create([
@@ -34,7 +34,7 @@ class GuestController extends Controller
             'role' => 'going',
         ]);
 
-        return back()->with('status', 'Invitado a ' . $guest->name . '.');
+        return back()->with('status', 'Invitado a '.$guest->name.'.');
     }
 
     public function destroy(Partido $match, Guest $guest): RedirectResponse

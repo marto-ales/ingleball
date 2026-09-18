@@ -63,17 +63,17 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-// Upcoming open match, 5v5 (9 registered + 1 guest = 10 going).
-$saturday = Partido::factory()->create([
-    'created_by' => $organizers[0]->id,
-    'title' => 'Fútbol de los sábados',
-    'played_at' => now()->addDays(6)->setTime(18, 0),
-]);
-foreach ($all->random(9) as $user) {
-    $saturday->entries()->create(['user_id' => $user->id, 'role' => 'going']);
-}
-$guest = Guest::create(['name' => 'Cheto (invitado)', 'phone' => '+5491155550099', 'overall' => 7]);
-$saturday->entries()->create(['guest_id' => $guest->id, 'role' => 'going']);
+        // Upcoming open match, 5v5 (9 registered + 1 guest = 10 going).
+        $saturday = Partido::factory()->create([
+            'created_by' => $organizers[0]->id,
+            'title' => 'Fútbol de los sábados',
+            'played_at' => now()->addDays(6)->setTime(18, 0),
+        ]);
+        foreach ($all->random(9) as $user) {
+            $saturday->entries()->create(['user_id' => $user->id, 'role' => 'going']);
+        }
+        $guest = Guest::create(['name' => 'Cheto (invitado)', 'phone' => '+5491155550099', 'overall' => 7]);
+        $saturday->entries()->create(['guest_id' => $guest->id, 'role' => 'going']);
 
         // Managed player: sits in the list but has no password (cannot log in).
         $managed = User::factory()->create([

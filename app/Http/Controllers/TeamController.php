@@ -9,9 +9,7 @@ use Illuminate\Http\Request;
 
 class TeamController extends Controller
 {
-    public function __construct(private TeamService $service)
-    {
-    }
+    public function __construct(private TeamService $service) {}
 
     public function generate(Request $request, Partido $match): RedirectResponse
     {

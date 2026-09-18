@@ -22,7 +22,6 @@ class PlayerFactory extends Factory
             'passing' => fake()->numberBetween(3, 9),
             'shooting' => fake()->numberBetween(3, 9),
             'defense' => fake()->numberBetween(3, 9),
-            'overall' => fake()->numberBetween(4, 9),
             'likes_goalie' => false,
             'goalkeeping' => fake()->numberBetween(3, 9),
         ];

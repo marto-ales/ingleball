@@ -13,8 +13,6 @@
 
 @php
     $existingMap = $existing->map(fn ($r) => [
-        'speed' => $r->speed, 'skill' => $r->skill, 'passing' => $r->passing,
-        'shooting' => $r->shooting, 'defense' => $r->defense, 'goalkeeping' => $r->goalkeeping,
         'overall' => $r->overall,
     ])->toArray();
 @endphp
@@ -38,12 +36,11 @@
                 @enderror
             </div>
 
-            @foreach (['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'goalkeeping' => 'Arco', 'overall' => 'General'] as $key => $label)
-                <div class="field">
-                    <label>{{ $label }}</label>
-                    @include('partials.scale', ['name' => $key, 'label' => $label, 'value' => old($key, 5)])
-                </div>
-            @endforeach
+            <div class="field">
+                <label>Calificación general</label>
+                <p class="muted small mb0">¿Qué nivel mostró en este partido? Es un solo puntaje, del 0 al 10.</p>
+                @include('partials.scale', ['name' => 'overall', 'label' => 'Calificación general', 'value' => old('overall', 5)])
+            </div>
 
             <button class="btn btn-primary" type="submit">Guardar calificación</button>
         </form>
@@ -55,11 +52,16 @@
     (function () {
         const hidden = document.getElementById('rated');
         const buttons = document.querySelectorAll('#pick-rated .pick');
-        const fields = ['speed', 'skill', 'passing', 'shooting', 'defense', 'goalkeeping', 'overall'];
+        const fields = ['overall'];
 
         function setScale(name, val) {
             document.querySelectorAll('[name="' + name + '"]').forEach(function (el) {
-                el.checked = String(el.value) === String(val);
+                if (el.type === 'range') {
+                    el.value = val;
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                } else {
+                    el.checked = String(el.value) === String(val);
+                }
             });
         }
 

@@ -34,10 +34,10 @@ final class PagesRenderTest extends TestCase
         $this->actingAs($this->organizer)->get('/dashboard')->assertOk();
         $this->actingAs($this->organizer)->get('/matches')->assertOk();
         $this->actingAs($this->organizer)->get('/matches/create')->assertOk();
-        $this->actingAs($this->organizer)->get('/matches/' . $this->openMatch->id)->assertOk();
-        $this->actingAs($this->organizer)->get('/matches/' . $this->openMatch->id . '/ratings')->assertOk();
+        $this->actingAs($this->organizer)->get('/matches/'.$this->openMatch->id)->assertOk();
+        $this->actingAs($this->organizer)->get('/matches/'.$this->openMatch->id.'/ratings')->assertOk();
         $this->actingAs($this->organizer)->get('/stats')->assertOk();
-        $this->actingAs($this->organizer)->get('/stats/' . $this->organizer->id)->assertOk();
+        $this->actingAs($this->organizer)->get('/stats/'.$this->organizer->id)->assertOk();
         $this->actingAs($this->organizer)->get('/profile')->assertOk();
     }
 
@@ -49,7 +49,7 @@ final class PagesRenderTest extends TestCase
             'phone' => null,
             'whatsapp_group' => 'https://chat.whatsapp.com/AbCd1234',
             'likes_goalie' => 1,
-            'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'overall' => 5, 'goalkeeping' => 8,
+            'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'goalkeeping' => 8,
         ]);
 
         $this->assertDatabaseHas('users', [
@@ -64,7 +64,7 @@ final class PagesRenderTest extends TestCase
         ]);
 
         $this->actingAs($this->organizer)
-            ->get('/matches/' . $this->openMatch->id)
+            ->get('/matches/'.$this->openMatch->id)
             ->assertOk()
             ->assertSee('chat.whatsapp.com/AbCd1234');
     }
@@ -72,22 +72,29 @@ final class PagesRenderTest extends TestCase
     public function test_numeric_widgets_render(): void
     {
         $this->actingAs($this->organizer)
-            ->get('/matches/' . $this->openMatch->id)
+            ->get('/matches/'.$this->openMatch->id)
             ->assertOk()
             ->assertSee('stepper-btn', false);
 
         $this->actingAs($this->organizer)
-            ->get('/matches/' . $this->openMatch->id . '/ratings')
+            ->get('/matches/'.$this->openMatch->id.'/ratings')
             ->assertOk()
-            ->assertSee('scale-opt', false)
-            ->assertSee('Arco');
+            ->assertSee('type="range"', false)
+            ->assertSee('Calificación general');
 
         $this->actingAs($this->organizer)
             ->get('/profile')
             ->assertOk()
-            ->assertSee('scale-opt', false)
+            ->assertSee('type="range"', false)
+            ->assertSee('data-live="1"', false)
             ->assertSee('¿Te gusta ir al arco?')
             ->assertSee('Arco');
+
+        $this->actingAs($this->organizer)
+            ->get('/stats/'.$this->organizer->id)
+            ->assertOk()
+            ->assertSee('class="radar"', false)
+            ->assertSee('Rendimiento reciente');
     }
 
     public function test_share_message_shows_for_any_user_with_going_list_when_no_teams(): void
@@ -95,7 +102,7 @@ final class PagesRenderTest extends TestCase
         $fan = User::factory()->create();
 
         $this->actingAs($fan)
-            ->get('/matches/' . $this->openMatch->id)
+            ->get('/matches/'.$this->openMatch->id)
             ->assertOk()
             ->assertSee('Compartir este partido')
             ->assertSee('Anotados')
@@ -111,7 +118,7 @@ final class PagesRenderTest extends TestCase
         $fan = User::factory()->create();
 
         $this->actingAs($fan)
-            ->get('/matches/' . $match->id)
+            ->get('/matches/'.$match->id)
             ->assertOk()
             ->assertSee('Compartir este partido')
             ->assertSee('*Suplentes*')
@@ -132,7 +139,7 @@ final class PagesRenderTest extends TestCase
         $fan = User::factory()->create();
 
         $this->actingAs($fan)
-            ->get('/matches/' . $match->id)
+            ->get('/matches/'.$match->id)
             ->assertOk()
             ->assertSee('*Equipo A*')
             ->assertSee('Alfa')
@@ -147,7 +154,7 @@ final class PagesRenderTest extends TestCase
         $match = Partido::factory()->create(['created_by' => $this->organizer->id, 'field_value' => 10000, 'size' => 4]);
 
         $this->actingAs($this->organizer)
-            ->get('/matches/' . $match->id)
+            ->get('/matches/'.$match->id)
             ->assertOk()
             ->assertSee('Valor: $1.250 por persona', false);
     }

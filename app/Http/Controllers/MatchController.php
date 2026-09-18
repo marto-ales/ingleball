@@ -150,9 +150,9 @@ class MatchController extends Controller
         $goingCount = $match->entries()->where('role', 'going')->count();
         $autoSize = $this->teams->chooseTeamSize($goingCount);
 
-$participants = $this->participants($match);
+        $participants = $this->participants($match);
 
-$waGroup = $me->is_organizer ? $me->whatsapp_group : null;
+        $waGroup = $me->is_organizer ? $me->whatsapp_group : null;
 
         $shareMessage = $this->messaging->message($match, $teamA, $teamB, $entriesGoing, $entriesSubstitute);
 
@@ -225,9 +225,9 @@ $waGroup = $me->is_organizer ? $me->whatsapp_group : null;
 
         foreach ($match->entries()->where('role', '!=', 'out')->with(['user', 'guest'])->get() as $entry) {
             if ($entry->user !== null) {
-                $participants[] = ['token' => 'user:' . $entry->user->id, 'type' => 'user', 'name' => $entry->user->name];
+                $participants[] = ['token' => 'user:'.$entry->user->id, 'type' => 'user', 'name' => $entry->user->name];
             } elseif ($entry->guest !== null) {
-                $participants[] = ['token' => 'guest:' . $entry->guest->id, 'type' => 'guest', 'name' => $entry->guest->name];
+                $participants[] = ['token' => 'guest:'.$entry->guest->id, 'type' => 'guest', 'name' => $entry->guest->name];
             }
         }
 

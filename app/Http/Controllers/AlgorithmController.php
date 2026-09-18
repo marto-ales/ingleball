@@ -20,6 +20,8 @@ class AlgorithmController extends Controller
             'weightSequence' => array_values($this->settings->weights()),
             'randomTieBreak' => $this->settings->randomTieBreak(),
             'spreadGoalies' => $this->settings->spreadGoalies(),
+            'selfWeight' => $this->settings->selfWeight(),
+            'weightByForm' => $this->settings->weightByForm(),
         ]);
     }
 
@@ -32,6 +34,8 @@ class AlgorithmController extends Controller
             'order.*' => ['required', 'string', 'in:'.implode(',', $attributes)],
             'random_tie_break' => ['nullable', 'boolean'],
             'spread_goalies' => ['nullable', 'boolean'],
+            'self_weight' => ['required', 'numeric', 'between:0,1'],
+            'weight_by_form' => ['nullable', 'boolean'],
         ]);
 
         $order = array_values($data['order']);
@@ -48,6 +52,8 @@ class AlgorithmController extends Controller
             'order' => $order,
             'random_tie_break' => $request->boolean('random_tie_break'),
             'spread_goalies' => $request->boolean('spread_goalies'),
+            'self_weight' => $data['self_weight'],
+            'weight_by_form' => $request->boolean('weight_by_form'),
         ]);
 
         return back()->with('status', 'Configuración del algoritmo guardada.');

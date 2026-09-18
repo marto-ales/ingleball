@@ -11,7 +11,9 @@ class MatchEntry extends Model
     use HasFactory;
 
     public const ROLE_GOING = 'going';
+
     public const ROLE_SUBSTITUTE = 'substitute';
+
     public const ROLE_OUT = 'out';
 
     protected $fillable = [

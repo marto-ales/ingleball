@@ -63,6 +63,16 @@ class User extends Authenticatable
         return $this->hasMany(Rating::class, 'rated_user_id');
     }
 
+    public function evaluationsGiven(): HasMany
+    {
+        return $this->hasMany(PlayerEvaluation::class, 'organizer_user_id');
+    }
+
+    public function evaluationsReceived(): HasMany
+    {
+        return $this->hasMany(PlayerEvaluation::class, 'rated_user_id');
+    }
+
     public function matchesCreated(): HasMany
     {
         return $this->hasMany(Partido::class, 'created_by');
