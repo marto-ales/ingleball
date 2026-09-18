@@ -73,7 +73,7 @@
     </main>
 
     <footer class="footer">
-        <div class="container">Ingleball — fútbol de amigos</div>
+        <div class="container">Ingleball — organicemo el fulbito</div>
     </footer>
     <script>
         document.querySelectorAll('.theme-toggle').forEach(function (btn) {
