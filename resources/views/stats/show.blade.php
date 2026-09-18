@@ -21,19 +21,6 @@
 
 <div class="grid grid-2">
     <div>
-        <div class="card card--profile">
-            <h2>Autoevaluación</h2>
-            @if ($player->player)
-                <ul class="list">
-                    @foreach (['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'goalkeeping' => 'Arco'] as $key => $label)
-                        <li><span>{{ $label }}</span><span class="score-tag">{{ $player->player->{$key} }}</span></li>
-                    @endforeach
-                    <li><span>¿Le gusta ir al arco?</span><span class="score-tag">{{ $player->player->likes_goalie ? 'Sí' : 'No' }}</span></li>
-                </ul>
-            @else
-                <div class="empty">Sin autoevaluación registrada.</div>
-            @endif
-        </div>
 
         <div class="card card--profile">
             <h2>Perfil</h2>
@@ -55,10 +42,20 @@
             </ul>
         </div>
 
-        <div class="card card--ranking">
-            <h2>Logros</h2>
-            <p class="mb0">🥅 {{ $goals->count() }} gol(s) · 🏅 {{ $mvp->count() }} MVP</p>
+        <div class="card card--profile">
+            <h2>Autoevaluación</h2>
+            @if ($player->player)
+                <ul class="list">
+                    @foreach (['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'goalkeeping' => 'Arco'] as $key => $label)
+                        <li><span>{{ $label }}</span><span class="score-tag">{{ $player->player->{$key} }}</span></li>
+                    @endforeach
+                    <li><span>¿Le gusta ir al arco?</span><span class="score-tag">{{ $player->player->likes_goalie ? 'Sí' : 'No' }}</span></li>
+                </ul>
+            @else
+                <div class="empty">Sin autoevaluación registrada.</div>
+            @endif
         </div>
+
     </div>
 
     <div>
@@ -72,6 +69,10 @@
             @empty
                 <div class="empty">Sin participaciones registradas.</div>
             @endforelse
+        </div>
+        <div class="card card--ranking">
+            <h2>Logros</h2>
+            <p class="mb0">🥅 {{ $goals->count() }} gol(s) · 🏅 {{ $mvp->count() }} MVP</p>
         </div>
     </div>
 </div>

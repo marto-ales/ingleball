@@ -1,10 +1,22 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', config('app.name', 'Ingleball')) · Ingleball</title>
+    <script>
+        (function () {
+            try {
+                document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark';
+            } catch (e) {
+                document.documentElement.dataset.theme = 'dark';
+            }
+        })();
+    </script>
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
 <body>
@@ -17,7 +29,7 @@
                 <a href="{{ route('matches.index') }}">Partidos</a>
                 <a href="{{ route('stats.index') }}">Ranking</a>
                 @if (auth()->user()->is_organizer)
-                    <a href="{{ route('users.manage.index') }}">Jugadores</a>
+                    <a href="{{ route('users.manage.index') }}">Usuarios</a>
                     <a href="{{ route('algorithm.index') }}">Algoritmo</a>
                     <a class="btn btn-primary btn-sm" href="{{ route('matches.create') }}">+ Nuevo partido</a>
                 @endif
@@ -26,10 +38,21 @@
                     @csrf
                     <button type="submit" class="btn btn-ghost btn-sm">Salir</button>
                 </form>
+                <button type="button" class="btn btn-ghost btn-sm theme-toggle" aria-label="Cambiar tema" title="Cambiar tema">
+                    <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/></svg>
+                </button>
             </nav>
         </div>
     </header>
     @endauth
+
+    @guest
+    <button type="button" class="btn btn-ghost theme-toggle theme-toggle-float" aria-label="Cambiar tema" title="Cambiar tema">
+        <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/></svg>
+    </button>
+    @endguest
 
     <main class="container content">
         @if (session('status'))
@@ -53,6 +76,14 @@
         <div class="container">Ingleball — fútbol de amigos</div>
     </footer>
     <script>
+        document.querySelectorAll('.theme-toggle').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var root = document.documentElement;
+                var next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+                root.setAttribute('data-theme', next);
+                try { localStorage.setItem('theme', next); } catch (e) {}
+            });
+        });
         document.querySelectorAll('.stepper').forEach(function (box) {
             var input = box.querySelector('.stepper-input');
             box.querySelectorAll('.stepper-btn').forEach(function (btn) {
