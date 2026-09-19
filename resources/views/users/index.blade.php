@@ -19,7 +19,7 @@
                     <th>Usuario</th>
                     <th>Estado</th>
                     <th>Autoevaluación</th>
-                    <th>Partidos</th>
+                    <th class="num">Eval. org.</th>
                     <th></th>
                 </tr>
             </thead>
@@ -46,10 +46,10 @@
                                 <span class="muted">No</span>
                             @endif
                         </td>
-                        <td>{{ $user->entries_count }}</td>
+                        <td>{{ $user->evaluations_received_count }}</td>
                         <td class="row gap-sm justify-end">
                             @if (! $user->is(auth()->user()))
-                                <a class="btn btn-sm" href="{{ route('evaluation.edit', $user) }}">Calificar</a>
+                                <a class="btn btn-sm {{ in_array($user->id, $myEvaluated, true) ? 'btn-ghost' : 'btn-primary' }}" href="{{ route('evaluation.edit', $user) }}">Evaluar</a>
                             @endif
                             <a class="btn btn-sm" href="{{ route('users.manage.edit', $user) }}">Editar</a>
                             @if ($user->isBanned())
@@ -73,7 +73,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="muted">Sin jugadores.</td></tr>
+                    <tr><td colspan="6" class="muted">Sin jugadores.</td></tr>
                 @endforelse
             </tbody>
         </table>

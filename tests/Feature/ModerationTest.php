@@ -114,6 +114,10 @@ final class ModerationTest extends TestCase
             'speed' => 6, 'skill' => 6, 'passing' => 6, 'shooting' => 6, 'defense' => 6, 'goalkeeping' => 7,
             'self_eval_completed_at' => now(),
         ]);
+        $organizer->evaluationsGiven()->create([
+            'rated_user_id' => $with->id,
+            'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'goalkeeping' => 5,
+        ]);
 
         $this->actingAs($organizer)
             ->get(route('users.manage.index'))
@@ -121,8 +125,9 @@ final class ModerationTest extends TestCase
             ->assertSee('Autoevaluación')
             ->assertSee('<span class="muted">No</span>', false)
             ->assertSee('>Sí</span>', false)
-            ->assertSee(route('evaluation.edit', $with))
-            ->assertSee(route('evaluation.edit', $without));
+            ->assertSee('Eval. org.')
+            ->assertSee('<a class="btn btn-sm btn-ghost" href="'.route('evaluation.edit', $with).'">Evaluar</a>', false)
+            ->assertSee('<a class="btn btn-sm btn-primary" href="'.route('evaluation.edit', $without).'">Evaluar</a>', false);
     }
 
     public function test_saving_profile_marks_self_evaluation_as_completed(): void

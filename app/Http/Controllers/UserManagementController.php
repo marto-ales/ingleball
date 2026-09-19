@@ -13,13 +13,18 @@ class UserManagementController extends Controller
 {
     public function index(): View
     {
-        $users = User::withCount('entries')
+        $users = User::withCount('evaluationsReceived')
             ->with('player')
             ->orderByDesc('is_organizer')
             ->orderBy('name')
             ->get();
 
-        return view('users.index', ['users' => $users]);
+        $myEvaluated = auth()->user()->evaluationsGiven()->pluck('rated_user_id')->all();
+
+        return view('users.index', [
+            'users' => $users,
+            'myEvaluated' => $myEvaluated,
+        ]);
     }
 
     public function create(): View
