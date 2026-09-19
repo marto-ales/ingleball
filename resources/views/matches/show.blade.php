@@ -3,7 +3,22 @@
 @section('title', $match->title)
 
 @section('content')
-@php $scorer = app(\App\Services\Scorer::class); @endphp
+@php
+    $scorer = app(\App\Services\Scorer::class);
+    $attrKeys = ['speed', 'skill', 'passing', 'shooting', 'defense'];
+    $attrLabels = ['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa'];
+    $memberScore = function ($t) use ($scorer) {
+        if ($t->user) {
+            return $scorer->scoreForUser($t->user);
+        }
+
+        if ($t->guest) {
+            return $scorer->forGuest($t->guest);
+        }
+
+        return 0.0;
+    };
+@endphp
 
 <div class="page-head">
     <div>
@@ -157,22 +172,55 @@
                         </form>
                     @endif
                 </div>
+                @if (auth()->user()->is_organizer)
+                    <p class="muted small mb0 mt">
+                        El armado empareja a cada jugador con un rival de nivel similar en el otro equipo y reparte los
+                        perfiles para equilibrar
+                        ambos equipos; 🧤 = prefiere atajar.
+                    </p>
+                    <ul class="list" style="margin:8px 0 4px;">
+                        <li><span>Puntaje A</span><span class="score-tag">{{ number_format(collect($teamA)->sum(fn ($t) => $memberScore($t)), 1) }}</span></li>
+                        <li><span>Puntaje B</span><span class="score-tag">{{ number_format(collect($teamB)->sum(fn ($t) => $memberScore($t)), 1) }}</span></li>
+                    </ul>
+                @endif
                 <div class="teams">
                     <div class="team team-a">
                         <h3>Equipo A <span class="muted small">{{ $teamA->count() }}</span></h3>
                         @foreach ($teamA as $t)
+                            @php
+                                $attrs = $t->user ? $scorer->attributesForUser($t->user) : $scorer->attributesForGuest($t->guest);
+                            @endphp
                             <div class="row" style="padding:6px 0;border-bottom:1px solid var(--line);">
-                                <span class="who">{{ $t->user?->name ?? $t->guest?->name }}</span>
+                                <span class="who">{{ $t->user?->name ?? $t->guest?->name }}@if ($t->user?->player?->likes_goalie) 🧤 @endif</span>
                                 @if ($t->guest)<span class="tag-guest">inv.</span>@endif
+                                @if (auth()->user()->is_organizer)
+                                    <span class="score-tag" title="Puntaje (poder ponderado del perfil)">{{ number_format($memberScore($t), 1) }}</span>
+                                    <span class="attrs-chips" aria-hidden="true">
+                                        @foreach ($attrKeys as $key)
+                                            <span title="{{ $attrLabels[$key] }}">{{ (int) round($attrs[$key] ?? 5) }}</span>
+                                        @endforeach
+                                    </span>
+                                @endif
                             </div>
                         @endforeach
                     </div>
                     <div class="team team-b">
                         <h3>Equipo B <span class="muted small">{{ $teamB->count() }}</span></h3>
                         @foreach ($teamB as $t)
+                            @php
+                                $attrs = $t->user ? $scorer->attributesForUser($t->user) : $scorer->attributesForGuest($t->guest);
+                            @endphp
                             <div class="row" style="padding:6px 0;border-bottom:1px solid var(--line);">
-                                <span class="who">{{ $t->user?->name ?? $t->guest?->name }}</span>
+                                <span class="who">{{ $t->user?->name ?? $t->guest?->name }}@if ($t->user?->player?->likes_goalie) 🧤 @endif</span>
                                 @if ($t->guest)<span class="tag-guest">inv.</span>@endif
+                                @if (auth()->user()->is_organizer)
+                                    <span class="score-tag" title="Puntaje (poder ponderado del perfil)">{{ number_format($memberScore($t), 1) }}</span>
+                                    <span class="attrs-chips" aria-hidden="true">
+                                        @foreach ($attrKeys as $key)
+                                            <span title="{{ $attrLabels[$key] }}">{{ (int) round($attrs[$key] ?? 5) }}</span>
+                                        @endforeach
+                                    </span>
+                                @endif
                             </div>
                         @endforeach
                     </div>

@@ -176,6 +176,8 @@ h3 { font-size: 15px; margin: 0 0 8px; }
 .list .who { display: flex; align-items: center; gap: 8px; font-weight: 600; }
 .idx { background: #eef2ee; color: var(--muted); border-radius: 6px; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
 .tag-guest { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; }
+.attrs-chips { display: inline-flex; gap: 4px; font-variant-numeric: tabular-nums; }
+.attrs-chips span { background: #eef2ee; color: var(--ink); border-radius: 5px; padding: 1px 6px; font-size: 11px; font-weight: 700; min-width: 22px; text-align: center; }
 
 /* Forms */
 .field { margin-bottom: 14px; }
@@ -411,3 +413,4 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
 [data-theme="dark"] .card--ranking { --card-bg: rgba(54, 44, 16, .74); --card-border: rgba(225, 185, 80, .30); }
 [data-theme="dark"] .card--profile { --card-bg: rgba(20, 30, 54, .74); --card-border: rgba(90, 140, 230, .30); }
 [data-theme="dark"] .card--info { --card-bg: rgba(17, 34, 46, .74); --card-border: rgba(80, 170, 220, .30); }
+[data-theme="dark"] .attrs-chips span { background: #222d26; color: #cfe0d4; }
