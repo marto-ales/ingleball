@@ -288,6 +288,39 @@ final class MatchFlowTest extends TestCase
         $this->assertSame(5, $match->teams()->where('team', 'B')->count());
     }
 
+    public function test_reopening_the_list_undoes_the_teams(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $players = User::factory(4)->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+
+        foreach ($players as $player) {
+            $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
+        }
+
+        $match->update(['status' => Partido::STATUS_LOCKED, 'locked_at' => now()]);
+
+        $this->actingAs($organizer)
+            ->post(route('teams.generate', $match), ['size' => 2])
+            ->assertRedirect();
+        $this->assertSame(4, $match->teams()->count());
+
+        $this->actingAs($organizer)
+            ->patch(route('matches.unlock', $match))
+            ->assertRedirect();
+
+        $match->refresh();
+        $this->assertTrue($match->isOpen());
+        $this->assertNull($match->locked_at);
+        $this->assertSame(0, $match->teams()->count());
+
+        $this->actingAs($organizer)
+            ->get(route('matches.show', $match))
+            ->assertOk()
+            ->assertSee('*Anotados*', false)
+            ->assertDontSee('*Equipo A*', false);
+    }
+
     public function test_teams_are_paired_by_characteristics_and_split_the_goalies(): void
     {
         $organizer = User::factory()->organizer()->create();

@@ -195,6 +195,7 @@ class MatchController extends Controller
     public function unlock(Partido $match): RedirectResponse
     {
         $match->update(['status' => Partido::STATUS_OPEN, 'locked_at' => null]);
+        $match->teams()->delete();
 
         return back()->with('status', 'Lista reabierta.');
     }

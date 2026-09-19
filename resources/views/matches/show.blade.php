@@ -96,7 +96,7 @@
                     <span class="idx">{{ $loop->iteration }}</span>
                     <span class="who">{{ $entry->user?->name ?? $entry->guest?->name }}</span>
                     @if ($entry->guest)<span class="tag-guest">invitado</span>@endif
-                    <span class="score-tag">{{ number_format($entry->user ? $scorer->scoreForUser($entry->user) : $scorer->forGuest($entry->guest), 1) }}</span>
+                    <span class="score-tag">{{ $entry->user ? number_format($scorer->scoreForUser($entry->user), 1) : ($entry->guest ? number_format($scorer->forGuest($entry->guest), 1) : '—') }}</span>
                     @if (auth()->user()->is_organizer && $entry->guest)
                         <form method="POST" action="{{ route('guests.destroy', [$match, $entry->guest]) }}" class="inline" onsubmit="return confirm('¿Retirar invitado?');">
                             @csrf @method('DELETE')
