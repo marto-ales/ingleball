@@ -112,7 +112,27 @@
                     <span class="who">{{ $entry->user?->name ?? $entry->guest?->name }}</span>
                     @if ($entry->guest)<span class="tag-guest">invitado</span>@endif
                     <span class="score-tag">{{ $entry->user ? number_format($scorer->scoreForUser($entry->user), 1) : ($entry->guest ? number_format($scorer->forGuest($entry->guest), 1) : '—') }}</span>
-                    @if (auth()->user()->is_organizer && $entry->guest)
+                    @if (auth()->user()->is_organizer && $match->isOpen() && $entry->user)
+                        <form method="POST" action="{{ route('entries.manage', $match) }}" class="inline">
+                            @csrf
+                            <input type="hidden" name="user_id" value="{{ $entry->user_id }}">
+                            <input type="hidden" name="role" value="substitute">
+                            <button class="btn btn-ghost btn-sm" type="submit" title="Poner como suplente">Suplente</button>
+                        </form>
+                        <form method="POST" action="{{ route('entries.manage', $match) }}" class="inline" onsubmit="return confirm('¿Quitar a {{ $entry->user->name }} de la lista?');">
+                            @csrf
+                            <input type="hidden" name="user_id" value="{{ $entry->user_id }}">
+                            <input type="hidden" name="role" value="out">
+                            <button class="btn btn-danger btn-sm" type="submit" title="Quitar de la lista">✕</button>
+                        </form>
+                    @endif
+                    @if (auth()->user()->is_organizer && $match->isOpen() && $entry->guest)
+                        <form method="POST" action="{{ route('entries.manage', $match) }}" class="inline">
+                            @csrf
+                            <input type="hidden" name="guest_id" value="{{ $entry->guest_id }}">
+                            <input type="hidden" name="role" value="substitute">
+                            <button class="btn btn-ghost btn-sm" type="submit" title="Poner como suplente">Suplente</button>
+                        </form>
                         <form method="POST" action="{{ route('guests.destroy', [$match, $entry->guest]) }}" class="inline" onsubmit="return confirm('¿Retirar invitado?');">
                             @csrf @method('DELETE')
                             <button class="btn btn-ghost btn-sm" type="submit">✕</button>
@@ -129,10 +149,61 @@
                     <div class="row" style="padding:6px 0;">
                         <span class="muted">{{ $entry->user?->name ?? $entry->guest?->name }}</span>
                         @if ($entry->guest)<span class="tag-guest">invitado</span>@endif
+                        @if (auth()->user()->is_organizer && $match->isOpen() && $entry->user)
+                            <form method="POST" action="{{ route('entries.manage', $match) }}" class="inline">
+                                @csrf
+                                <input type="hidden" name="user_id" value="{{ $entry->user_id }}">
+                                <input type="hidden" name="role" value="going">
+                                <button class="btn btn-ghost btn-sm" type="submit" title="Pasar a titular">Titular</button>
+                            </form>
+                            <form method="POST" action="{{ route('entries.manage', $match) }}" class="inline" onsubmit="return confirm('¿Quitar a {{ $entry->user->name }} de la lista?');">
+                                @csrf
+                                <input type="hidden" name="user_id" value="{{ $entry->user_id }}">
+                                <input type="hidden" name="role" value="out">
+                                <button class="btn btn-danger btn-sm" type="submit" title="Quitar de la lista">✕</button>
+                            </form>
+                        @endif
+                        @if (auth()->user()->is_organizer && $match->isOpen() && $entry->guest)
+                            <form method="POST" action="{{ route('entries.manage', $match) }}" class="inline">
+                                @csrf
+                                <input type="hidden" name="guest_id" value="{{ $entry->guest_id }}">
+                                <input type="hidden" name="role" value="going">
+                                <button class="btn btn-ghost btn-sm" type="submit" title="Pasar a titular">Titular</button>
+                            </form>
+                            <form method="POST" action="{{ route('guests.destroy', [$match, $entry->guest]) }}" class="inline" onsubmit="return confirm('¿Retirar invitado?');">
+                                @csrf @method('DELETE')
+                                <button class="btn btn-ghost btn-sm" type="submit">✕</button>
+                            </form>
+                        @endif
                     </div>
                 @endforeach
             @endif
         </div>
+
+        @if (auth()->user()->is_organizer && $match->isOpen())
+            <div class="card card--info">
+                <h2>Agregar jugadores</h2>
+                @if ($availableUsers->isEmpty())
+                    <p class="muted mb0">Todos los jugadores ya están anotados.</p>
+                @else
+                    <form method="POST" action="{{ route('entries.manage', $match) }}">
+                        @csrf
+                        <div class="field">
+                            <label>Jugador</label>
+                            <select name="user_id" required>
+                                @foreach ($availableUsers as $u)
+                                    <option value="{{ $u->id }}" @selected(old('user_id') == $u->id)>{{ $u->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="row">
+                            <button class="btn btn-primary" type="submit" name="role" value="going">Agregar como titular</button>
+                            <button class="btn" type="submit" name="role" value="substitute">Agregar como suplente</button>
+                        </div>
+                    </form>
+                @endif
+            </div>
+        @endif
 
         @if (auth()->user()->is_organizer && $match->isOpen())
             <div class="card card--info">
@@ -153,7 +224,10 @@
                         <label>Calificación general</label>
                         @include('partials.scale', ['name' => 'overall', 'label' => 'Calificación general', 'value' => old('overall', 5)])
                     </div>
-                    <button class="btn btn-primary" type="submit">Añadir a la lista</button>
+                    <div class="row">
+                        <button class="btn btn-primary" type="submit" name="role" value="going">Agregar como titular</button>
+                        <button class="btn" type="submit" name="role" value="substitute">Agregar como suplente</button>
+                    </div>
                 </form>
             </div>
         @endif

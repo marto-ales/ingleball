@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Guest;
 use App\Models\Partido;
+use App\Models\User;
 use App\Services\MessagingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -56,6 +58,52 @@ class EntryController extends Controller
         return back()
             ->with('status', 'Te quitaste de la lista.')
             ->with('attendance', $this->attendanceSuggestion($request, $match, 'out'));
+    }
+
+    public function manage(Request $request, Partido $match): RedirectResponse
+    {
+        abort_unless($match->isOpen(), 403, 'La lista ya está cerrada.');
+
+        $data = $request->validate([
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'guest_id' => ['nullable', 'integer', 'exists:guests,id'],
+            'role' => ['required', Rule::in(['going', 'substitute', 'out'])],
+        ]);
+
+        abort_unless(isset($data['user_id']) || isset($data['guest_id']), 422, 'Falta indicar el jugador.');
+
+        if (isset($data['user_id'])) {
+            $target = User::findOrFail($data['user_id']);
+            abort_if($target->isBanned(), 403, 'Ese jugador está suspendido.');
+            $key = 'user_id';
+        } else {
+            $target = Guest::findOrFail($data['guest_id']);
+            $key = 'guest_id';
+        }
+
+        $match->entries()
+            ->where('match_id', $match->id)
+            ->where($key, $target->id)
+            ->delete();
+
+        if ($data['role'] === 'out') {
+            if ($target instanceof Guest && ! $target->entries()->exists()) {
+                $target->delete();
+            }
+
+            return back()->with('status', $target->name.' fue quitado de la lista.');
+        }
+
+        $match->entries()->create([
+            'match_id' => $match->id,
+            $key => $target->id,
+            'role' => $data['role'],
+        ]);
+
+        return back()->with(
+            'status',
+            $target->name.' quedó como '.($data['role'] === 'going' ? 'titular' : 'suplente').'.'
+        );
     }
 
     /**

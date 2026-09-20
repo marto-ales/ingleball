@@ -6,6 +6,7 @@ use App\Models\Guest;
 use App\Models\Partido;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class GuestController extends Controller
 {
@@ -22,19 +23,27 @@ class GuestController extends Controller
             'shooting' => ['nullable', 'integer', 'between:0,10'],
             'defense' => ['nullable', 'integer', 'between:0,10'],
             'overall' => ['nullable', 'integer', 'between:0,10'],
+            'role' => ['nullable', Rule::in(['going', 'substitute'])],
         ]);
 
-        $guest = $this->findOrGlobal($data);
+        $guestData = $data;
+        unset($guestData['role']);
+        $guest = $this->findOrGlobal($guestData);
         if ($match->entries()->where('guest_id', $guest->id)->exists()) {
             return back()->with('status', $guest->name.' ya está en la lista.');
         }
 
         $match->entries()->create([
             'guest_id' => $guest->id,
-            'role' => 'going',
+            'role' => $data['role'] ?? 'going',
         ]);
 
-        return back()->with('status', 'Invitado a '.$guest->name.'.');
+        return back()->with(
+            'status',
+            ($data['role'] ?? 'going') === 'substitute'
+                ? $guest->name.' quedó como suplente.'
+                : 'Invitado a '.$guest->name.'.'
+        );
     }
 
     public function destroy(Partido $match, Guest $guest): RedirectResponse

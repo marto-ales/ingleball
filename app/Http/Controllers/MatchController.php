@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Partido;
+use App\Models\User;
 use App\Services\MessagingService;
 use App\Services\RecurringMatchService;
 use App\Services\ReminderService;
@@ -151,6 +152,12 @@ class MatchController extends Controller
 
         $participants = $this->participants($match);
 
+        $availableUsers = User::where('is_managed', false)
+            ->whereNull('banned_at')
+            ->whereNotIn('id', $match->entries()->whereNotNull('user_id')->pluck('user_id'))
+            ->orderBy('name')
+            ->get();
+
         $waGroup = $me->is_organizer ? $me->whatsapp_group : null;
 
         $shareMessage = $this->messaging->message($match, $teamA, $teamB, $entriesGoing, $entriesSubstitute);
@@ -165,6 +172,7 @@ class MatchController extends Controller
             'goingCount' => $goingCount,
             'autoSize' => $autoSize,
             'participants' => $participants,
+            'availableUsers' => $availableUsers,
             'waGroup' => $waGroup,
             'shareMessage' => $shareMessage,
         ]);

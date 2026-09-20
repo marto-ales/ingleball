@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Guest;
 use App\Models\Partido;
 use App\Models\Player;
 use App\Models\User;
@@ -25,6 +26,132 @@ final class MatchFlowTest extends TestCase
         $this->actingAs($organizer)
             ->get(route('matches.show', $match))
             ->assertOk();
+    }
+
+    public function test_organizer_can_add_users_to_the_list(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $player = User::factory()->create(['name' => 'Carla']);
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+
+        $this->actingAs($organizer)
+            ->post(route('entries.manage', $match), ['user_id' => $player->id, 'role' => 'going'])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('match_entries', [
+            'match_id' => $match->id,
+            'user_id' => $player->id,
+            'role' => 'going',
+        ]);
+    }
+
+    public function test_organizer_can_move_users_to_substitute_and_remove_them(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $player = User::factory()->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+        $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
+
+        $this->actingAs($organizer)
+            ->post(route('entries.manage', $match), ['user_id' => $player->id, 'role' => 'substitute'])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('match_entries', [
+            'match_id' => $match->id,
+            'user_id' => $player->id,
+            'role' => 'substitute',
+        ]);
+
+        $this->actingAs($organizer)
+            ->post(route('entries.manage', $match), ['user_id' => $player->id, 'role' => 'out'])
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('match_entries', ['match_id' => $match->id, 'user_id' => $player->id]);
+    }
+
+    public function test_players_cannot_manage_other_players_entries(): void
+    {
+        $player = User::factory()->create();
+        $other = User::factory()->create();
+        $match = Partido::factory()->create(['created_by' => $player->id]);
+
+        $this->actingAs($player)
+            ->post(route('entries.manage', $match), ['user_id' => $other->id, 'role' => 'going'])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('match_entries', ['match_id' => $match->id, 'user_id' => $other->id]);
+    }
+
+    public function test_organizer_cannot_manage_entries_when_list_is_closed(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $player = User::factory()->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+        $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
+        $match->update(['status' => Partido::STATUS_LOCKED, 'locked_at' => now()]);
+
+        $this->actingAs($organizer)
+            ->post(route('entries.manage', $match), ['user_id' => $player->id, 'role' => 'substitute'])
+            ->assertForbidden();
+    }
+
+    public function test_organizer_can_add_guest_as_substitute(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+
+        $this->actingAs($organizer)
+            ->post(route('guests.store', $match), ['name' => 'Cheto', 'role' => 'substitute'])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('guests', ['name' => 'Cheto']);
+        $this->assertDatabaseHas('match_entries', [
+            'match_id' => $match->id,
+            'role' => 'substitute',
+        ]);
+    }
+
+    public function test_organizer_can_move_guest_between_going_and_substitute(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+        $guest = Guest::create(['name' => 'Cheto', 'overall' => 5]);
+        $match->entries()->create(['guest_id' => $guest->id, 'role' => 'going']);
+
+        $this->actingAs($organizer)
+            ->post(route('entries.manage', $match), ['guest_id' => $guest->id, 'role' => 'substitute'])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('match_entries', [
+            'match_id' => $match->id,
+            'guest_id' => $guest->id,
+            'role' => 'substitute',
+        ]);
+
+        $this->actingAs($organizer)
+            ->post(route('entries.manage', $match), ['guest_id' => $guest->id, 'role' => 'going'])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('match_entries', [
+            'match_id' => $match->id,
+            'guest_id' => $guest->id,
+            'role' => 'going',
+        ]);
+    }
+
+    public function test_organizer_removing_guest_via_manage_deletes_orphaned_guest(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+        $guest = Guest::create(['name' => 'Cheto', 'overall' => 5]);
+        $match->entries()->create(['guest_id' => $guest->id, 'role' => 'going']);
+
+        $this->actingAs($organizer)
+            ->post(route('entries.manage', $match), ['guest_id' => $guest->id, 'role' => 'out'])
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('match_entries', ['match_id' => $match->id, 'guest_id' => $guest->id]);
+        $this->assertDatabaseMissing('guests', ['id' => $guest->id]);
     }
 
     public function test_organizer_can_create_match(): void
