@@ -41,6 +41,21 @@ final class PagesRenderTest extends TestCase
         $this->actingAs($this->organizer)->get('/profile')->assertOk();
     }
 
+    public function test_dashboard_prompts_users_without_email(): void
+    {
+        $user = User::factory()->create(['email' => null]);
+
+        $this->actingAs($user)->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Completá tu correo');
+
+        $user->update(['email' => 'fulano@example.com']);
+
+        $this->actingAs($user)->get('/dashboard')
+            ->assertOk()
+            ->assertDontSee('Completá tu correo');
+    }
+
     public function test_organizer_can_define_whatsapp_group_and_it_shows_on_match_page(): void
     {
         $this->actingAs($this->organizer)->patch('/profile', [

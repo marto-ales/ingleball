@@ -161,6 +161,7 @@ final class ModerationTest extends TestCase
         $this->post('/register', [
             'name' => 'Pancho Real',
             'username' => 'pancho',
+            'email' => 'pancho@example.com',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
         ])->assertRedirect(route('dashboard'));
@@ -181,6 +182,7 @@ final class ModerationTest extends TestCase
         $this->post('/register', [
             'name' => 'Otra',
             'username' => 'marta',
+            'email' => 'otra@example.com',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
         ])->assertSessionHasErrors('username');

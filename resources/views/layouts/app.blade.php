@@ -130,6 +130,19 @@
             sync();
         });
 
+        document.querySelectorAll('.password-toggle').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var input = btn.parentElement.querySelector('input');
+                if (!input) return;
+                var show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                btn.classList.toggle('visible', show);
+                btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+                btn.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
+                if (show) setTimeout(function () { input.focus(); }, 0);
+            });
+        });
+
         document.querySelectorAll('svg.radar[data-live]').forEach(function (svg) {
             var keys = (svg.getAttribute('data-keys') || '').split(',').filter(Boolean);
             if (!keys.length || !svg.querySelector('[data-shape]')) return;

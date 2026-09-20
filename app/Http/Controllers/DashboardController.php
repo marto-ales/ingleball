@@ -38,6 +38,8 @@ class DashboardController extends Controller
         $needsSelfEval = $request->user()->player === null
             || $request->user()->player->self_eval_completed_at === null;
 
-        return view('dashboard', compact('upcoming', 'finished', 'myEntries', 'needsSelfEval'));
+        $needsEmail = blank($request->user()->email);
+
+        return view('dashboard', compact('upcoming', 'finished', 'myEntries', 'needsSelfEval', 'needsEmail'));
     }
 }

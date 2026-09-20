@@ -26,13 +26,27 @@ final class AuthenticationTest extends TestCase
         $response = $this->post('/register', [
             'name' => 'Marta',
             'username' => 'marta',
+            'email' => 'marta@example.com',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
         ]);
 
         $this->assertAuthenticated();
-        $this->assertDatabaseHas('users', ['username' => 'marta']);
+        $this->assertDatabaseHas('users', ['username' => 'marta', 'email' => 'marta@example.com']);
         $response->assertRedirect(route('dashboard'));
+    }
+
+    public function test_registration_requires_email(): void
+    {
+        $response = $this->post('/register', [
+            'name' => 'Marta',
+            'username' => 'marta',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        $this->assertGuest();
     }
 
     public function test_registration_mails_user_and_notifies_organizers(): void
@@ -85,6 +99,7 @@ final class AuthenticationTest extends TestCase
         $this->post('/register', [
             'name' => 'Marta',
             'username' => 'Marta_88',
+            'email' => 'marta88@example.com',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
         ]);

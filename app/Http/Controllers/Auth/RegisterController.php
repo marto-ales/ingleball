@@ -28,7 +28,7 @@ class RegisterController extends Controller
         $rules = [
             'name' => ['required', 'string', 'max:80'],
             'username' => ['required', 'string', 'max:30', 'alpha_dash'],
-            'email' => ['nullable', 'email', 'max:120'],
+            'email' => ['required', 'email', 'max:120'],
             'phone' => ['nullable', 'string', 'max:20'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ];
@@ -48,9 +48,7 @@ class RegisterController extends Controller
             ]);
         }
 
-        $emailOwner = ! empty($data['email'])
-            ? User::where('email', $data['email'])->first()
-            : null;
+        $emailOwner = User::where('email', $data['email'])->first();
         if ($emailOwner && ! $emailOwner->is_managed) {
             throw ValidationException::withMessages([
                 'email' => __('El correo ya está en uso.'),
@@ -64,7 +62,7 @@ class RegisterController extends Controller
             $user->forceFill([
                 'name' => $data['name'],
                 'phone' => $data['phone'] ?? $user->phone,
-                'email' => $data['email'] ?? $user->email,
+                'email' => $data['email'],
                 'password' => $data['password'],
                 'is_managed' => false,
             ])->save();
@@ -72,7 +70,7 @@ class RegisterController extends Controller
             $user = User::create([
                 'name' => $data['name'],
                 'username' => $data['username'],
-                'email' => $data['email'] ?? null,
+                'email' => $data['email'],
                 'phone' => $data['phone'] ?? null,
                 'password' => $data['password'],
                 'is_organizer' => false,

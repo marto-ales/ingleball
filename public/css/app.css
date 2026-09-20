@@ -183,6 +183,14 @@ label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 5px; c
 input, select, textarea { width: 100%; padding: 9px 11px; border: 1px solid #cdd5cd; border-radius: 9px; font-size: 14px; background: #fff; color: var(--ink); font-family: inherit; }
 input:focus, select:focus, textarea:focus { outline: 2px solid rgba(11, 110, 63, .35); border-color: var(--accent); }
 .field-error { color: var(--err); font-size: 12px; margin-top: 4px; }
+.password-wrap { position: relative; }
+.password-wrap input { padding-right: 44px; }
+.password-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 0; background: none; color: var(--muted); cursor: pointer; border-radius: 8px; }
+.password-toggle:hover { color: var(--accent); background: rgba(0, 0, 0, .04); }
+.password-toggle svg { width: 19px; height: 19px; }
+.password-toggle .pw-eye-off { display: none; }
+.password-toggle.visible .pw-eye { display: none; }
+.password-toggle.visible .pw-eye-off { display: inline-block; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .range-val { font-weight: 700; color: var(--pitch-dark); }
 input[type=range] { padding: 0; accent-color: var(--accent); }
@@ -403,6 +411,7 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
 [data-theme="dark"] .brand, [data-theme="dark"] .auth-brand, [data-theme="dark"] .score-tag, [data-theme="dark"] .range-badge, [data-theme="dark"] .section > h2, [data-theme="dark"] .page-head h1 { color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.35); }
 [data-theme="dark"] .range-badge { color: #7ed3a3; background: #222d26; }
 [data-theme="dark"] .captcha-img { border-color: var(--line); }
+[data-theme="dark"] .password-toggle:hover { background: rgba(255, 255, 255, .08); }
 [data-theme="dark"] .auth-wrap::before { border-color: rgba(255,255,255,.22); }
 [data-theme="dark"] .empty { text-shadow: none; }
 [data-theme="dark"] .card--live { --card-bg: rgba(20, 48, 33, .74); --card-border: rgba(47, 157, 98, .32); }
