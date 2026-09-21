@@ -51,25 +51,44 @@
                             @if (! $user->is(auth()->user()))
                                 <a class="btn btn-sm {{ in_array($user->id, $myEvaluated, true) ? 'btn-ghost' : 'btn-primary' }}" href="{{ route('evaluation.edit', $user) }}">Evaluar</a>
                             @endif
-                            <a class="btn btn-sm" href="{{ route('users.manage.edit', $user) }}">Editar</a>
-                            @if ($user->isBanned())
-                                <form class="inline" method="POST" action="{{ route('users.manage.unblock', $user) }}">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-ghost">Desbloquear</button>
-                                </form>
-                            @elseif (! $user->is(auth()->user()))
-                                <form class="inline" method="POST" action="{{ route('users.manage.block', $user) }}">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-ghost">Bloquear</button>
-                                </form>
-                            @endif
-                            @if (! $user->is(auth()->user()))
-                                <form class="inline" method="POST" action="{{ route('users.manage.destroy', $user) }}" onsubmit="return confirm('¿Eliminar la cuenta de {{ addslashes($user->name) }}? Su historial se pierde.');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
-                                </form>
-                            @endif
+                            <div class="row-actions">
+                                <button type="button" class="btn-icon row-actions-btn" aria-haspopup="true" aria-expanded="false" aria-label="Acciones de {{ $user->name }}" title="Acciones">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>
+                                </button>
+                                <div class="row-menu" hidden>
+                                    <a class="row-opt" href="{{ route('users.manage.edit', $user) }}">
+                                        <span class="opt-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></span>
+                                        Editar
+                                    </a>
+                                    @if ($user->isBanned())
+                                        <form method="POST" action="{{ route('users.manage.unblock', $user) }}">
+                                            @csrf
+                                            <button type="submit" class="row-opt">
+                                                <span class="opt-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></span>
+                                                Desbloquear
+                                            </button>
+                                        </form>
+                                    @elseif (! $user->is(auth()->user()))
+                                        <form method="POST" action="{{ route('users.manage.block', $user) }}">
+                                            @csrf
+                                            <button type="submit" class="row-opt">
+                                                <span class="opt-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/></svg></span>
+                                                Bloquear
+                                            </button>
+                                        </form>
+                                    @endif
+                                    @if (! $user->is(auth()->user()))
+                                        <form method="POST" action="{{ route('users.manage.destroy', $user) }}" onsubmit="return confirm('¿Eliminar la cuenta de {{ addslashes($user->name) }}? Su historial se pierde.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="row-opt danger">
+                                                <span class="opt-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
+                                                Eliminar
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 @empty

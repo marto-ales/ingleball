@@ -28,13 +28,27 @@
             @error('email')<div class="field-error">{{ $message }}</div>@enderror
         </div>
         <div class="field">
-            <label class="checkbox-line">
-                <input type="hidden" name="is_organizer" value="0">
-                <input type="checkbox" name="is_organizer" value="1" {{ old('is_organizer', $user->is_organizer) ? 'checked' : '' }}>
-                Es organizador
-            </label>
+            <label for="is-organizer-btn">Es organizador</label>
+            <input type="hidden" name="is_organizer" id="is-organizer-input" value="{{ old('is_organizer', $user->is_organizer ? 1 : 0) ? 1 : 0 }}">
+            <button type="button" class="switch-btn {{ old('is_organizer', $user->is_organizer ? 1 : 0) ? 'on' : '' }}" id="is-organizer-btn" aria-pressed="{{ old('is_organizer', $user->is_organizer ? 1 : 0) ? 'true' : 'false' }}">
+                <span class="switch-dot"></span>
+                <span>Organizador</span>
+            </button>
         </div>
         <button class="btn btn-primary" type="submit">Guardar cambios</button>
     </form>
 </div>
+<script>
+    (function () {
+        var btn = document.getElementById('is-organizer-btn');
+        var input = document.getElementById('is-organizer-input');
+        if (!btn || !input) return;
+        btn.addEventListener('click', function () {
+            var on = input.value === '1';
+            input.value = on ? '0' : '1';
+            btn.classList.toggle('on', !on);
+            btn.setAttribute('aria-pressed', on ? 'false' : 'true');
+        });
+    })();
+</script>
 @endsection
