@@ -190,6 +190,39 @@ h3 { font-size: 15px; margin: 0 0 8px; }
 .order-actions .btn { min-width: 34px; justify-content: center; padding-left: 0; padding-right: 0; }
 .chip { display: inline-flex; align-items: center; gap: 6px; background: #f3f6f2; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 600; }
 .score-tag { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--pitch-dark); }
+.score-tag.tip { position: relative; cursor: help; }
+.score-tag.tip .tipbox {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: #14181d;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s ease;
+}
+.score-tag.tip .tipbox::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 10px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid rgba(255, 255, 255, .25);
+}
+.tipbox-num.tip-self { color: #5aa9ff; }
+.tipbox-num.tip-org { color: #c4a6ff; }
+.score-tag.tip:hover .tipbox, .score-tag.tip:focus .tipbox, .score-tag.tip.open .tipbox { opacity: 1; }
 
 /* Lists */
 .list { list-style: none; margin: 0; padding: 0; }

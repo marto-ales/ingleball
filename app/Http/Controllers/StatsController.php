@@ -33,6 +33,19 @@ class StatsController extends Controller
 
         $mvp = MatchResult::where('mvp_user_id', $user->id)->with('match')->get();
 
+        $orgEval = null;
+        $evaluations = $user->evaluationsReceived()->get();
+        if ($evaluations->isNotEmpty()) {
+            $orgEval = [
+                'speed' => round($evaluations->avg('speed'), 1),
+                'skill' => round($evaluations->avg('skill'), 1),
+                'passing' => round($evaluations->avg('passing'), 1),
+                'shooting' => round($evaluations->avg('shooting'), 1),
+                'defense' => round($evaluations->avg('defense'), 1),
+                'goalkeeping' => round($evaluations->avg('goalkeeping'), 1),
+            ];
+        }
+
         return view('stats.show', [
             'player' => $user,
             'matches' => $matches,
@@ -40,6 +53,7 @@ class StatsController extends Controller
             'profile' => $this->scorer->attributesForUser($user),
             'goalkeeping' => $this->scorer->goalkeepingForUser($user),
             'form' => $this->scorer->formForUser($user),
+            'orgEval' => $orgEval,
         ]);
     }
 }

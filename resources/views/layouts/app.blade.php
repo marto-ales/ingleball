@@ -188,6 +188,19 @@
             });
         })();
 
+        document.querySelectorAll('.tip').forEach(function (tip) {
+            tip.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var open = tip.classList.contains('open');
+                document.querySelectorAll('.tip').forEach(function (t) { t.classList.remove('open'); });
+                if (!open) tip.classList.add('open');
+            });
+        });
+
+        document.addEventListener('click', function () {
+            document.querySelectorAll('.tip').forEach(function (t) { t.classList.remove('open'); });
+        });
+
         document.querySelectorAll('.password-toggle').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var input = btn.parentElement.querySelector('input');

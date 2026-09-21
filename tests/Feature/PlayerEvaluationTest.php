@@ -58,4 +58,27 @@ final class PlayerEvaluationTest extends TestCase
         $this->actingAs($player)->get(route('evaluation.edit', $organizer))->assertForbidden();
         $this->actingAs($organizer)->get(route('evaluation.edit', $organizer))->assertForbidden();
     }
+
+    public function test_stats_show_tooltips_with_self_and_organizer_values(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $player = User::factory()->create();
+        $player->player()->create([
+            'speed' => 8, 'skill' => 6, 'passing' => 5, 'shooting' => 7, 'defense' => 4, 'goalkeeping' => 9,
+            'self_eval_completed_at' => now(),
+        ]);
+        PlayerEvaluation::create([
+            'organizer_user_id' => $organizer->id,
+            'rated_user_id' => $player->id,
+            'speed' => 6, 'skill' => 7, 'passing' => 4, 'shooting' => 5, 'defense' => 6, 'goalkeeping' => 8,
+        ]);
+
+        $this->actingAs($organizer)
+            ->get(route('stats.show', $player))
+            ->assertOk()
+            ->assertSee('tip-self', false)
+            ->assertSee('tip-org', false)
+            ->assertSee('¿Le gusta ir al arco?')
+            ->assertDontSee('Sin autoevaluación registrada');
+    }
 }

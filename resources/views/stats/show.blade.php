@@ -34,26 +34,34 @@
 
             <ul class="list">
                 @foreach (['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa'] as $key => $label)
-                    <li><span>{{ $label }}</span><span class="score-tag">{{ number_format($profile[$key], 1) }}</span></li>
+                    <li>
+                        <span>{{ $label }}</span>
+                        <span class="score-tag tip" tabindex="0">
+                            {{ number_format($profile[$key], 1) }}
+                            <span class="tipbox" role="tooltip">
+                                <span class="tipbox-num tip-self">{{ $player->player?->{$key} ?? '—' }}</span>
+                                <span class="tipbox-num tip-org">{{ isset($orgEval[$key]) ? number_format($orgEval[$key], 1) : '—' }}</span>
+                            </span>
+                        </span>
+                    </li>
                 @endforeach
-                <li><span>Arco</span><span class="score-tag">{{ number_format($goalkeeping, 1) }}</span></li>
+                <li>
+                    <span>Arco</span>
+                    <span class="score-tag tip" tabindex="0">
+                        {{ number_format($goalkeeping, 1) }}
+                        <span class="tipbox" role="tooltip">
+                            <span class="tipbox-num tip-self">{{ $player->player?->goalkeeping ?? '—' }}</span>
+                            <span class="tipbox-num tip-org">{{ isset($orgEval['goalkeeping']) ? number_format($orgEval['goalkeeping'], 1) : '—' }}</span>
+                        </span>
+                    </span>
+                </li>
                 <li><span>General (últ. 3 partidos)</span><span class="score-tag">{{ $form['general'] !== null ? number_format($form['general'], 1) : '—' }}</span></li>
                 <li><span>Rendimiento reciente</span><span class="score-tag">×{{ number_format($form['multiplier'], 2) }}</span></li>
+                <li>
+                    <span>¿Le gusta ir al arco?</span>
+                    <span class="score-tag">{{ $player->player ? ($player->player->likes_goalie ? 'Sí' : 'No') : '—' }}</span>
+                </li>
             </ul>
-        </div>
-
-        <div class="card card--profile">
-            <h2>Autoevaluación</h2>
-            @if ($player->player)
-                <ul class="list">
-                    @foreach (['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'goalkeeping' => 'Arco'] as $key => $label)
-                        <li><span>{{ $label }}</span><span class="score-tag">{{ $player->player->{$key} }}</span></li>
-                    @endforeach
-                    <li><span>¿Le gusta ir al arco?</span><span class="score-tag">{{ $player->player->likes_goalie ? 'Sí' : 'No' }}</span></li>
-                </ul>
-            @else
-                <div class="empty">Sin autoevaluación registrada.</div>
-            @endif
         </div>
 
     </div>
