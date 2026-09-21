@@ -117,7 +117,7 @@
                             @csrf
                             <input type="hidden" name="user_id" value="{{ $entry->user_id }}">
                             <input type="hidden" name="role" value="substitute">
-                            <button class="btn btn-ghost btn-sm" type="submit" title="Poner como suplente">Suplente</button>
+                            <button class="btn-icon" type="submit" title="Poner como suplente" aria-label="Poner como suplente"><span class="icon-dot"></span></button>
                         </form>
                         <form method="POST" action="{{ route('entries.manage', $match) }}" class="inline" onsubmit="return confirm('¿Quitar a {{ $entry->user->name }} de la lista?');">
                             @csrf
@@ -131,7 +131,7 @@
                             @csrf
                             <input type="hidden" name="guest_id" value="{{ $entry->guest_id }}">
                             <input type="hidden" name="role" value="substitute">
-                            <button class="btn btn-ghost btn-sm" type="submit" title="Poner como suplente">Suplente</button>
+                            <button class="btn-icon" type="submit" title="Poner como suplente" aria-label="Poner como suplente"><span class="icon-dot"></span></button>
                         </form>
                         <form method="POST" action="{{ route('guests.destroy', [$match, $entry->guest]) }}" class="inline" onsubmit="return confirm('¿Retirar invitado?');">
                             @csrf @method('DELETE')
@@ -154,7 +154,7 @@
                                 @csrf
                                 <input type="hidden" name="user_id" value="{{ $entry->user_id }}">
                                 <input type="hidden" name="role" value="going">
-                                <button class="btn btn-ghost btn-sm" type="submit" title="Pasar a titular">Titular</button>
+                                <button class="btn-icon" type="submit" title="Pasar a titular" aria-label="Pasar a titular"><span class="icon-dot-green"></span></button>
                             </form>
                             <form method="POST" action="{{ route('entries.manage', $match) }}" class="inline" onsubmit="return confirm('¿Quitar a {{ $entry->user->name }} de la lista?');">
                                 @csrf
@@ -168,7 +168,7 @@
                                 @csrf
                                 <input type="hidden" name="guest_id" value="{{ $entry->guest_id }}">
                                 <input type="hidden" name="role" value="going">
-                                <button class="btn btn-ghost btn-sm" type="submit" title="Pasar a titular">Titular</button>
+                                <button class="btn-icon" type="submit" title="Pasar a titular" aria-label="Pasar a titular"><span class="icon-dot-green"></span></button>
                             </form>
                             <form method="POST" action="{{ route('guests.destroy', [$match, $entry->guest]) }}" class="inline" onsubmit="return confirm('¿Retirar invitado?');">
                                 @csrf @method('DELETE')

@@ -152,6 +152,10 @@ h3 { font-size: 15px; margin: 0 0 8px; }
 .btn-danger { background: #fff; border-color: #e3c3c1; color: var(--err); }
 .btn-danger:hover { background: #fdf1f0; }
 .btn-ghost { border-color: transparent; background: transparent; }
+.btn-icon { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 1px solid var(--line); border-radius: 999px; background: transparent; cursor: pointer; }
+.btn-icon:hover { background: rgba(127, 127, 127, .14); }
+.icon-dot { display: inline-block; width: 12px; height: 12px; border-radius: 999px; background: #ffd23f; box-shadow: 0 0 0 2px rgba(255, 210, 63, .35); }
+.icon-dot-green { display: inline-block; width: 12px; height: 12px; border-radius: 999px; background: #3ecf6e; box-shadow: 0 0 0 2px rgba(62, 207, 110, .35); }
 .btn-sm { padding: 6px 10px; font-size: 13px; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 
