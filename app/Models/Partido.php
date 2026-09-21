@@ -121,8 +121,8 @@ class Partido extends Model
     }
 
     /**
-     * Matches are finalized automatically once their start time has passed.
-     * Returns true when the status changed.
+     * Matches are finalized automatically once two hours have passed
+     * since the scheduled start time. Returns true when the status changed.
      */
     public function autoFinish(): bool
     {
@@ -130,7 +130,7 @@ class Partido extends Model
             return false;
         }
 
-        if ($this->played_at->isFuture()) {
+        if ($this->played_at->copy()->addHours(2)->isFuture()) {
             return false;
         }
 

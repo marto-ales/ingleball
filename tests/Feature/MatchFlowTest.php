@@ -564,6 +564,27 @@ final class MatchFlowTest extends TestCase
         $this->assertSame(Partido::STATUS_FINISHED, $match->refresh()->status);
     }
 
+    public function test_match_is_not_finished_until_two_hours_after_start_time(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+
+        $match = Partido::factory()->create([
+            'created_by' => $organizer->id,
+            'played_at' => now()->subHour(),
+            'status' => Partido::STATUS_LOCKED,
+        ]);
+        $this->assertFalse($match->autoFinish());
+        $this->assertSame(Partido::STATUS_LOCKED, $match->refresh()->status);
+
+        $match = Partido::factory()->create([
+            'created_by' => $organizer->id,
+            'played_at' => now()->subHours(2)->subMinutes(5),
+            'status' => Partido::STATUS_OPEN,
+        ]);
+        $this->assertTrue($match->autoFinish());
+        $this->assertSame(Partido::STATUS_FINISHED, $match->refresh()->status);
+    }
+
     public function test_result_cannot_be_recorded_before_start_time(): void
     {
         $organizer = User::factory()->organizer()->create();
