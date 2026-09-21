@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Themes;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -35,12 +38,14 @@ class ProfileController extends Controller
             'defense' => ['required', 'integer', 'between:0,10'],
             'likes_goalie' => ['nullable', 'boolean'],
             'goalkeeping' => ['required', 'integer', 'between:0,10'],
+            'theme' => ['nullable', Rule::in(array_keys(Themes::all()))],
         ]);
 
         $update = [
             'name' => $data['name'],
             'email' => $data['email'] ?? null,
             'phone' => $data['phone'] ?? null,
+            'theme' => $data['theme'] ?? Themes::DEFAULT,
         ];
 
         if ($user->is_organizer) {
@@ -64,5 +69,16 @@ class ProfileController extends Controller
         );
 
         return back()->with('status', 'Perfil actualizado.');
+    }
+
+    public function updateTheme(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'theme' => ['required', Rule::in(array_keys(Themes::all()))],
+        ]);
+
+        $request->user()->update(['theme' => $validated['theme']]);
+
+        return response()->json(['ok' => true]);
     }
 }

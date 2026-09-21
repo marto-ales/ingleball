@@ -25,6 +25,7 @@ class User extends Authenticatable
         'is_organizer',
         'banned_at',
         'is_managed',
+        'theme',
         'password',
     ];
 

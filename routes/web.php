@@ -77,6 +77,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('profile/theme', [ProfileController::class, 'updateTheme'])->name('profile.theme');
 });
 
 Route::middleware('auth', 'organizer')->group(function () {

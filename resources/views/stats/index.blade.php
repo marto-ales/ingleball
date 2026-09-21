@@ -10,7 +10,7 @@
     </div>
 </div>
 
-<div class="card card--ranking">
+<div class="card card--stats">
     <div class="table-wrap">
         <table class="table">
         <thead>

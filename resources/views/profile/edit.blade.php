@@ -53,6 +53,18 @@
         @endif
 
         <div class="divider"></div>
+        <h2>Apariencia</h2>
+        <div class="field">
+            <label>Tema de colores</label>
+            <div class="segmented">
+                @foreach (\App\Support\Themes::all() as $key => $label)
+                    <label><input type="radio" name="theme" value="{{ $key }}" @checked(old('theme', $user->theme) === $key)><span>{{ $label }}</span></label>
+                @endforeach
+            </div>
+            <p class="muted small mb0">Elegí el tema de colores del sitio para tu cuenta.</p>
+        </div>
+
+        <div class="divider"></div>
         <h2>Cómo jugás (autoevaluación)</h2>
         <div class="field">
             <label>¿Te gusta ir al arco?</label>

@@ -220,4 +220,73 @@ final class PagesRenderTest extends TestCase
             ->assertOk()
             ->assertDontSee('Completá tu autoevaluación');
     }
+
+    public function test_profile_page_shows_theme_selector(): void
+    {
+        $this->actingAs($this->organizer)
+            ->get('/profile')
+            ->assertOk()
+            ->assertSee('Tema de colores')
+            ->assertSee('value="dark"', false)
+            ->assertSee('value="light"', false)
+            ->assertSee('value="arg"', false)
+            ->assertSee('value="arg-dark"', false);
+    }
+
+    public function test_user_can_choose_color_theme_and_pages_render_with_it(): void
+    {
+        $this->actingAs($this->organizer)
+            ->patch('/profile', [
+                'name' => $this->organizer->name,
+                'email' => 'org@example.com',
+                'phone' => null,
+                'whatsapp_group' => null,
+                'likes_goalie' => 0,
+                'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'goalkeeping' => 5,
+                'theme' => 'arg',
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('users', ['id' => $this->organizer->id, 'theme' => 'arg']);
+
+        $this->actingAs($this->organizer)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('data-theme="arg"', false);
+
+        $dark = User::factory()->create();
+        $this->actingAs($dark)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('data-theme="arg-dark"', false);
+    }
+
+    public function test_default_theme_is_argentina_dark_for_guests_and_new_users(): void
+    {
+        $this->get('/login')->assertOk()->assertSee('data-theme="arg-dark"', false);
+
+        $user = User::factory()->create();
+        $this->assertSame('arg-dark', $user->refresh()->theme);
+    }
+
+    public function test_theme_switcher_is_rendered_in_the_menu_bar(): void
+    {
+        $this->actingAs($this->organizer)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('theme-btn', false)
+            ->assertSee('Verde oscuro')
+            ->assertSee('Verde claro')
+            ->assertSee('Argentina oscuro');
+    }
+
+    public function test_theme_switcher_saves_the_theme(): void
+    {
+        $this->actingAs($this->organizer)
+            ->post(route('profile.theme'), ['theme' => 'arg'])
+            ->assertOk()
+            ->assertJson(['ok' => true]);
+
+        $this->assertDatabaseHas('users', ['id' => $this->organizer->id, 'theme' => 'arg']);
+    }
 }

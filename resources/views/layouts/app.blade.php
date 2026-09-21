@@ -1,19 +1,10 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es" data-theme="{{ auth()->user()?->theme ?? \App\Support\Themes::DEFAULT }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', config('app.name', 'Ingleball')) · Ingleball</title>
-    <script>
-        (function () {
-            try {
-                document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark';
-            } catch (e) {
-                document.documentElement.dataset.theme = 'dark';
-            }
-        })();
-    </script>
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
@@ -34,25 +25,26 @@
                     <a class="btn btn-primary btn-sm" href="{{ route('matches.create') }}">+ Nuevo partido</a>
                 @endif
                 <a href="{{ route('profile.edit') }}">{{ auth()->user()->name }}</a>
+                <div class="theme-switch">
+                    <button type="button" class="theme-btn" aria-haspopup="true" aria-expanded="false" aria-label="Cambiar tema de color" title="Tema de color">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.41-1.01S12.7 17.64 12.7 17c0-.96.78-1.74 1.74-1.74h.87A3.7 3.7 0 0 0 19 11.56C19 6.95 15.99 3 12 3zM7.5 10a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-3a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3.75-1.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3.75 2A1.5 1.5 0 1 1 18 6.5a1.5 1.5 0 0 1 0 3z"/></svg>
+                    </button>
+                    <div class="theme-menu" hidden>
+                        @foreach (\App\Support\Themes::all() as $themeKey => $themeLabel)
+                            <button type="button" class="theme-opt {{ (auth()->user()->theme ?? \App\Support\Themes::DEFAULT) === $themeKey ? 'current' : '' }}" data-theme="{{ $themeKey }}">
+                                <span class="dot dot-{{ $themeKey }}"></span>{{ $themeLabel }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
                 <form method="POST" action="{{ route('logout') }}" class="inline">
                     @csrf
                     <button type="submit" class="btn btn-ghost btn-sm">Salir</button>
                 </form>
-                <button type="button" class="btn btn-ghost btn-sm theme-toggle" aria-label="Cambiar tema" title="Cambiar tema">
-                    <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                    <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/></svg>
-                </button>
             </nav>
         </div>
     </header>
     @endauth
-
-    @guest
-    <button type="button" class="btn btn-ghost theme-toggle theme-toggle-float" aria-label="Cambiar tema" title="Cambiar tema">
-        <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/></svg>
-    </button>
-    @endguest
 
     <main class="container content">
         @if (session('status'))
@@ -82,14 +74,6 @@
         <div class="container">Ingleball — organicemo el fulbito</div>
     </footer>
     <script>
-        document.querySelectorAll('.theme-toggle').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var root = document.documentElement;
-                var next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-                root.setAttribute('data-theme', next);
-                try { localStorage.setItem('theme', next); } catch (e) {}
-            });
-        });
         document.querySelectorAll('.stepper').forEach(function (box) {
             var input = box.querySelector('.stepper-input');
             box.querySelectorAll('.stepper-btn').forEach(function (btn) {
@@ -129,6 +113,51 @@
             range.addEventListener('input', sync);
             sync();
         });
+
+        document.querySelector('.theme-btn') && (function () {
+            var btn = document.querySelector('.theme-btn');
+            var menu = document.querySelector('.theme-menu');
+            var csrf = document.querySelector('meta[name="csrf-token"]');
+
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var open = menu.hidden;
+                menu.hidden = !open;
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+
+            document.addEventListener('click', function (e) {
+                if (e.target.closest('.theme-switch')) return;
+                menu.hidden = true;
+                btn.setAttribute('aria-expanded', 'false');
+            });
+
+            menu.querySelectorAll('.theme-opt').forEach(function (opt) {
+                opt.addEventListener('click', function () {
+                    var theme = opt.getAttribute('data-theme');
+                    if (opt.classList.contains('current') || !csrf) {
+                        menu.hidden = true;
+                        btn.setAttribute('aria-expanded', 'false');
+                        return;
+                    }
+                    var fd = new FormData();
+                    fd.append('theme', theme);
+                    fetch('{{ route('profile.theme') }}', {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': csrf.content },
+                        body: fd
+                    }).then(function (r) {
+                        if (!r.ok) throw new Error('fail');
+                        document.documentElement.setAttribute('data-theme', theme);
+                        menu.querySelectorAll('.theme-opt').forEach(function (o) {
+                            o.classList.toggle('current', o === opt);
+                        });
+                        menu.hidden = true;
+                        btn.setAttribute('aria-expanded', 'false');
+                    }).catch(function () { location.reload(); });
+                });
+            });
+        })();
 
         document.querySelectorAll('.password-toggle').forEach(function (btn) {
             btn.addEventListener('click', function () {
