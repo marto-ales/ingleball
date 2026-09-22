@@ -247,13 +247,13 @@ final class MatchFlowTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_cancelled_match_renders_with_badge_in_index(): void
+    public function test_cancelled_match_renders_with_badge_on_dashboard(): void
     {
         $organizer = User::factory()->organizer()->create();
         Partido::factory()->create(['created_by' => $organizer->id, 'status' => Partido::STATUS_CANCELLED]);
 
         $this->actingAs($organizer)
-            ->get(route('matches.index'))
+            ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('Cancelado');
     }
@@ -564,13 +564,13 @@ final class MatchFlowTest extends TestCase
         $this->assertSame(Partido::STATUS_FINISHED, $match->refresh()->status);
     }
 
-    public function test_match_is_not_finished_until_two_hours_after_start_time(): void
+    public function test_match_is_not_finished_until_one_hour_after_start_time(): void
     {
         $organizer = User::factory()->organizer()->create();
 
         $match = Partido::factory()->create([
             'created_by' => $organizer->id,
-            'played_at' => now()->subHour(),
+            'played_at' => now()->subMinutes(30),
             'status' => Partido::STATUS_LOCKED,
         ]);
         $this->assertFalse($match->autoFinish());
@@ -578,7 +578,7 @@ final class MatchFlowTest extends TestCase
 
         $match = Partido::factory()->create([
             'created_by' => $organizer->id,
-            'played_at' => now()->subHours(2)->subMinutes(5),
+            'played_at' => now()->subHours(2),
             'status' => Partido::STATUS_OPEN,
         ]);
         $this->assertTrue($match->autoFinish());
@@ -624,5 +624,56 @@ final class MatchFlowTest extends TestCase
                 'overall' => 5,
             ])
             ->assertStatus(422);
+    }
+
+    public function test_index_button_says_anotate_or_detalle_depending_on_signup(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $match = Partido::factory()->create([
+            'created_by' => $organizer->id,
+            'played_at' => now()->addDay(),
+        ]);
+
+        $this->actingAs($organizer)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Anotate')
+            ->assertDontSee('Detalle');
+
+        $match->entries()->create(['user_id' => $organizer->id, 'role' => 'going']);
+
+        $this->actingAs($organizer)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Detalle')
+            ->assertDontSee('Anotate');
+    }
+
+    public function test_attendance_counts_finished_matches_only(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $player = User::factory()->create();
+        $past = Partido::factory()->create([
+            'created_by' => $organizer->id,
+            'status' => Partido::STATUS_FINISHED,
+            'played_at' => now()->subWeek(),
+        ]);
+        Partido::factory()->create([
+            'created_by' => $organizer->id,
+            'status' => Partido::STATUS_FINISHED,
+            'played_at' => now()->subWeeks(2),
+        ]);
+        $upcoming = Partido::factory()->create([
+            'created_by' => $organizer->id,
+            'played_at' => now()->addWeek(),
+        ]);
+
+        $player->entries()->create(['match_id' => $past->id, 'role' => 'going']);
+        $player->entries()->create(['match_id' => $upcoming->id, 'role' => 'going']);
+
+        $row = app(\App\Services\StatsService::class)->leaderboard()->firstWhere(fn ($r) => $r['user']->is($player));
+
+        $this->assertSame(1, $row['matches']);
+        $this->assertSame(50, (int) $row['attendance']);
     }
 }

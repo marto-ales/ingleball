@@ -21,26 +21,6 @@ class MatchController extends Controller
         private RecurringMatchService $recurring,
     ) {}
 
-    public function index(): View
-    {
-        $this->recurring->ensureUpcoming();
-        Partido::whereIn('status', [Partido::STATUS_OPEN, Partido::STATUS_LOCKED])
-            ->where('played_at', '<', now())
-            ->get()
-            ->each(fn (Partido $match) => $match->autoFinish());
-
-        $all = Partido::with('creator')
-            ->orderByDesc('played_at')
-            ->get()
-            ->groupBy(fn (Partido $match): string => match (true) {
-                $match->isCancelled() => 'cancelled',
-                $match->isFinished() => 'finished',
-                default => 'upcoming',
-            });
-
-        return view('matches.index', ['matches' => $all]);
-    }
-
     public function create(): View
     {
         return view('matches.create');

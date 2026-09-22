@@ -32,7 +32,6 @@ final class PagesRenderTest extends TestCase
     public function test_main_pages_render_for_authenticated_user(): void
     {
         $this->actingAs($this->organizer)->get('/dashboard')->assertOk();
-        $this->actingAs($this->organizer)->get('/matches')->assertOk();
         $this->actingAs($this->organizer)->get('/matches/create')->assertOk();
         $this->actingAs($this->organizer)->get('/matches/'.$this->openMatch->id)->assertOk();
         $this->actingAs($this->organizer)->get('/matches/'.$this->openMatch->id.'/ratings')->assertOk();
@@ -172,16 +171,6 @@ final class PagesRenderTest extends TestCase
 
         $this->actingAs($this->organizer)
             ->get('/matches/'.$match->id)
-            ->assertOk()
-            ->assertSee('Valor: $1.250 por persona', false);
-    }
-
-    public function test_index_lists_cost_per_person(): void
-    {
-        $match = Partido::factory()->create(['created_by' => $this->organizer->id, 'field_value' => 10000, 'size' => 4]);
-
-        $this->actingAs($this->organizer)
-            ->get('/matches')
             ->assertOk()
             ->assertSee('Valor: $1.250 por persona', false);
     }

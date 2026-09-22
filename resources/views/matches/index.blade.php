@@ -25,7 +25,11 @@
                     <div class="muted small">💰 Valor: ${{ number_format($match->costPerPerson(), 0, ',', '.') }} por persona</div>
                 @endif
             </div>
-            <a class="btn btn-primary btn-sm" href="{{ route('matches.show', $match) }}">Abrir</a>
+            @if ($match->entries->isNotEmpty())
+                <a class="btn btn-sm" href="{{ route('matches.show', $match) }}">Detalle</a>
+            @else
+                <a class="btn btn-primary btn-sm" href="{{ route('matches.show', $match) }}">Anotate</a>
+            @endif
         </div>
     @empty
         <div class="card empty">Sin partidos próximos.</div>

@@ -38,10 +38,12 @@
                 <div class="row">
                     <strong>{{ $match->title }}</strong>
                     @include('partials.status-badge', ['match' => $match])
+                    @if ($match->recurring) <span class="badge badge-info">Recurrente</span> @endif
                 </div>
                 <div class="muted small">
                     {{ $match->played_at->format('D, d M Y H:i') }}
                     @if ($match->venue) · {{ $match->venue }} @endif
+                    · creó {{ $match->creator?->name }}
                 </div>
                 @if ($match->field_value !== null)
                     <div class="muted small">💰 Valor: ${{ number_format($match->costPerPerson(), 0, ',', '.') }} por persona</div>
@@ -53,7 +55,11 @@
                 @elseif (($myEntries->get($match->id)?->role) === 'substitute')
                     <span class="chip">🟡 Suplente</span>
                 @endif
-                <a class="btn btn-primary btn-sm" href="{{ route('matches.show', $match) }}">Ver</a>
+                @if ($myEntries->has($match->id))
+                    <a class="btn btn-sm" href="{{ route('matches.show', $match) }}">Detalle</a>
+                @else
+                    <a class="btn btn-primary btn-sm" href="{{ route('matches.show', $match) }}">Anotate</a>
+                @endif
             </div>
         </div>
     @empty
@@ -81,4 +87,25 @@
         <div class="card empty">Aún no hay partidos terminados.</div>
     @endforelse
 </div>
+
+@if ($cancelled->isNotEmpty())
+    <div class="section">
+        <h2>Cancelados</h2>
+        @foreach ($cancelled as $match)
+            <div class="card card--cancelled row between">
+                <div>
+                    <div class="row">
+                        <strong>{{ $match->title }}</strong>
+                        <span class="badge badge-cancelled">Cancelado</span>
+                    </div>
+                    <div class="muted small">{{ $match->played_at->format('d M Y') }}</div>
+                    @if ($match->field_value !== null)
+                        <div class="muted small">💰 Valor: ${{ number_format($match->costPerPerson(), 0, ',', '.') }} por persona</div>
+                    @endif
+                </div>
+                <a class="btn btn-sm" href="{{ route('matches.show', $match) }}">Ver</a>
+            </div>
+        @endforeach
+    </div>
+@endif
 @endsection

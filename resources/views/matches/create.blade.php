@@ -5,7 +5,7 @@
 @section('content')
 <div class="page-head">
     <div><h1>Nuevo partido</h1></div>
-    <a class="btn btn-sm" href="{{ route('matches.index') }}">← Volver</a>
+    <a class="btn btn-sm" href="{{ route('dashboard') }}">← Volver</a>
 </div>
 
 <div class="card" style="max-width: 560px;">

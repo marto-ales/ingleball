@@ -190,8 +190,8 @@ h3 { font-size: 15px; margin: 0 0 8px; }
 .order-actions .btn { min-width: 34px; justify-content: center; padding-left: 0; padding-right: 0; }
 .chip { display: inline-flex; align-items: center; gap: 6px; background: #f3f6f2; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 600; }
 .score-tag { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--pitch-dark); }
-.score-tag.tip { position: relative; cursor: help; }
-.score-tag.tip .tipbox {
+.tip { position: relative; cursor: help; }
+.tip .tipbox {
   position: absolute;
   bottom: calc(100% + 8px);
   right: 0;
@@ -211,7 +211,7 @@ h3 { font-size: 15px; margin: 0 0 8px; }
   pointer-events: none;
   transition: opacity .12s ease;
 }
-.score-tag.tip .tipbox::after {
+.tip .tipbox::after {
   content: "";
   position: absolute;
   top: 100%;
@@ -220,9 +220,15 @@ h3 { font-size: 15px; margin: 0 0 8px; }
   border-right: 5px solid transparent;
   border-top: 5px solid rgba(255, 255, 255, .25);
 }
+.tipbox--col { flex-direction: column; align-items: stretch; gap: 5px; min-width: 200px; text-align: left; }
+.tipbox--col .tip-row-name { max-width: 230px; }
+.tip-row { display: flex; justify-content: space-between; gap: 14px; font-size: 12px; font-weight: 600; color: #eef1f5; white-space: nowrap; }
+.tip-row-name { color: #c8d0da; font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
+.tip-row-val { color: #5aa9ff; font-weight: 700; }
+.tip-head { font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: #9aa6b4; border-bottom: 1px solid rgba(255, 255, 255, .12); padding-bottom: 4px; margin-bottom: 2px; white-space: nowrap; }
 .tipbox-num.tip-self { color: #5aa9ff; }
 .tipbox-num.tip-org { color: #c4a6ff; }
-.score-tag.tip:hover .tipbox, .score-tag.tip:focus .tipbox, .score-tag.tip.open .tipbox { opacity: 1; }
+.tip:hover .tipbox, .tip:focus .tipbox, .tip.open .tipbox { opacity: 1; }
 
 /* Lists */
 .list { list-style: none; margin: 0; padding: 0; }

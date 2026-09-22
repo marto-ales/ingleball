@@ -18,23 +18,27 @@ class StatsService
      */
     public function leaderboard(): Collection
     {
-        $totalMatches = Partido::count();
+        $totalMatches = Partido::where('status', Partido::STATUS_FINISHED)->count();
 
         return User::with('player')
             ->orderBy('id')
             ->get()
             ->map(function (User $user) use ($totalMatches): array {
-                $matches = $user->entries()->where('role', 'going')->count();
+                $played = $user->entries()
+                    ->where('role', 'going')
+                    ->whereHas('match', fn ($q) => $q->where('status', Partido::STATUS_FINISHED))
+                    ->count();
                 $form = $this->scorer->formForUser($user);
 
                 return [
                     'user' => $user,
                     'score' => $this->scorer->scoreForUser($user, $form),
-                    'matches' => $matches,
-                    'attendance' => $totalMatches > 0 ? round($matches / $totalMatches * 100) : 0,
+                    'matches' => $played,
+                    'attendance' => $totalMatches > 0 ? round($played / $totalMatches * 100) : 0,
                     'mvp' => MatchResult::where('mvp_user_id', $user->id)->count(),
                     'general' => $form['general'],
                     'form' => $form['multiplier'],
+                    'rendimiento' => $this->scorer->ratingDetailsForUser($user),
                     'goalkeeping' => $this->scorer->goalkeepingForUser($user),
                 ];
             })

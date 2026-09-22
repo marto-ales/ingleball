@@ -20,7 +20,7 @@
                 <th class="num">Puntaje</th>
                 <th class="num">Partidos</th>
                 <th class="num">MVP</th>
-                <th class="num">General</th>
+                <th class="num"><span class="tip">General<span class="tipbox tipbox--col"><span class="tip-head">General</span>Promedio de la calificación general que te pusieron tus compañeros en tus últimos {{ $formWindow }} partidos finalizados (sin contar tu autoevaluación).</span></span></th>
                 <th class="num">Rendimiento</th>
                 <th class="num">Participación</th>
             </tr>
@@ -34,7 +34,21 @@
                     <td class="num">{{ $row['matches'] }}</td>
                     <td class="num">{{ $row['mvp'] }}</td>
                     <td class="num">{{ $row['general'] ? number_format($row['general'], 1) : '—' }}</td>
-                    <td class="num">×{{ number_format($row['form'], 2) }}</td>
+                    <td class="num">
+                        <span class="tip">×{{ number_format($row['form'], 2) }}
+                            @if ($row['rendimiento']->isNotEmpty())
+                                <span class="tipbox tipbox--col">
+                                    <span class="tip-head">Calificaciones recibidas</span>
+                                    @foreach ($row['rendimiento'] as $r)
+                                        <span class="tip-row">
+                                            <span class="tip-row-name">{{ $r['match']->played_at->format('d/m') }} · {{ $r['match']->title }}</span>
+                                            <span class="tip-row-val">{{ number_format($r['overall'], 1) }}</span>
+                                        </span>
+                                    @endforeach
+                                </span>
+                            @endif
+                        </span>
+                    </td>
                     <td class="num">{{ $row['attendance'] }}%</td>
                 </tr>
             @empty

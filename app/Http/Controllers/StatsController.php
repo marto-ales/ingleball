@@ -14,7 +14,10 @@ class StatsController extends Controller
 
     public function index(): View
     {
-        return view('stats.index', ['rows' => $this->stats->leaderboard()]);
+        return view('stats.index', [
+            'rows' => $this->stats->leaderboard(),
+            'formWindow' => max(1, (int) config('balance.form_window')),
+        ]);
     }
 
     public function show(User $user): View

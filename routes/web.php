@@ -43,7 +43,6 @@ Route::post('logout', [LoginController::class, 'logout'])
 Route::middleware('auth')->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('matches', [MatchController::class, 'index'])->name('matches.index');
     Route::get('matches/create', [MatchController::class, 'create'])->middleware('organizer')->name('matches.create');
     Route::get('matches/{match}/edit', [MatchController::class, 'edit'])->middleware('organizer')->name('matches.edit');
     Route::patch('matches/{match}', [MatchController::class, 'update'])->middleware('organizer')->name('matches.update');

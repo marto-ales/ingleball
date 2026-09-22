@@ -84,6 +84,32 @@ class Scorer
         return round($this->power($this->attributesForUser($user, $form), $this->settings->weights()), 2);
     }
 
+    /**
+     * The general ratings this player received, one per finished match within
+     * the form window, newest first. Used to explain the Rendimiento column.
+     *
+     * @return Collection<int, array{match: Partido, overall: float}>
+     */
+    public function ratingDetailsForUser(User $user): Collection
+    {
+        $matchIds = $this->recentMatchIds($user, max(1, (int) config('balance.form_window')));
+
+        if ($matchIds->isEmpty()) {
+            return collect();
+        }
+
+        return Rating::whereIn('match_id', $matchIds)
+            ->where('rated_user_id', $user->id)
+            ->with('match')
+            ->get()
+            ->sortByDesc(fn (Rating $rating): int => (int) $rating->match?->played_at?->getTimestamp())
+            ->values()
+            ->map(fn (Rating $rating): array => [
+                'match' => $rating->match,
+                'overall' => (float) $rating->overall,
+            ]);
+    }
+
     public function forGuest(Guest $guest): float
     {
         return (float) ($guest->overall ?? 5);

@@ -17,7 +17,6 @@
             <a class="brand" href="{{ route('dashboard') }}">⚽ Ingleball</a>
             <nav class="nav">
                 <a href="{{ route('dashboard') }}">Inicio</a>
-                <a href="{{ route('matches.index') }}">Partidos</a>
                 <a href="{{ route('stats.index') }}">Estadísticas</a>
                 @if (auth()->user()->is_organizer)
                     <a href="{{ route('users.manage.index') }}">Usuarios</a>

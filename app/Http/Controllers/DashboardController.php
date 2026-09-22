@@ -18,7 +18,8 @@ class DashboardController extends Controller
             ->get()
             ->each(fn (Partido $match) => $match->autoFinish());
 
-        $upcoming = Partido::whereIn('status', [Partido::STATUS_OPEN, Partido::STATUS_LOCKED])
+        $upcoming = Partido::with('creator')
+            ->whereIn('status', [Partido::STATUS_OPEN, Partido::STATUS_LOCKED])
             ->where('played_at', '>=', now()->subDay())
             ->orderBy('played_at')
             ->take(10)
@@ -26,7 +27,10 @@ class DashboardController extends Controller
 
         $finished = Partido::where('status', Partido::STATUS_FINISHED)
             ->orderByDesc('played_at')
-            ->take(6)
+            ->get();
+
+        $cancelled = Partido::where('status', Partido::STATUS_CANCELLED)
+            ->orderByDesc('played_at')
             ->get();
 
         $myEntries = $request->user()
@@ -40,6 +44,6 @@ class DashboardController extends Controller
 
         $needsEmail = blank($request->user()->email);
 
-        return view('dashboard', compact('upcoming', 'finished', 'myEntries', 'needsSelfEval', 'needsEmail'));
+        return view('dashboard', compact('upcoming', 'finished', 'cancelled', 'myEntries', 'needsSelfEval', 'needsEmail'));
     }
 }
