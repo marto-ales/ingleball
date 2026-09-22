@@ -1,5 +1,7 @@
 <?php
 
+use App\Console\Commands\RatingsDetailCommand;
+use App\Http\Middleware\EnsureUserIsOrganizer;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -11,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withCommands([
+        RatingsDetailCommand::class,
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: [
             '10.0.0.0/8',
@@ -19,7 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'organizer' => \App\Http\Middleware\EnsureUserIsOrganizer::class,
+            'organizer' => EnsureUserIsOrganizer::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

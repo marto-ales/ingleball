@@ -18,7 +18,7 @@
                 <th>#</th>
                 <th>Jugador</th>
                 <th class="num">Puntaje</th>
-                <th class="num"><span class="tip">Ponderado<span class="tipbox tipbox--col"><span class="tip-head">Ponderado</span>Promedio de la calificación general que te pusieron tus compañeros en tus últimos {{ $formWindow }} partidos finalizados (sin contar tu autoevaluación).</span></span></th>
+                <th class="num"><span class="tip">Calificaciones<span class="tipbox tipbox--col"><span class="tip-head">Calificaciones</span>Promedio de la calificación general que te pusieron tus compañeros en tus últimos {{ $formWindow }} partidos finalizados (sin contar tu autoevaluación).</span></span></th>
                 <th class="num">Rendimiento</th>
                 <th class="num">MVP</th>
                 <th class="num">Partidos</th>
