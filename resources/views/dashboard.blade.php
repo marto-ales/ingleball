@@ -41,9 +41,8 @@
                     @if ($match->recurring) <span class="badge badge-info">Recurrente</span> @endif
                 </div>
                 <div class="muted small">
-                    {{ $match->played_at->format('D, d M Y H:i') }}
+                    {{ ucfirst($match->played_at->isoFormat('dddd, D [de] MMMM [de] YYYY HH:mm')) }}
                     @if ($match->venue) · {{ $match->venue }} @endif
-                    · creó {{ $match->creator?->name }}
                 </div>
                 @if ($match->field_value !== null)
                     <div class="muted small">💰 Valor: ${{ number_format($match->costPerPerson(), 0, ',', '.') }} por persona</div>

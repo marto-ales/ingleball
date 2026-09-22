@@ -187,18 +187,63 @@
             });
         })();
 
-        document.querySelectorAll('.tip').forEach(function (tip) {
-            tip.addEventListener('click', function (e) {
-                e.stopPropagation();
-                var open = tip.classList.contains('open');
-                document.querySelectorAll('.tip').forEach(function (t) { t.classList.remove('open'); });
-                if (!open) tip.classList.add('open');
-            });
-        });
+        (function () {
+            var layer = document.createElement('div');
+            layer.className = 'tip-layer';
+            document.body.appendChild(layer);
 
-        document.addEventListener('click', function () {
-            document.querySelectorAll('.tip').forEach(function (t) { t.classList.remove('open'); });
-        });
+            var current = null;
+
+            function position(box, tip) {
+                var r = tip.getBoundingClientRect();
+                box.style.left = 'auto';
+                box.style.bottom = 'auto';
+                box.style.width = 'auto';
+                box.style.right = (window.innerWidth - r.right) + 'px';
+                box.style.top = (r.top - box.offsetHeight - 8) + 'px';
+                if (box.offsetHeight + 8 > r.top) {
+                    box.style.top = (r.bottom + 8) + 'px';
+                }
+            }
+
+            function closeCurrent() {
+                if (!current) return;
+                current.tip.classList.remove('open');
+                current.tip.appendChild(current.box);
+                current.box.style.cssText = '';
+                current = null;
+            }
+
+            function openTip(tip, box) {
+                if (current && current.tip === tip) return;
+                closeCurrent();
+                tip.classList.add('open');
+                current = { tip: tip, box: box };
+                layer.appendChild(box);
+                box.style.position = 'fixed';
+                box.style.opacity = '1';
+                box.style.pointerEvents = 'none';
+                position(box, tip);
+            }
+
+            document.querySelectorAll('.tip').forEach(function (tip) {
+                var box = tip.querySelector('.tipbox');
+                if (!box) return;
+
+                tip.addEventListener('mouseenter', function () { openTip(tip, box); });
+                tip.addEventListener('mouseleave', closeCurrent);
+                tip.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    openTip(tip, box);
+                });
+                tip.addEventListener('focus', function () { openTip(tip, box); });
+                tip.addEventListener('blur', closeCurrent);
+            });
+
+            document.addEventListener('click', closeCurrent);
+            window.addEventListener('scroll', closeCurrent, true);
+            window.addEventListener('resize', closeCurrent);
+        })();
 
         document.querySelectorAll('.password-toggle').forEach(function (btn) {
             btn.addEventListener('click', function () {

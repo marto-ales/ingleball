@@ -42,7 +42,7 @@ final class RecurringGuestTest extends TestCase
         $service = app(RecurringMatchService::class);
         $this->assertSame(1, $service->ensureUpcoming());
         $this->assertDatabaseHas('matches', [
-            'title' => 'Fútbol de los sábados',
+            'title' => '23 de Septiembre',
             'played_at' => '2026-09-23 12:00:00',
             'recurring' => false,
         ]);

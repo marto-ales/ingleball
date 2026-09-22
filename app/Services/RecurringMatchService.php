@@ -45,7 +45,7 @@ class RecurringMatchService
             }
 
             Partido::create([
-                'title' => $template->title,
+                'title' => $next->format('j').' de '.ucfirst($next->translatedFormat('F')),
                 'played_at' => $next,
                 'venue' => $template->venue,
                 'field_value' => $template->field_value,

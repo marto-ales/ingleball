@@ -24,7 +24,7 @@
     <div>
         <h1>{{ $match->title }}</h1>
         <p class="lead">
-            {{ $match->played_at->format('D, d M Y · H:i') }}
+            {{ ucfirst($match->played_at->isoFormat('dddd, D [de] MMMM [de] YYYY · HH:mm')) }}
             @if ($match->venue) · {{ $match->venue }} @endif
             · {{ $goingCount }} anotados ({{ $autoSize }}v{{ $autoSize }})
         </p>

@@ -2,7 +2,7 @@
     <h1 style="color: #0b6e3f; margin: 0 0 12px;">&#9917; Ingleball</h1>
     <p style="margin: 0 0 16px;">Recordatorio de partido:</p>
     <h2 style="margin: 0 0 8px; font-size: 20px;">{{ $match->title }}</h2>
-    <p style="font-size: 16px; margin: 6px 0;">&#128197; {{ $match->played_at->format('D, d M Y \· H:i') }}</p>
+    <p style="font-size: 16px; margin: 6px 0;">&#128197; {{ ucfirst($match->played_at->isoFormat('dddd, D [de] MMMM [de] YYYY · HH:mm')) }}</p>
     @if ($match->venue)
         <p style="margin: 6px 0;">&#128205; {{ $match->venue }}</p>
     @endif
