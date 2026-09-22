@@ -35,10 +35,10 @@
                         <span class="tip">{{ $row['general'] ? number_format($row['general'], 1) : '—' }}
                             @if ($row['general'] !== null && $row['rendimiento']->isNotEmpty())
                                 <span class="tipbox tipbox--col">
-                                    <span class="tip-head">Calificaciones recibidas</span>
+                                    <span class="tip-head">Calificaciones</span>
                                     @foreach ($row['rendimiento'] as $r)
                                         <span class="tip-row">
-                                            <span class="tip-row-name">{{ $r['match']->played_at->format('d/m') }} · {{ $r['match']->title }}</span>
+                                            <span class="tip-row-name">{{ $r['match']->played_at->format('d/m') }}</span>
                                             <span class="tip-row-val">{{ number_format($r['overall'], 1) }}</span>
                                         </span>
                                     @endforeach
