@@ -132,8 +132,7 @@ class MatchController extends Controller
 
         $participants = $this->participants($match);
 
-        $availableUsers = User::where('is_managed', false)
-            ->whereNull('banned_at')
+        $availableUsers = User::whereNull('banned_at')
             ->whereNotIn('id', $match->entries()->whereNotNull('user_id')->pluck('user_id'))
             ->orderBy('name')
             ->get();

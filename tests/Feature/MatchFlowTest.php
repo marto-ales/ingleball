@@ -6,6 +6,7 @@ use App\Models\Guest;
 use App\Models\Partido;
 use App\Models\Player;
 use App\Models\User;
+use App\Services\StatsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -43,6 +44,18 @@ final class MatchFlowTest extends TestCase
             'user_id' => $player->id,
             'role' => 'going',
         ]);
+    }
+
+    public function test_managed_players_are_available_in_the_add_players_dropdown(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $managed = User::factory()->create(['name' => 'Pancho', 'is_managed' => true]);
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+
+        $this->actingAs($organizer)
+            ->get(route('matches.show', $match))
+            ->assertOk()
+            ->assertSee('Pancho (gestionado)');
     }
 
     public function test_organizer_can_move_users_to_substitute_and_remove_them(): void
@@ -671,7 +684,7 @@ final class MatchFlowTest extends TestCase
         $player->entries()->create(['match_id' => $past->id, 'role' => 'going']);
         $player->entries()->create(['match_id' => $upcoming->id, 'role' => 'going']);
 
-        $row = app(\App\Services\StatsService::class)->leaderboard()->firstWhere(fn ($r) => $r['user']->is($player));
+        $row = app(StatsService::class)->leaderboard()->firstWhere(fn ($r) => $r['user']->is($player));
 
         $this->assertSame(1, $row['matches']);
         $this->assertSame(50, (int) $row['attendance']);

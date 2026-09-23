@@ -142,7 +142,7 @@
                             <label>Jugador</label>
                             <select name="user_id" required>
                                 @foreach ($availableUsers as $u)
-                                    <option value="{{ $u->id }}" @selected(old('user_id') == $u->id)>{{ $u->name }}</option>
+                                    <option value="{{ $u->id }}" @selected(old('user_id') == $u->id)>{{ $u->name }}@if ($u->is_managed) (gestionado) @endif</option>
                                 @endforeach
                             </select>
                         </div>
