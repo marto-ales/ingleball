@@ -150,6 +150,28 @@ final class ScorerTest extends TestCase
         $this->assertSame(1.2, $this->scorer->formForUser($user)['multiplier']);
     }
 
+    public function test_the_form_span_setting_scales_the_multiplier(): void
+    {
+        config(['balance.self_weight' => 1.0]);
+        app(AlgorithmSettings::class)->update(['self_weight' => 1.0, 'weight_by_form' => true, 'form_span' => 0.4]);
+
+        $user = $this->player(['speed' => 6]);
+        $rater = User::factory()->create();
+
+        $match = Partido::factory()->create([
+            'status' => Partido::STATUS_FINISHED,
+            'played_at' => now()->subDay(),
+        ]);
+
+        $match->entries()->create(['user_id' => $user->id, 'role' => 'going']);
+
+        Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $user->id, 'match_id' => $match->id, 'overall' => 8]);
+
+        // Stored 8 is centered +3; 3/5·0.4 = 0.24 → ×1.24.
+        $this->assertEqualsWithDelta(1.24, $this->scorer->formForUser($user)['multiplier'], 0.001);
+        $this->assertEqualsWithDelta(7.44, $this->scorer->attributesForUser($user)['speed'], 0.01);
+    }
+
     public function test_form_weighting_can_be_disabled(): void
     {
         config(['balance.self_weight' => 1.0]);

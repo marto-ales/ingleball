@@ -22,6 +22,7 @@ class AlgorithmController extends Controller
             'spreadGoalies' => $this->settings->spreadGoalies(),
             'selfWeight' => $this->settings->selfWeight(),
             'weightByForm' => $this->settings->weightByForm(),
+            'formSpan' => $this->settings->formSpan(),
         ]);
     }
 
@@ -36,6 +37,7 @@ class AlgorithmController extends Controller
             'spread_goalies' => ['nullable', 'boolean'],
             'self_weight' => ['required', 'numeric', 'between:0,1'],
             'weight_by_form' => ['nullable', 'boolean'],
+            'form_span' => ['nullable', 'numeric', 'between:0.05,0.5'],
         ]);
 
         $order = array_values($data['order']);
@@ -48,12 +50,20 @@ class AlgorithmController extends Controller
             throw ValidationException::withMessages(['order' => 'Cada atributo debe aparecer una sola vez.']);
         }
 
+        $weightByForm = $request->boolean('weight_by_form');
+
+        // The form span only applies while the recent-form adjustment is on.
+        $formSpan = $weightByForm
+            ? (float) ($data['form_span'] ?? config('balance.form_span', 0.2))
+            : $this->settings->formSpan();
+
         $this->settings->update([
             'order' => $order,
             'random_tie_break' => $request->boolean('random_tie_break'),
             'spread_goalies' => $request->boolean('spread_goalies'),
             'self_weight' => $data['self_weight'],
-            'weight_by_form' => $request->boolean('weight_by_form'),
+            'weight_by_form' => $weightByForm,
+            'form_span' => $formSpan,
         ]);
 
         return back()->with('status', 'Configuración del algoritmo guardada.');

@@ -18,12 +18,12 @@ return [
     |--------------------------------------------------------------------------
     | The profile is scaled by the general rating the player received in their
     | last matches. Ratings are stored 0-10; centered on the neutral 5, each
-    | point above or below the neutral level moves the profile ±4%, so the
-    | multiplier stays between form_min and form_max (±20%).
+    | point above or below the neutral level moves the profile form_span. So
+    | with the default 0.2 the multiplier stays between 0.8 and 1.2 (±20%).
+    | Organizers can tune form_span from the "Algoritmo" screen.
     */
     'form_window' => 3,
-    'form_min' => 0.8,
-    'form_max' => 1.2,
+    'form_span' => 0.2,
 
     /*
     |--------------------------------------------------------------------------

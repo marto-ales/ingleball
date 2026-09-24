@@ -81,13 +81,40 @@
             <label><input type="radio" name="weight_by_form" value="1" @checked($weightByForm)><span>Sí</span></label>
             <label><input type="radio" name="weight_by_form" value="0" @checked(! $weightByForm)><span>No</span></label>
         </div>
-        <p class="muted small mb0">Escala el perfil con la calificación general recibida en los últimos 3 partidos: desde el nivel neutral (0) hacia arriba o abajo ajusta hasta ±20%.</p>
+        <p class="muted small mb0">Escala el perfil con la calificación general recibida en los últimos 3 partidos.</p>
+    </div>
+
+    <div class="field" id="form-span-field" @if(! $weightByForm) hidden @endif>
+        <label for="form_span">Incidencia de las calificaciones por partido</label>
+        <div class="slider">
+            <input id="form_span" type="range" name="form_span" min="0.05" max="0.5" step="0.05" value="{{ old('form_span', $formSpan) }}" data-percent="1" aria-label="Incidencia de las calificaciones por partido">
+            <output for="form_span">{{ (int) round((float) old('form_span', $formSpan) * 100) }}%</output>
+        </div>
+        <div class="row between muted small" style="gap:6px;"><span>±5%</span><span>±50%</span></div>
+        <p class="muted small mb0">Cuánto pueden afectar las calificaciones al puntaje del perfil, hacia arriba o hacia abajo.</p>
     </div>
 
     <button type="submit" class="btn btn-primary">Guardar</button>
 </form>
 
 <script>
+    (function () {
+        var formSpanField = document.getElementById('form-span-field');
+        var radios = document.querySelectorAll('input[name="weight_by_form"]');
+        if (formSpanField && radios.length) {
+            function sync() {
+                var on = document.querySelector('input[name="weight_by_form"]:checked');
+                formSpanField.hidden = !(on && on.value === '1');
+            }
+
+            radios.forEach(function (radio) {
+                radio.addEventListener('change', sync);
+            });
+
+            sync();
+        }
+    })();
+
     (function () {
         var list = document.getElementById('order-list');
         if (!list) return;

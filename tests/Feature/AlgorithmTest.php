@@ -37,6 +37,37 @@ final class AlgorithmTest extends TestCase
         $this->assertSame(0.5, $settings->selfWeight());
     }
 
+    public function test_form_span_can_be_tuned_only_while_form_weighting_is_on(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+
+        $this->actingAs($organizer)
+            ->patch('/algorithm', [
+                'order' => ['speed', 'skill', 'passing', 'shooting', 'defense'],
+                'self_weight' => 0.5,
+                'weight_by_form' => '1',
+                'form_span' => 0.4,
+            ])
+            ->assertRedirect();
+
+        $settings = new AlgorithmSettings;
+
+        $this->assertTrue($settings->weightByForm());
+        $this->assertSame(0.4, $settings->formSpan());
+
+        $this->actingAs($organizer)
+            ->patch('/algorithm', [
+                'order' => ['speed', 'skill', 'passing', 'shooting', 'defense'],
+                'self_weight' => 0.5,
+                'weight_by_form' => '0',
+            ])
+            ->assertRedirect();
+
+        // Disabling the form weighting keeps the tuned span for later.
+        $this->assertFalse($settings->weightByForm());
+        $this->assertSame(0.4, $settings->formSpan());
+    }
+
     public function test_duplicate_positions_are_rejected(): void
     {
         $organizer = User::factory()->organizer()->create();

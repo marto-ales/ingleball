@@ -212,12 +212,13 @@ class Scorer
         }
 
         // The stored overall is 0-10; centered on 5, each point above or below
-        // neutral moves the multiplier ±4%, capped at ±20%.
-        $weight = (($general - 5) / 5) * (float) config('balance.form_span', 0.2);
+        // neutral moves the multiplier by span/5, capped at ±span.
+        $span = $this->settings->formSpan();
+        $weight = (($general - 5) / 5) * $span;
 
         return max(
-            (float) config('balance.form_min', 0.8),
-            min((float) config('balance.form_max', 1.2), 1 + $weight),
+            1 - $span,
+            min(1 + $span, 1 + $weight),
         );
     }
 }

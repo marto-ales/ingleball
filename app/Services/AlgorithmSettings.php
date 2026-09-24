@@ -24,7 +24,7 @@ class AlgorithmSettings
     private const RANKED_WEIGHTS = [0.30, 0.25, 0.15, 0.15, 0.15];
 
     /**
-     * @return array{order: array<int, string>, random_tie_break: bool, spread_goalies: bool, self_weight: float, weight_by_form: bool}
+     * @return array{order: array<int, string>, random_tie_break: bool, spread_goalies: bool, self_weight: float, weight_by_form: bool, form_span: float}
      */
     public function all(): array
     {
@@ -71,6 +71,15 @@ class AlgorithmSettings
     }
 
     /**
+     * How strongly the per-match ratings (form) can scale the profile, as a
+     * fraction: 0.2 means the profile moves at most ±20%.
+     */
+    public function formSpan(): float
+    {
+        return $this->all()['form_span'];
+    }
+
+    /**
      * Attribute weights derived from the configured order.
      *
      * @return array<string, float>
@@ -87,7 +96,7 @@ class AlgorithmSettings
     }
 
     /**
-     * @param  array{order?: array<int, string>, random_tie_break?: bool, spread_goalies?: bool, self_weight?: float|int|string, weight_by_form?: bool}  $data
+     * @param  array{order?: array<int, string>, random_tie_break?: bool, spread_goalies?: bool, self_weight?: float|int|string, weight_by_form?: bool, form_span?: float|int|string}  $data
      */
     public function update(array $data): void
     {
@@ -101,7 +110,7 @@ class AlgorithmSettings
 
     /**
      * @param  array<string, mixed>  $data
-     * @return array{order: array<int, string>, random_tie_break: bool, spread_goalies: bool, self_weight: float, weight_by_form: bool}
+     * @return array{order: array<int, string>, random_tie_break: bool, spread_goalies: bool, self_weight: float, weight_by_form: bool, form_span: float}
      */
     private function normalize(array $data): array
     {
@@ -126,6 +135,7 @@ class AlgorithmSettings
             'spread_goalies' => (bool) ($data['spread_goalies'] ?? true),
             'self_weight' => max(0.0, min(1.0, (float) $selfWeight)),
             'weight_by_form' => (bool) ($data['weight_by_form'] ?? true),
+            'form_span' => max(0.05, min(0.5, (float) ($data['form_span'] ?? config('balance.form_span', 0.2)))),
         ];
     }
 }
