@@ -12,23 +12,16 @@ class TeamBalancer
     private const GOALIE_PENALTY = 100.0;
 
     /**
-     * Above this many participants the exhaustive pairing gets expensive, so a
-     * greedy nearest-neighbour matching is used instead. Real matches never
-     * reach it: the generator only ever sends at most 12 players (6v6).
-     */
-    private const EXHAUSTIVE_LIMIT = 12;
-
-    /**
      * Tolerance used to treat two floating point costs as a tie.
      */
     private const EPSILON = 1.0e-9;
 
     /**
-     * Split participants into two teams so that every player has a rival of
-     * similar characteristics on the other team. Players are first paired by
-     * how alike their attribute vectors are (speed weighing the most, then
-     * skill), then each pair is split one per team choosing the orientation
-     * that keeps every characteristic as even as possible, preferring a polite
+     * Split participants into two teams by building duplas: the lowest rated
+     * player is paired with the highest, the next lowest with the next highest,
+     * and so on. Each dupla therefore carries a similar combined power, and
+     * every dupla contributes one player to each team. The orientation that
+     * keeps the totals as even as possible is chosen, preferring a polite
      * goalkeeper on each side.
      *
      * Participants are plain arrays with a 'score' and, when available, an
@@ -64,16 +57,16 @@ class TeamBalancer
         }
 
         $indices = range(0, $count - 1);
+        $this->sortByPower($indices, $participants, $profiles, $weights);
         $leftover = null;
 
         if ($count % 2 === 1) {
             // Odd attendance: the weakest player waits and later joins the
             // weakest team, so the extra man compensates the gap.
-            usort($indices, fn (int $a, int $b): int => $this->power($profiles[$b], $weights) <=> $this->power($profiles[$a], $weights));
-            $leftover = array_pop($indices);
+            $leftover = array_shift($indices);
         }
 
-        $pairs = $this->pairUp(array_values($indices), $profiles, $weights, $random);
+        $pairs = $this->duplas($indices);
         [$teamA, $teamB] = $this->orient($pairs, $participants, $profiles, $weights, $random, $spreadGoalies);
 
         if ($leftover !== null) {
@@ -152,120 +145,52 @@ class TeamBalancer
     }
 
     /**
-     * Distance between two players: how differently they are built.
-     */
-    private function distance(array $a, array $b, array $weights): float
-    {
-        $distance = 0.0;
-
-        foreach ($weights as $dimension => $weight) {
-            $distance += $weight * abs(($a[$dimension] ?? 0) - ($b[$dimension] ?? 0));
-        }
-
-        return $distance;
-    }
-
-    /**
-     * Pair the indices so the total distance between partners is minimal, which
-     * gives every player the closest possible rival. Exhaustive with memoization
-     * up to EXHAUSTIVE_LIMIT players, greedy beyond that.
+     * Pair the players by extremes: the lowest rated with the highest, then the
+     * next lowest with the next highest, and so on. Each dupla carries a
+     * similar combined power, so sending one member to each team keeps both
+     * close in total score.
      *
-     * @param  array<int, int>  $indices
+     * @param  array<int, int>  $indices  sorted ascending by power
      * @return array<int, array{0: int, 1: int}>
      */
-    private function pairUp(array $indices, array $profiles, array $weights, bool $random): array
-    {
-        $indices = array_values($indices);
-
-        if (count($indices) > self::EXHAUSTIVE_LIMIT) {
-            return $this->pairUpGreedy($indices, $profiles, $weights);
-        }
-
-        $memo = [];
-
-        return $this->bestMatching($indices, $profiles, $weights, $random, $memo);
-    }
-
-    private function bestMatching(array $indices, array $profiles, array $weights, bool $random, array &$memo): array
-    {
-        $indices = array_values($indices);
-
-        if (count($indices) < 2) {
-            return [];
-        }
-
-        $key = implode(',', $indices);
-
-        if (isset($memo[$key])) {
-            return $memo[$key];
-        }
-
-        $first = $indices[0];
-        $rest = array_slice($indices, 1);
-        $best = [];
-        $bestCost = INF;
-
-        foreach ($rest as $position => $partner) {
-            $remaining = $rest;
-            unset($remaining[$position]);
-
-            $sub = $this->bestMatching(array_values($remaining), $profiles, $weights, $random, $memo);
-            $cost = $this->distance($profiles[$first], $profiles[$partner], $weights)
-                + $this->matchingCost($sub, $profiles, $weights);
-
-            if ($cost < $bestCost - self::EPSILON) {
-                $bestCost = $cost;
-                $best = array_merge([[$first, $partner]], $sub);
-            } elseif ($random && abs($cost - $bestCost) <= self::EPSILON && mt_rand(0, 1) === 1) {
-                $best = array_merge([[$first, $partner]], $sub);
-            }
-        }
-
-        return $memo[$key] = $best;
-    }
-
-    /**
-     * @param  array<int, array{0: int, 1: int}>  $pairs
-     */
-    private function matchingCost(array $pairs, array $profiles, array $weights): float
-    {
-        $cost = 0.0;
-
-        foreach ($pairs as [$a, $b]) {
-            $cost += $this->distance($profiles[$a], $profiles[$b], $weights);
-        }
-
-        return $cost;
-    }
-
-    /**
-     * @param  array<int, int>  $indices
-     * @return array<int, array{0: int, 1: int}>
-     */
-    private function pairUpGreedy(array $indices, array $profiles, array $weights): array
+    private function duplas(array $indices): array
     {
         $pairs = [];
+        $last = count($indices) - 1;
 
-        while (count($indices) >= 2) {
-            $first = array_shift($indices);
-            $nearest = null;
-            $nearestCost = INF;
-
-            foreach ($indices as $position => $candidate) {
-                $cost = $this->distance($profiles[$first], $profiles[$candidate], $weights);
-
-                if ($cost < $nearestCost) {
-                    $nearestCost = $cost;
-                    $nearest = $position;
-                }
-            }
-
-            $pairs[] = [$first, $indices[$nearest]];
-            unset($indices[$nearest]);
-            $indices = array_values($indices);
+        for ($first = 0; $first < $last; $first++, $last--) {
+            $pairs[] = [$indices[$first], $indices[$last]];
         }
 
         return $pairs;
+    }
+
+    /**
+     * Sort the indices by the players' power (their score), weakest first. Ties
+     * are broken by name and then by position, so the order never depends on
+     * how the list was fed in.
+     *
+     * @param  array<int, int>  $indices
+     */
+    private function sortByPower(array &$indices, array $participants, array $profiles, array $weights): void
+    {
+        usort($indices, function (int $a, int $b) use ($participants, $profiles, $weights): int {
+            $byPower = $this->power($profiles[$a], $weights) <=> $this->power($profiles[$b], $weights);
+
+            if ($byPower !== 0) {
+                return $byPower;
+            }
+
+            $nameA = (string) ($participants[$a]['name'] ?? $participants[$a]['id'] ?? $a);
+            $nameB = (string) ($participants[$b]['name'] ?? $participants[$b]['id'] ?? $b);
+            $byName = strcmp($nameA, $nameB);
+
+            if ($byName !== 0) {
+                return $byName;
+            }
+
+            return $a <=> $b;
+        });
     }
 
     /**

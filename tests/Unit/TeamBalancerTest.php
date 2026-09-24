@@ -124,30 +124,31 @@ final class TeamBalancerTest extends TestCase
         $this->assertLessThanOrEqual(2.0, abs($sumA - $sumB));
     }
 
-    public function test_every_characteristic_is_evenly_split(): void
+    public function test_each_dupla_pairs_the_weakest_with_the_strongest_and_is_split(): void
     {
-        $profiles = [
-            $this->attributes(['speed' => 10, 'skill' => 6, 'passing' => 5, 'shooting' => 7, 'defense' => 4]),
-            $this->attributes(['speed' => 8, 'skill' => 3, 'passing' => 6, 'shooting' => 2, 'defense' => 8]),
-            $this->attributes(['speed' => 6, 'skill' => 9, 'passing' => 4, 'shooting' => 5, 'defense' => 3]),
-            $this->attributes(['speed' => 4, 'skill' => 4, 'passing' => 8, 'shooting' => 6, 'defense' => 6]),
-        ];
-
-        $participants = [];
-
-        foreach ($profiles as $index => $profile) {
-            $participants[] = ['name' => "a{$index}", 'attributes' => $profile, 'score' => 0.0];
-            $participants[] = ['name' => "b{$index}", 'attributes' => $profile, 'score' => 0.0];
-        }
+        $participants = collect(range(1, 8))->map(fn ($s) => ['id' => (string) $s, 'score' => (float) $s])->all();
 
         $result = $this->balancer->balance($participants, 4);
 
-        foreach (['speed', 'skill', 'passing', 'shooting', 'defense'] as $attribute) {
-            $sumA = collect($result['teamA'])->sum(fn ($p) => $p['attributes'][$attribute]);
-            $sumB = collect($result['teamB'])->sum(fn ($p) => $p['attributes'][$attribute]);
+        $teamA = collect($result['teamA'])->map(fn ($p) => (string) $p['id'])->all();
+        $teamB = collect($result['teamB'])->map(fn ($p) => (string) $p['id'])->all();
 
-            $this->assertSame($sumA, $sumB, "{$attribute} is not evenly split");
+        // Duplas 1+8, 2+7, 3+6 and 4+5, one member per team.
+        foreach ([[1, 8], [2, 7], [3, 6], [4, 5]] as [$low, $high]) {
+            $low = (string) $low;
+            $high = (string) $high;
+
+            $this->assertTrue(
+                (in_array($low, $teamA, true) && in_array($high, $teamB, true))
+                || (in_array($low, $teamB, true) && in_array($high, $teamA, true)),
+                "Dupla {$low}+{$high} is not split across teams",
+            );
         }
+
+        $sumA = collect($result['teamA'])->sum('score');
+        $sumB = collect($result['teamB'])->sum('score');
+
+        $this->assertLessThanOrEqual(2.0, abs($sumA - $sumB));
     }
 
     public function test_a_strong_shooter_is_answered_by_a_strong_shooter(): void
