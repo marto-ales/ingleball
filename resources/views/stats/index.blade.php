@@ -32,14 +32,14 @@
                     <td><a href="{{ route('stats.show', $row['user']) }}">{{ $row['user']->name }}</a></td>
                     <td class="num">{{ number_format($row['score'], 1) }}</td>
                     <td class="num">
-                        <span class="tip">{{ $row['general'] ? number_format($row['general'], 1) : '—' }}
+                        <span class="tip">{{ $row['general'] !== null ? (($row['general'] - 5) > 0 ? '+' : '').number_format($row['general'] - 5, 1) : '—' }}
                             @if ($row['general'] !== null && $row['rendimiento']->isNotEmpty())
                                 <span class="tipbox tipbox--col">
                                     <span class="tip-head">Calificaciones</span>
                                     @foreach ($row['rendimiento'] as $r)
                                         <span class="tip-row">
                                             <span class="tip-row-name">{{ $r['match']->played_at->format('d/m') }}</span>
-                                            <span class="tip-row-val">{{ number_format($r['overall'], 1) }}</span>
+                                            <span class="tip-row-val">{{ ($r['overall'] - 5) > 0 ? '+' : '' }}{{ number_format($r['overall'] - 5, 1) }}</span>
                                         </span>
                                     @endforeach
                                 </span>

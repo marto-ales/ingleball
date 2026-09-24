@@ -634,9 +634,40 @@ final class MatchFlowTest extends TestCase
         $this->actingAs($me)
             ->post(route('ratings.store', $match), [
                 'rated' => 'user:'.$me->id,
-                'overall' => 5,
+                'overall' => 0,
             ])
             ->assertStatus(422);
+    }
+
+    public function test_centered_rating_slider_is_stored_shifted_and_validated(): void
+    {
+        $me = User::factory()->create();
+        $other = User::factory()->create();
+        $match = Partido::factory()->create(['created_by' => $me->id]);
+        $match->entries()->create(['user_id' => $me->id, 'role' => 'going']);
+        $match->entries()->create(['user_id' => $other->id, 'role' => 'going']);
+
+        // The slider goes -5..+5 (0 = neutral); stored overall stays 0-10.
+        $this->actingAs($me)
+            ->post(route('ratings.store', $match), [
+                'rated' => 'user:'.$other->id,
+                'overall' => -3,
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('ratings', [
+            'rater_user_id' => $me->id,
+            'rated_user_id' => $other->id,
+            'match_id' => $match->id,
+            'overall' => 2,
+        ]);
+
+        $this->actingAs($me)
+            ->post(route('ratings.store', $match), [
+                'rated' => 'user:'.$other->id,
+                'overall' => 6,
+            ])
+            ->assertSessionHasErrors('overall');
     }
 
     public function test_index_button_says_anotate_or_detalle_depending_on_signup(): void

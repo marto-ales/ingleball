@@ -94,12 +94,12 @@ final class ScorerTest extends TestCase
         $this->assertSame(8.0, $this->scorer->attributesForUser($user)['speed']);
     }
 
-    public function test_recent_form_scales_the_profile_against_the_group_average(): void
+    public function test_recent_form_scales_the_profile_by_the_received_rating(): void
     {
         config(['balance.self_weight' => 1.0]);
+        app(AlgorithmSettings::class)->update(['self_weight' => 1.0, 'weight_by_form' => true]);
 
         $user = $this->player(['speed' => 6]);
-        $other = $this->player(['speed' => 5]);
         $rater = User::factory()->create();
 
         $match = Partido::factory()->create([
@@ -108,16 +108,46 @@ final class ScorerTest extends TestCase
         ]);
 
         $match->entries()->create(['user_id' => $user->id, 'role' => 'going']);
-        $match->entries()->create(['user_id' => $other->id, 'role' => 'going']);
 
         Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $user->id, 'match_id' => $match->id, 'overall' => 8]);
-        Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $other->id, 'match_id' => $match->id, 'overall' => 4]);
 
         $form = $this->scorer->formForUser($user);
 
         $this->assertSame(8.0, $form['general']);
-        $this->assertSame(6.0, $form['group']);
-        $this->assertEqualsWithDelta(8.0, $this->scorer->attributesForUser($user)['speed'], 0.01);
+        // Stored 8 is centered +3; 3/5·0.2 = 0.12 → ×1.12, uncapped.
+        $this->assertEqualsWithDelta(1.12, $form['multiplier'], 0.001);
+        $this->assertEqualsWithDelta(6.72, $this->scorer->attributesForUser($user)['speed'], 0.01);
+    }
+
+    public function test_form_multiplier_is_clamped_between_0_8_and_1_2(): void
+    {
+        config(['balance.self_weight' => 1.0, 'balance.form_window' => 1]);
+        app(AlgorithmSettings::class)->update(['self_weight' => 1.0, 'weight_by_form' => true]);
+
+        $user = $this->player(['speed' => 6]);
+        $rater = User::factory()->create();
+
+        $low = Partido::factory()->create([
+            'status' => Partido::STATUS_FINISHED,
+            'played_at' => now()->subDays(2),
+        ]);
+
+        $low->entries()->create(['user_id' => $user->id, 'role' => 'going']);
+
+        // Stored 0 is centered -5 → -20%, the floor.
+        Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $user->id, 'match_id' => $low->id, 'overall' => 0]);
+        $this->assertSame(0.8, $this->scorer->formForUser($user)['multiplier']);
+
+        $high = Partido::factory()->create([
+            'status' => Partido::STATUS_FINISHED,
+            'played_at' => now()->subDay(),
+        ]);
+
+        $high->entries()->create(['user_id' => $user->id, 'role' => 'going']);
+
+        // Stored 10 is centered +5 → +20%, the ceiling.
+        Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $user->id, 'match_id' => $high->id, 'overall' => 10]);
+        $this->assertSame(1.2, $this->scorer->formForUser($user)['multiplier']);
     }
 
     public function test_form_weighting_can_be_disabled(): void
@@ -164,10 +194,10 @@ final class ScorerTest extends TestCase
 
         $form = $this->scorer->formForUser($user);
 
-        // 2 + 10 + 10 (the three newest) average 7.33; the group average is the
-        // same, so the multiplier is 1.
+        // 2 + 10 + 10 (the three newest) average 7.33; centered +2.33 →
+        // 2.33/5·0.2 = 0.0932 → ×1.0932.
         $this->assertSame(7.33, $form['general']);
-        $this->assertSame(1.0, $form['multiplier']);
+        $this->assertEqualsWithDelta(1.0932, $form['multiplier'], 0.001);
     }
 
     public function test_for_guest_uses_overall(): void

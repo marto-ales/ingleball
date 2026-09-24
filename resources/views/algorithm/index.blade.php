@@ -81,7 +81,7 @@
             <label><input type="radio" name="weight_by_form" value="1" @checked($weightByForm)><span>Sí</span></label>
             <label><input type="radio" name="weight_by_form" value="0" @checked(! $weightByForm)><span>No</span></label>
         </div>
-        <p class="muted small mb0">Escala el perfil con la calificación general de los últimos 3 partidos, comparada con el promedio del grupo en esos mismos partidos.</p>
+        <p class="muted small mb0">Escala el perfil con la calificación general recibida en los últimos 3 partidos: desde el nivel neutral (0) hacia arriba o abajo ajusta hasta ±20%.</p>
     </div>
 
     <button type="submit" class="btn btn-primary">Guardar</button>

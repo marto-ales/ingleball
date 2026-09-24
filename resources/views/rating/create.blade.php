@@ -13,7 +13,7 @@
 
 @php
     $existingMap = $existing->map(fn ($r) => [
-        'overall' => $r->overall,
+        'overall' => $r->overall - 5,
     ])->toArray();
 @endphp
 
@@ -42,8 +42,8 @@
 
             <div class="field">
                 <label>Calificación general</label>
-                <p class="muted small mb0">¿Qué nivel mostró en este partido?</p>
-                @include('partials.scale', ['name' => 'overall', 'label' => 'Calificación general', 'value' => old('overall', 5)])
+                <p class="muted small mb0">¿Qué nivel mostró en este partido? (0 = nivel esperado)</p>
+                @include('partials.scale-centered', ['name' => 'overall', 'label' => 'Calificación general', 'value' => old('overall', 5)])
             </div>
 
             <button class="btn btn-primary" type="submit">Guardar calificación</button>
@@ -73,7 +73,7 @@
         function apply(token) {
             const e = window.__existing[token];
             fields.forEach(function (f) {
-                setScale(f, (e && e[f] != null) ? e[f] : 5);
+                setScale(f, (e && e[f] != null) ? e[f] : 0);
             });
         }
 

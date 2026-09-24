@@ -55,7 +55,7 @@
                         </span>
                     </span>
                 </li>
-                <li><span>General (últ. 3 partidos)</span><span class="score-tag">{{ $form['general'] !== null ? number_format($form['general'], 1) : '—' }}</span></li>
+                <li><span>General (últ. 3 partidos)</span><span class="score-tag">{{ $form['general'] !== null ? (($form['general'] - 5) > 0 ? '+' : '').number_format($form['general'] - 5, 1) : '—' }}</span></li>
                 <li><span>Rendimiento reciente</span><span class="score-tag">×{{ number_format($form['multiplier'], 2) }}</span></li>
                 <li>
                     <span>¿Le gusta ir al arco?</span>

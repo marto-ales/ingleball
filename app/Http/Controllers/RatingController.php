@@ -50,15 +50,16 @@ class RatingController extends Controller
     {
         $data = $request->validate([
             'rated' => ['required', 'string', 'regex:/(user|guest):\d+/'],
-            'overall' => ['required', 'integer', 'between:0,10'],
+            'overall' => ['required', 'integer', 'between:-5,5'],
         ]);
 
         [$type, $id] = explode(':', $data['rated']);
         $id = (int) $id;
         $me = $request->user();
 
+        // The slider goes from -5 to +5, but the stored overall stays 0-10.
         $attributes = [
-            'overall' => (int) $data['overall'],
+            'overall' => (int) $data['overall'] + 5,
         ];
 
         if ($type === 'user') {

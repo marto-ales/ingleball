@@ -17,12 +17,13 @@ return [
     | Recent form
     |--------------------------------------------------------------------------
     | The profile is scaled by the general rating the player received in their
-    | last matches, relative to the group's average in those same matches. The
-    | ratio is clamped so a single bad night does not wreck a profile.
+    | last matches. Ratings are stored 0-10; centered on the neutral 5, each
+    | point above or below the neutral level moves the profile ±4%, so the
+    | multiplier stays between form_min and form_max (±20%).
     */
     'form_window' => 3,
-    'form_min' => 0.5,
-    'form_max' => 1.5,
+    'form_min' => 0.8,
+    'form_max' => 1.2,
 
     /*
     |--------------------------------------------------------------------------

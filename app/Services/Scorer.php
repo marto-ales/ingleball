@@ -47,9 +47,9 @@ class Scorer
 
     /**
      * Recent form: the general score the player received over their last
-     * finished matches and the group's average in those same matches. The
-     * multiplier scales the profile by how the player performed relative to
-     * the group.
+     * finished matches. The multiplier scales the profile by that rating:
+     * each point above or below the neutral level (stored 5) moves it up to
+     * ±20%.
      *
      * @return array{general: float|null, group: float|null, multiplier: float}
      */
@@ -70,7 +70,7 @@ class Scorer
         return [
             'general' => $general !== null ? round((float) $general, 2) : null,
             'group' => $group !== null ? round((float) $group, 2) : null,
-            'multiplier' => $this->multiplier($general, $group),
+            'multiplier' => $this->multiplier($general),
         ];
     }
 
@@ -205,15 +205,19 @@ class Scorer
             ->values();
     }
 
-    private function multiplier(?float $general, ?float $group): float
+    private function multiplier(?float $general): float
     {
-        if (! $this->settings->weightByForm() || $general === null || $group === null || $group <= 0.0) {
+        if (! $this->settings->weightByForm() || $general === null) {
             return 1.0;
         }
 
+        // The stored overall is 0-10; centered on 5, each point above or below
+        // neutral moves the multiplier ±4%, capped at ±20%.
+        $weight = (($general - 5) / 5) * (float) config('balance.form_span', 0.2);
+
         return max(
-            (float) config('balance.form_min', 0.5),
-            min((float) config('balance.form_max', 1.5), $general / $group),
+            (float) config('balance.form_min', 0.8),
+            min((float) config('balance.form_max', 1.2), 1 + $weight),
         );
     }
 }
