@@ -222,7 +222,7 @@ h3 { font-size: 15px; margin: 0 0 8px; }
   border-right: 5px solid transparent;
   border-top: 5px solid rgba(255, 255, 255, .25);
 }
-.tipbox--col { flex-direction: column; align-items: stretch; gap: 5px; min-width: 200px; text-align: left; }
+.tipbox--col { flex-direction: column; align-items: stretch; gap: 5px; min-width: 150px; text-align: left; }
 .tip-row { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; font-size: 12px; font-weight: 600; color: #eef1f5; }
 .tip-row-name { color: #c8d0da; font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
 .tip-row-val { color: #5aa9ff; font-weight: 700; flex-shrink: 0; white-space: nowrap; }

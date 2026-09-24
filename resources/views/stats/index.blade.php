@@ -39,7 +39,7 @@
                                     @foreach ($row['rendimiento'] as $r)
                                         <span class="tip-row">
                                             <span class="tip-row-name">{{ $r['match']->played_at->format('d/m') }}</span>
-                                            <span class="tip-row-val">{{ ($r['overall'] - 5) > 0 ? '+' : '' }}{{ number_format($r['overall'] - 5, 1) }}</span>
+                                            <span class="tip-row-val">{{ ($r['overall'] - 5) > 0 ? '+' : '' }}{{ (int) $r['overall'] - 5 }}</span>
                                         </span>
                                     @endforeach
                                 </span>
