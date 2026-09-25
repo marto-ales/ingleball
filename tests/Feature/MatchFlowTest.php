@@ -508,6 +508,33 @@ final class MatchFlowTest extends TestCase
         $this->assertSame(1, $teamB->intersect($goalieIds)->count());
     }
 
+    public function test_the_teams_view_shows_each_dupla_as_a_paired_row(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $players = User::factory(8)->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+
+        foreach ($players as $player) {
+            $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
+        }
+
+        $match->update(['status' => Partido::STATUS_LOCKED, 'locked_at' => now()]);
+
+        $this->actingAs($organizer)
+            ->post(route('teams.generate', $match), ['size' => 4])
+            ->assertRedirect();
+
+        $content = $this->actingAs($organizer)
+            ->get(route('matches.show', $match))
+            ->assertOk()
+            ->assertSee('Equipo A (4)')
+            ->assertSee('Equipo B (4)')
+            ->assertSee('Duplas de extremos')
+            ->getContent();
+
+        $this->assertSame(4, substr_count($content, 'class="dupla">'));
+    }
+
     public function test_player_swap_only_moves_the_two_chosen_players(): void
     {
         $organizer = User::factory()->organizer()->create();

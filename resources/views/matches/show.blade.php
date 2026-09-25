@@ -198,45 +198,64 @@
                 </div>
                 @if (auth()->user()->is_organizer)
 <p class="muted small mb0 mt">
-                        El armado empareja a cada jugador con un rival de nivel similar en el otro equipo y reparte los
-                        perfiles para equilibrar ambos equipos; 🧤 = prefiere atajar.
+                        Duplas de extremos: cada fila es una dupla que junta al de mayor puntaje con el de menor, y así
+                        sucesivamente; cada dupla aporta un jugador a cada equipo buscando puntajes totales parejos. 🧤 = prefiere atajar.
                     </p>
                     <ul class="list" style="margin:8px 0 4px;">
                         <li><span>Puntaje A</span><span class="score-tag">{{ number_format(collect($teamA)->sum(fn ($t) => $memberScore($t)), 1) }}</span></li>
                         <li><span>Puntaje B</span><span class="score-tag">{{ number_format(collect($teamB)->sum(fn ($t) => $memberScore($t)), 1) }}</span></li>
                     </ul>
                 @endif
-                <div class="teams">
-                    <div class="team team-a">
-                        <h3>Equipo A <span class="muted small">{{ $teamA->count() }}</span></h3>
-                        @foreach ($teamA as $t)
-                            @php
-                                $attrs = $t->user ? $scorer->attributesForUser($t->user) : $scorer->attributesForGuest($t->guest);
-                            @endphp
-                            <div class="row" style="padding:6px 0;border-bottom:1px solid var(--line);">
-                                <span class="who">{{ $t->user?->name ?? $t->guest?->name }}@if ($t->user?->player?->likes_goalie) 🧤 @endif</span>
-                                @if ($t->guest)<span class="tag-guest">inv.</span>@endif
-                                @if (auth()->user()->is_organizer)
-                                    <span class="score-tag" title="{{ implode(' · ', array_map(fn ($key) => $attrLabels[$key].': '.round($attrs[$key] ?? 5, 1), $attrKeys)) }}">{{ number_format($memberScore($t), 1) }}</span>
+                @php
+                    $teamAPos = $teamA->keyBy('position');
+                    $teamBPos = $teamB->keyBy('position');
+                    $positions = $teamA->pluck('position')->merge($teamB->pluck('position'))->unique()->sort()->values();
+                @endphp
+                <div class="dupla-head">
+                    <span class="side-a">Equipo A ({{ $teamA->count() }})</span>
+                    <span class="side-mid">dupla</span>
+                    <span class="side-b">Equipo B ({{ $teamB->count() }})</span>
+                </div>
+                <div class="duplas">
+                    @foreach ($positions as $pos)
+                        @php
+                            $a = $teamAPos[$pos] ?? null;
+                            $b = $teamBPos[$pos] ?? null;
+                            $sum = $a && $b ? $memberScore($a) + $memberScore($b) : null;
+                        @endphp
+                        <div class="dupla">
+                            <div class="dupla-side dupla-a">
+                                @if ($a)
+                                    <span class="who">{{ $a->user?->name ?? $a->guest?->name }}@if ($a->user?->player?->likes_goalie) 🧤 @endif</span>
+                                    @if ($a->guest)<span class="tag-guest">inv.</span>@endif
+                                    @if (auth()->user()->is_organizer)
+                                        @php $attrsA = $a->user ? $scorer->attributesForUser($a->user) : $scorer->attributesForGuest($a->guest); @endphp
+                                        <span class="score-tag" title="{{ implode(' · ', array_map(fn ($key) => $attrLabels[$key].': '.round($attrsA[$key] ?? 5, 1), $attrKeys)) }}">{{ number_format($memberScore($a), 1) }}</span>
+                                    @endif
+                                @else
+                                    <span class="who dupla-off">Sin par (impar)</span>
                                 @endif
                             </div>
-                        @endforeach
-                    </div>
-                    <div class="team team-b">
-                        <h3>Equipo B <span class="muted small">{{ $teamB->count() }}</span></h3>
-                        @foreach ($teamB as $t)
-                            @php
-                                $attrs = $t->user ? $scorer->attributesForUser($t->user) : $scorer->attributesForGuest($t->guest);
-                            @endphp
-                            <div class="row" style="padding:6px 0;border-bottom:1px solid var(--line);">
-                                <span class="who">{{ $t->user?->name ?? $t->guest?->name }}@if ($t->user?->player?->likes_goalie) 🧤 @endif</span>
-                                @if ($t->guest)<span class="tag-guest">inv.</span>@endif
-                                @if (auth()->user()->is_organizer)
-                                    <span class="score-tag" title="{{ implode(' · ', array_map(fn ($key) => $attrLabels[$key].': '.round($attrs[$key] ?? 5, 1), $attrKeys)) }}">{{ number_format($memberScore($t), 1) }}</span>
+                            <div class="dupla-mid">
+                                <span>{{ $loop->iteration }}</span>
+                                @if ($sum !== null && auth()->user()->is_organizer)
+                                    <b>{{ number_format($sum, 1) }}</b>
                                 @endif
                             </div>
-                        @endforeach
-                    </div>
+                            <div class="dupla-side dupla-b">
+                                @if ($b)
+                                    <span class="who">{{ $b->user?->name ?? $b->guest?->name }}@if ($b->user?->player?->likes_goalie) 🧤 @endif</span>
+                                    @if ($b->guest)<span class="tag-guest">inv.</span>@endif
+                                    @if (auth()->user()->is_organizer)
+                                        @php $attrsB = $b->user ? $scorer->attributesForUser($b->user) : $scorer->attributesForGuest($b->guest); @endphp
+                                        <span class="score-tag" title="{{ implode(' · ', array_map(fn ($key) => $attrLabels[$key].': '.round($attrsB[$key] ?? 5, 1), $attrKeys)) }}">{{ number_format($memberScore($b), 1) }}</span>
+                                    @endif
+                                @else
+                                    <span class="who dupla-off">Sin par (impar)</span>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
                 @if (auth()->user()->is_organizer && $match->isLocked())
                     <div class="divider"></div>
