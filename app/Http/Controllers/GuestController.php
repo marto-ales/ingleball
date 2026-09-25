@@ -33,14 +33,20 @@ class GuestController extends Controller
             return back()->with('status', $guest->name.' ya está en la lista.');
         }
 
+        // 'going' past the capacity lands on the bench too.
+        $role = $data['role'] ?? 'going';
+        if ($role === 'going' && ! $match->hasRoomForGoing()) {
+            $role = 'substitute';
+        }
+
         $match->entries()->create([
             'guest_id' => $guest->id,
-            'role' => $data['role'] ?? 'going',
+            'role' => $role,
         ]);
 
         return back()->with(
             'status',
-            ($data['role'] ?? 'going') === 'substitute'
+            $role === 'substitute'
                 ? $guest->name.' quedó como suplente.'
                 : 'Invitado a '.$guest->name.'.'
         );
@@ -57,6 +63,8 @@ class GuestController extends Controller
         if (! $guest->entries()->exists()) {
             $guest->delete();
         }
+
+        $match->promoteSubstitutes();
 
         return back()->with('status', 'Invitado retirado.');
     }

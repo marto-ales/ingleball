@@ -111,13 +111,48 @@ class Partido extends Model
      */
     public function costPerPerson(): ?int
     {
-        $players = (int) $this->size * 2;
+        $players = $this->capacity();
 
         if ($this->field_value === null || $players <= 0) {
             return null;
         }
 
         return (int) round($this->field_value / $players);
+    }
+
+    /**
+     * Total going slots: double the team size (5v5 → 10, 4v4 → 8, 6v6 → 12).
+     */
+    public function capacity(): int
+    {
+        return max(0, (int) $this->size * 2);
+    }
+
+    /**
+     * Whether another player may still sign up as a starter.
+     */
+    public function hasRoomForGoing(): bool
+    {
+        return $this->entries()->where('role', 'going')->count() < $this->capacity();
+    }
+
+    /**
+     * Fill empty going slots with the earliest substitutes: when someone is
+     * removed from the going list, the first substitute takes their place.
+     */
+    public function promoteSubstitutes(): void
+    {
+        $capacity = $this->capacity();
+        $going = $this->entries()->where('role', 'going')->count();
+
+        foreach ($this->entries()->where('role', 'substitute')->orderBy('id')->get() as $entry) {
+            if ($going >= $capacity) {
+                break;
+            }
+
+            $entry->update(['role' => MatchEntry::ROLE_GOING]);
+            $going++;
+        }
     }
 
     /**

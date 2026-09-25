@@ -21,29 +21,41 @@ class EntryController extends Controller
         $data = $request->validate(['role' => ['required', Rule::in(['going', 'substitute'])]]);
         $me = $request->user();
 
-        $exists = $match->entries()
+        $current = $match->entries()
             ->where('match_id', $match->id)
             ->where('user_id', $me->id)
-            ->exists();
+            ->first();
 
-        if (! $exists && $data['role'] === 'going') {
+        // The going list never exceeds the match capacity: the player past the
+        // last slot automatically lands on the substitutes bench.
+        $role = $data['role'];
+
+        if ($role === 'going' && $current?->role !== 'going' && ! $match->hasRoomForGoing()) {
+            $role = 'substitute';
+        }
+
+        if ($current === null) {
             $match->entries()->create([
                 'user_id' => $me->id,
-                'role' => 'going',
+                'role' => $role,
             ]);
         } else {
-            $match->entries()->updateOrCreate(
-                ['match_id' => $match->id, 'user_id' => $me->id],
-                ['role' => $data['role']],
-            );
+            $match->entries()
+                ->where('match_id', $match->id)
+                ->where('user_id', $me->id)
+                ->update(['role' => $role]);
         }
 
         return back()
             ->with(
                 'status',
-                $data['role'] === 'going' ? '¡Te anotaste para jugar!' : 'Quedaste como suplente.'
+                $role === 'going'
+                    ? '¡Te anotaste para jugar!'
+                    : ($data['role'] === 'going'
+                        ? 'La lista de titulares está completa: quedaste como suplente.'
+                        : 'Quedaste como suplente.')
             )
-            ->with('attendance', $this->attendanceSuggestion($request, $match, $data['role']));
+            ->with('attendance', $this->attendanceSuggestion($request, $match, $role));
     }
 
     public function destroy(Request $request, Partido $match): RedirectResponse
@@ -54,6 +66,8 @@ class EntryController extends Controller
             ->where('match_id', $match->id)
             ->where('user_id', $request->user()->id)
             ->delete();
+
+        $match->promoteSubstitutes();
 
         return back()
             ->with('status', 'Te quitaste de la lista.')
@@ -91,18 +105,23 @@ class EntryController extends Controller
                 $target->delete();
             }
 
+            $match->promoteSubstitutes();
+
             return back()->with('status', $target->name.' fue quitado de la lista.');
         }
+
+        // 'going' past the capacity lands on the bench too.
+        $role = ($data['role'] === 'going' && ! $match->hasRoomForGoing()) ? 'substitute' : $data['role'];
 
         $match->entries()->create([
             'match_id' => $match->id,
             $key => $target->id,
-            'role' => $data['role'],
+            'role' => $role,
         ]);
 
         return back()->with(
             'status',
-            $target->name.' quedó como '.($data['role'] === 'going' ? 'titular' : 'suplente').'.'
+            $target->name.' quedó como '.($role === 'going' ? 'titular' : 'suplente').'.'
         );
     }
 

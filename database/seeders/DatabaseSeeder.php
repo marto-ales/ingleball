@@ -29,7 +29,11 @@ class DatabaseSeeder extends Seeder
             ]),
         ];
 
-        $players = User::factory(12)->create();
+        $playerNames = ['Nico', 'Tomi', 'Santi', 'Agus', 'Juli', 'Facu', 'Luis', 'Diego', 'Rafa', 'Marco', 'Tino', 'Bas'];
+
+        $players = collect($playerNames)->map(
+            fn (string $name) => User::factory()->create(['name' => $name])
+        );
         $all = collect($organizers)->concat($players);
 
         // Self-assessments for every registered player.
@@ -40,9 +44,9 @@ class DatabaseSeeder extends Seeder
                 'passing' => fake()->numberBetween(4, 9),
                 'shooting' => fake()->numberBetween(4, 9),
                 'defense' => fake()->numberBetween(4, 9),
-                'overall' => fake()->numberBetween(5, 9),
                 'likes_goalie' => fake()->boolean(30),
                 'goalkeeping' => fake()->numberBetween(3, 9),
+                'self_eval_completed_at' => now(),
             ]);
         }
 
@@ -52,13 +56,7 @@ class DatabaseSeeder extends Seeder
                 Rating::create([
                     'rater_user_id' => $rater->id,
                     'rated_user_id' => $rated->id,
-                    'speed' => fake()->numberBetween(4, 9),
-                    'skill' => fake()->numberBetween(4, 9),
-                    'passing' => fake()->numberBetween(4, 9),
-                    'shooting' => fake()->numberBetween(4, 9),
-                    'defense' => fake()->numberBetween(4, 9),
-                    'overall' => fake()->numberBetween(5, 9),
-                    'goalkeeping' => fake()->numberBetween(3, 9),
+                    'overall' => fake()->numberBetween(5, 10),
                 ]);
             }
         }
@@ -76,6 +74,7 @@ class DatabaseSeeder extends Seeder
         $saturday->entries()->create(['guest_id' => $guest->id, 'role' => 'going']);
 
         // Managed player: sits in the list but has no password (cannot log in).
+        // The 5v5 going list is already at capacity (10), so he is a substitute.
         $managed = User::factory()->create([
             'name' => 'Pancho (sin cuenta)',
             'username' => 'pancho',
@@ -83,15 +82,16 @@ class DatabaseSeeder extends Seeder
             'is_managed' => true,
         ]);
         $managed->player()->create([
-            'speed' => 6, 'skill' => 6, 'passing' => 6, 'shooting' => 6, 'defense' => 5, 'overall' => 6,
+            'speed' => 6, 'skill' => 6, 'passing' => 6, 'shooting' => 6, 'defense' => 5,
         ]);
-        $saturday->entries()->create(['user_id' => $managed->id, 'role' => 'going']);
+        $saturday->entries()->create(['user_id' => $managed->id, 'role' => 'substitute']);
 
         // Upcoming open match, 4v4.
         $four = Partido::factory()->create([
             'created_by' => $organizers[1]->id,
             'title' => 'Fútbol 4x4',
             'played_at' => now()->addDays(13)->setTime(20, 0),
+            'size' => 4,
         ]);
         foreach ($all->random(8) as $user) {
             $four->entries()->create(['user_id' => $user->id, 'role' => 'going']);

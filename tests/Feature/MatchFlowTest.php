@@ -167,6 +167,100 @@ final class MatchFlowTest extends TestCase
         $this->assertDatabaseMissing('guests', ['id' => $guest->id]);
     }
 
+    public function test_the_player_past_the_capacity_lands_on_the_substitutes_bench(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $players = User::factory(11)->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id, 'size' => 5]);
+
+        foreach ($players as $player) {
+            $this->actingAs($player)
+                ->patch(route('entries.update', $match), ['role' => 'going'])
+                ->assertRedirect();
+        }
+
+        $this->assertSame(10, $match->entries()->where('role', 'going')->count());
+        $this->assertSame(1, $match->entries()->where('role', 'substitute')->count());
+        $this->assertSame($players->last()->id, $match->entries()->where('role', 'substitute')->value('user_id'));
+
+        $this->actingAs($players->last())
+            ->patch(route('entries.update', $match), ['role' => 'going'])
+            ->assertRedirect()
+            ->assertSessionHas('status', 'La lista de titulares está completa: quedaste como suplente.');
+    }
+
+    public function test_every_format_promotes_to_bench_past_its_capacity(): void
+    {
+        // 4v4 → the 9th player is a substitute, 5v5 → the 11th, 6v6 → the 13th.
+        foreach ([4 => 9, 5 => 11, 6 => 13] as $size => $firstSubPosition) {
+            $organizer = User::factory()->organizer()->create();
+            $players = User::factory($firstSubPosition)->create();
+            $match = Partido::factory()->create(['created_by' => $organizer->id, 'size' => $size]);
+
+            foreach ($players as $player) {
+                $this->actingAs($player)
+                    ->patch(route('entries.update', $match), ['role' => 'going'])
+                    ->assertRedirect();
+            }
+
+            $this->assertSame($size * 2, $match->entries()->where('role', 'going')->count());
+            $this->assertSame(1, $match->entries()->where('role', 'substitute')->count());
+            $this->assertSame($players->last()->id, $match->entries()->where('role', 'substitute')->value('user_id'));
+        }
+    }
+
+    public function test_the_first_substitute_takes_the_place_of_a_going_player_who_leaves(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $players = User::factory(12)->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id, 'size' => 5]);
+
+        foreach ($players->take(10) as $player) {
+            $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
+        }
+        $allowed = $players->get(10);
+        $waiting = $players->get(11);
+        $match->entries()->create(['user_id' => $allowed->id, 'role' => 'substitute']);
+        $match->entries()->create(['user_id' => $waiting->id, 'role' => 'substitute']);
+
+        // The first going player leaves on their own: the earliest substitute
+        // (by signup order) fills the empty going slot.
+        $this->actingAs($players->get(0))
+            ->delete(route('entries.destroy', $match))
+            ->assertRedirect();
+
+        $this->assertSame(10, $match->entries()->where('role', 'going')->count());
+        $this->assertSame($allowed->id, $match->entries()->where('role', 'going')->where('user_id', $allowed->id)->value('user_id'));
+        $this->assertSame([$waiting->id], $match->entries()->where('role', 'substitute')->pluck('user_id')->all());
+    }
+
+    public function test_removing_a_going_player_promotes_the_first_guest_substitute(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $players = User::factory(10)->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id, 'size' => 5]);
+
+        foreach ($players as $player) {
+            $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
+        }
+
+        // The guest #11 asks to be a starter but the 5v5 list is full: bench.
+        $this->actingAs($organizer)
+            ->post(route('guests.store', $match), ['name' => 'Cuate', 'role' => 'going'])
+            ->assertRedirect();
+
+        $guest = Guest::where('name', 'Cuate')->first();
+        $this->assertSame('substitute', $match->entries()->where('guest_id', $guest->id)->value('role'));
+
+        // An organizer removes a going player: the only substitute steps up.
+        $this->actingAs($organizer)
+            ->post(route('entries.manage', $match), ['user_id' => $players->first()->id, 'role' => 'out'])
+            ->assertRedirect();
+
+        $this->assertSame(10, $match->entries()->where('role', 'going')->count());
+        $this->assertSame('going', $match->entries()->where('guest_id', $guest->id)->value('role'));
+    }
+
     public function test_organizer_can_create_match(): void
     {
         $organizer = User::factory()->organizer()->create();
