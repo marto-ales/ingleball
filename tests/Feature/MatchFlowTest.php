@@ -508,6 +508,60 @@ final class MatchFlowTest extends TestCase
         $this->assertSame(1, $teamB->intersect($goalieIds)->count());
     }
 
+    public function test_player_swap_only_moves_the_two_chosen_players(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $players = User::factory(8)->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+
+        foreach ($players as $player) {
+            $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
+        }
+
+        $match->update(['status' => Partido::STATUS_LOCKED, 'locked_at' => now()]);
+
+        $this->actingAs($organizer)
+            ->post(route('teams.generate', $match), ['size' => 4])
+            ->assertRedirect();
+
+        $beforeA = $match->teams()->where('team', 'A')->orderBy('position')->pluck('user_id')->all();
+        $beforeB = $match->teams()->where('team', 'B')->orderBy('position')->pluck('user_id')->all();
+        $this->assertCount(4, $beforeA);
+        $this->assertCount(4, $beforeB);
+
+        $from = $match->teams()->where('team', 'A')->first();
+        $to = $match->teams()->where('team', 'B')->first();
+
+        $this->actingAs($organizer)
+            ->post(route('teams.swap', $match), ['from' => $from->id, 'to' => $to->id])
+            ->assertRedirect()->assertSessionHas('status');
+
+        $afterA = $match->teams()->where('team', 'A')->orderBy('position')->pluck('user_id')->all();
+        $afterB = $match->teams()->where('team', 'B')->orderBy('position')->pluck('user_id')->all();
+
+        // The entering player takes exactly the slot of the leaving player:
+        // every other row stays in the same position, so only the two chosen
+        // players visibly change.
+        $this->assertSame(
+            array_map(fn ($id) => $id === $from->user_id ? $to->user_id : $id, $beforeA),
+            $afterA,
+        );
+        $this->assertSame(
+            array_map(fn ($id) => $id === $to->user_id ? $from->user_id : $id, $beforeB),
+            $afterB,
+        );
+
+        // Same 8 members still in the lineup: the swap did not regenerate.
+        $this->assertSame(8, $match->teams()->count());
+
+        // A swap between two players of the same team is rejected.
+        $from = $match->teams()->where('team', 'A')->first();
+        $other = $match->teams()->where('team', 'A')->orderBy('id', 'desc')->first();
+        $this->actingAs($organizer)
+            ->post(route('teams.swap', $match), ['from' => $from->id, 'to' => $other->id])
+            ->assertStatus(422);
+    }
+
     public function test_teams_cannot_be_generated_while_list_is_open(): void
     {
         $organizer = User::factory()->organizer()->create();

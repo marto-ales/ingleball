@@ -31,9 +31,10 @@ class TeamController extends Controller
         $from = $match->teams()->whereKey($data['from'])->first();
         $to = $match->teams()->whereKey($data['to'])->first();
 
-        abort_unless($from !== null && $to !== null && $from->id !== $to->id, 422, 'Selección inválida.');
+        abort_unless($from !== null && $to !== null && $from->team !== $to->team, 422, 'Selección inválida.');
 
         [$from->team, $to->team] = [$to->team, $from->team];
+        [$from->position, $to->position] = [$to->position, $from->position];
         $from->save();
         $to->save();
 

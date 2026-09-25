@@ -14,7 +14,7 @@ class MatchTeam extends Model
 
     public const TEAM_B = 'B';
 
-    protected $fillable = ['match_id', 'team', 'user_id', 'guest_id'];
+    protected $fillable = ['match_id', 'team', 'position', 'user_id', 'guest_id'];
 
     public function match(): BelongsTo
     {

@@ -124,8 +124,8 @@ class MatchController extends Controller
         $entriesGoing = $match->entries()->where('role', 'going')->get()->values();
         $entriesSubstitute = $match->entries()->where('role', 'substitute')->get()->values();
 
-        $teamA = $match->teams()->where('team', 'A')->get(['match_teams.*'])->load('user', 'guest');
-        $teamB = $match->teams()->where('team', 'B')->get(['match_teams.*'])->load('user', 'guest');
+        $teamA = $match->teams()->where('team', 'A')->orderBy('position')->get(['match_teams.*'])->load('user', 'guest');
+        $teamB = $match->teams()->where('team', 'B')->orderBy('position')->get(['match_teams.*'])->load('user', 'guest');
 
         $goingCount = $match->entries()->where('role', 'going')->count();
         $autoSize = $this->teams->chooseTeamSize($goingCount);

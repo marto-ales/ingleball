@@ -91,21 +91,22 @@ class TeamService
 
         $match->teams()->delete();
 
-        foreach ($result['teamA'] as $participant) {
-            $this->persist($match, 'A', $participant);
+        foreach ($result['teamA'] as $position => $participant) {
+            $this->persist($match, 'A', $position, $participant);
         }
 
-        foreach ($result['teamB'] as $participant) {
-            $this->persist($match, 'B', $participant);
+        foreach ($result['teamB'] as $position => $participant) {
+            $this->persist($match, 'B', $position, $participant);
         }
 
         return $result;
     }
 
-    private function persist(Partido $match, string $team, array $participant): void
+    private function persist(Partido $match, string $team, int $position, array $participant): void
     {
         $match->teams()->create([
             'team' => $team,
+            'position' => $position,
             'user_id' => $participant['user_id'],
             'guest_id' => $participant['guest_id'],
         ]);
