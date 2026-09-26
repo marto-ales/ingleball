@@ -205,11 +205,12 @@
                     @php
                         $settings = app(\App\Services\AlgorithmSettings::class);
                         $weights = $settings->weights();
+                        $order = $settings->order();
                         $attrSums = ['A' => [], 'B' => []];
                         $teamGoalies = ['A' => 0, 'B' => 0];
                         $teamTotals = ['A' => 0.0, 'B' => 0.0];
 
-                        foreach ($attrKeys as $key) {
+                        foreach ($order as $key) {
                             $attrSums['A'][$key] = 0.0;
                             $attrSums['B'][$key] = 0.0;
                         }
@@ -224,7 +225,7 @@
                                     continue;
                                 }
 
-                                foreach ($attrKeys as $key) {
+                                foreach ($order as $key) {
                                     $attrSums[$side][$key] += (float) ($attrs[$key] ?? 5);
                                 }
 
@@ -236,7 +237,7 @@
                         $gaps = [];
                         $totalGap = 0.0;
 
-                        foreach ($attrKeys as $key) {
+                        foreach ($order as $key) {
                             $gap = ($weights[$key] ?? 0.0) * abs($attrSums['A'][$key] - $attrSums['B'][$key]);
                             $gaps[$key] = $gap;
                             $totalGap += $gap;
@@ -244,9 +245,9 @@
                     @endphp
                     <div class="balance-detail">
                         <div class="balance-head">
-                            <span>Habilidad</span><span>Equipo A</span><span>Equipo B</span><span>Desfase</span>
+                            <span>Habilidad</span><span>A</span><span>B</span><span>Desfase</span>
                         </div>
-                        @foreach ($attrKeys as $key)
+                        @foreach ($order as $key)
                             <div class="balance-row">
                                 <span>{{ $attrLabels[$key] }}</span>
                                 <span>{{ number_format($attrSums['A'][$key], 1) }}</span>
