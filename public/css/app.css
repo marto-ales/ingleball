@@ -309,6 +309,7 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
 .balance-detail .balance-row { border-bottom: 1px solid var(--line); }
 .balance-detail > div:last-child { border-bottom: 0; }
 .balance-row span:nth-child(2), .balance-row span:nth-child(3), .balance-row span:nth-child(4) { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.balance-head span:nth-child(2), .balance-head span:nth-child(3), .balance-head span:nth-child(4) { text-align: right; }
 .balance-detail .balance-total { background: var(--card-bg); font-weight: 800; }
 .balance-detail .balance-total span:last-child { color: var(--pitch-dark); }
 @media (max-width: 480px) {
