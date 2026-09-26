@@ -5,13 +5,6 @@ namespace App\Services;
 class TeamBalancer
 {
     /**
-     * When two orientations leave the same attribute imbalance, this makes the
-     * one that spreads goalkeepers more evenly win. It is large on purpose:
-     * having a goalie on each team matters more than a slightly better balance.
-     */
-    private const GOALIE_PENALTY = 100.0;
-
-    /**
      * Tolerance used to treat two floating point costs as a tie.
      */
     private const EPSILON = 1.0e-9;
@@ -21,8 +14,8 @@ class TeamBalancer
      * player is paired with the highest, the next lowest with the next highest,
      * and so on. Each dupla therefore carries a similar combined power, and
      * every dupla contributes one player to each team. The orientation that
-     * keeps the totals as even as possible is chosen, preferring a polite
-     * goalkeeper on each side.
+     * keeps the teams as even as possible per attribute is chosen; a polite
+     * goalkeeper on each side only breaks ties among equally balanced ones.
      *
      * Participants are plain arrays with a 'score' and, when available, an
      * 'attributes' map and a 'likes_goalie' flag. When no attributes are given
@@ -196,17 +189,18 @@ class TeamBalancer
     /**
      * For every pair, decide which player goes to each team. All orientations
      * are tried and the ones minimizing the sum of per-characteristic gaps win;
-     * with random tie-breaking one of those is picked at random, otherwise the
-     * first one. The goalie spread acts as a tie-breaker so each team tends to
-     * have one, unless it is disabled.
+     * the goalkeeper spread only breaks ties among equally balanced ones, so it
+     * can never trade away balance for a goalie on each side. With random
+     * tie-breaking one of the equally good solutions is picked at random,
+     * otherwise the first one.
      *
      * @param  array<int, array{0: int, 1: int}>  $pairs
      * @return array{0: array<int, int>, 1: array<int, int>}
      */
     private function orient(array $pairs, array $participants, array $profiles, array $weights, bool $random, bool $spreadGoalies): array
     {
-        $goalieWeight = $spreadGoalies ? self::GOALIE_PENALTY : 0.0;
-        $bestCost = INF;
+        $bestImbalance = INF;
+        $bestGoalies = INF;
         $candidates = [];
         $combinations = 1 << count($pairs);
 
@@ -224,13 +218,29 @@ class TeamBalancer
                 }
             }
 
-            $cost = $this->imbalance($candidateA, $candidateB, $profiles, $weights)
-                + $goalieWeight * abs($this->goalies($candidateA, $participants) - $this->goalies($candidateB, $participants));
+            $imbalance = $this->imbalance($candidateA, $candidateB, $profiles, $weights);
+            $goaliesGap = $spreadGoalies
+                ? abs($this->goalies($candidateA, $participants) - $this->goalies($candidateB, $participants))
+                : 0;
 
-            if ($cost < $bestCost - self::EPSILON) {
-                $bestCost = $cost;
+            if ($imbalance < $bestImbalance - self::EPSILON) {
+                // Clearly more balanced: previous candidates lose.
+                $bestImbalance = $imbalance;
+                $bestGoalies = $goaliesGap;
                 $candidates = [[$candidateA, $candidateB]];
-            } elseif (abs($cost - $bestCost) <= self::EPSILON) {
+
+                continue;
+            }
+
+            if (abs($imbalance - $bestImbalance) > self::EPSILON) {
+                continue;
+            }
+
+            // Same balance: the goalie spread is only a tie-breaker.
+            if ($goaliesGap < $bestGoalies - self::EPSILON) {
+                $bestGoalies = $goaliesGap;
+                $candidates = [[$candidateA, $candidateB]];
+            } elseif (abs($goaliesGap - $bestGoalies) <= self::EPSILON) {
                 $candidates[] = [$candidateA, $candidateB];
             }
         }

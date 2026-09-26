@@ -197,14 +197,79 @@
                     @endif
                 </div>
                 @if (auth()->user()->is_organizer)
-<p class="muted small mb0 mt">
+                    <p class="muted small mb0 mt">
                         Duplas de extremos: cada fila es una dupla que junta al de mayor puntaje con el de menor, y así
-                        sucesivamente; cada dupla aporta un jugador a cada equipo buscando puntajes totales parejos. 🧤 = prefiere atajar.
+                        sucesivamente; cada dupla aporta un jugador a cada equipo. El armado minimiza el desfase por
+                        habilidad; el reparto de 🧤 solo desempata entre armados igual de parejos.
                     </p>
+                    @php
+                        $settings = app(\App\Services\AlgorithmSettings::class);
+                        $weights = $settings->weights();
+                        $attrSums = ['A' => [], 'B' => []];
+                        $teamGoalies = ['A' => 0, 'B' => 0];
+                        $teamTotals = ['A' => 0.0, 'B' => 0.0];
+
+                        foreach ($attrKeys as $key) {
+                            $attrSums['A'][$key] = 0.0;
+                            $attrSums['B'][$key] = 0.0;
+                        }
+
+                        foreach (['A' => $teamA, 'B' => $teamB] as $side => $rows) {
+                            foreach ($rows as $t) {
+                                $attrs = $t->user
+                                    ? $scorer->attributesForUser($t->user)
+                                    : ($t->guest ? $scorer->attributesForGuest($t->guest) : null);
+
+                                if ($attrs === null) {
+                                    continue;
+                                }
+
+                                foreach ($attrKeys as $key) {
+                                    $attrSums[$side][$key] += (float) ($attrs[$key] ?? 5);
+                                }
+
+                                $teamGoalies[$side] += ($t->user?->player?->likes_goalie ?? false) ? 1 : 0;
+                                $teamTotals[$side] += $memberScore($t);
+                            }
+                        }
+
+                        $gaps = [];
+                        $totalGap = 0.0;
+
+                        foreach ($attrKeys as $key) {
+                            $gap = ($weights[$key] ?? 0.0) * abs($attrSums['A'][$key] - $attrSums['B'][$key]);
+                            $gaps[$key] = $gap;
+                            $totalGap += $gap;
+                        }
+                    @endphp
+                    <div class="balance-detail">
+                        <div class="balance-head">
+                            <span>Habilidad</span><span>Equipo A</span><span>Equipo B</span><span>Desfase</span>
+                        </div>
+                        @foreach ($attrKeys as $key)
+                            <div class="balance-row">
+                                <span>{{ $attrLabels[$key] }}</span>
+                                <span>{{ number_format($attrSums['A'][$key], 1) }}</span>
+                                <span>{{ number_format($attrSums['B'][$key], 1) }}</span>
+                                <span>{{ number_format($gaps[$key], 2) }}</span>
+                            </div>
+                        @endforeach
+                        <div class="balance-row balance-total">
+                            <span>Desbalanceo</span><span></span><span></span><span>{{ number_format($totalGap, 2) }}</span>
+                        </div>
+                        <div class="balance-row">
+                            <span>Arqueros 🧤</span><span>{{ $teamGoalies['A'] }}</span><span>{{ $teamGoalies['B'] }}</span><span>{{ abs($teamGoalies['A'] - $teamGoalies['B']) }}</span>
+                        </div>
+                    </div>
                     <ul class="list" style="margin:8px 0 4px;">
-                        <li><span>Puntaje A</span><span class="score-tag">{{ number_format(collect($teamA)->sum(fn ($t) => $memberScore($t)), 1) }}</span></li>
-                        <li><span>Puntaje B</span><span class="score-tag">{{ number_format(collect($teamB)->sum(fn ($t) => $memberScore($t)), 1) }}</span></li>
+                        <li><span>Puntaje A</span><span class="score-tag">{{ number_format($teamTotals['A'], 1) }}</span></li>
+                        <li><span>Puntaje B</span><span class="score-tag">{{ number_format($teamTotals['B'], 1) }}</span></li>
                     </ul>
+                    <p class="muted small">
+                        El desfase de cada habilidad es la diferencia entre equipos multiplicada por su importancia.
+                        El armado elige la combinación con menor desbalanceo total; el puntaje es solo la suma de las
+                        calificaciones de cada jugador.
+                    </p>
                 @endif
                 @php
                     $teamAPos = $teamA->keyBy('position');

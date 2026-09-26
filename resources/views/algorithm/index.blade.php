@@ -58,7 +58,7 @@
             <label><input type="radio" name="spread_goalies" value="1" @checked($spreadGoalies)><span>Sí</span></label>
             <label><input type="radio" name="spread_goalies" value="0" @checked(! $spreadGoalies)><span>No</span></label>
         </div>
-        <p class="muted small mb0">Busca que a cada equipo le toque al menos un jugador que le guste atajar.</p>
+        <p class="muted small mb0">Solo desempata: entre dos armados igualmente parejos, prefiere el que reparte mejor a los jugadores que les gusta atajar.</p>
     </div>
 
     <div class="divider"></div>

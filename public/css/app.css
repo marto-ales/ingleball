@@ -303,6 +303,17 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
 .dupla-mid { flex: 0 0 92px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 4px 6px; background: var(--card-bg); border-left: 1px solid var(--line); border-right: 1px solid var(--line); font-size: 11px; color: var(--muted); line-height: 1.2; }
 .dupla-mid b { font-size: 13px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
 .dupla-off { opacity: .4; font-style: italic; font-weight: 500; }
+.balance-detail { margin: 10px 0 2px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 12px; }
+.balance-detail > div { display: grid; grid-template-columns: 1fr 48px 48px 56px; gap: 6px; padding: 6px 12px; align-items: center; }
+.balance-detail .balance-head { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid var(--line); padding: 5px 12px; }
+.balance-detail .balance-row { border-bottom: 1px solid var(--line); }
+.balance-detail > div:last-child { border-bottom: 0; }
+.balance-row span:nth-child(2), .balance-row span:nth-child(3), .balance-row span:nth-child(4) { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.balance-detail .balance-total { background: var(--card-bg); font-weight: 800; }
+.balance-detail .balance-total span:last-child { color: var(--pitch-dark); }
+@media (max-width: 480px) {
+  .balance-detail > div { grid-template-columns: 1fr 40px 40px 46px; gap: 4px; padding: 6px 8px; }
+}
 .score-big { font-size: 30px; font-weight: 800; letter-spacing: 1px; text-align: center; padding: 6px 0; }
 
 /* Flash */
@@ -487,6 +498,7 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
 [data-theme="dark"] .dupla-a { background: #182a1f; }
 [data-theme="dark"] .dupla-b { background: #2b2017; }
 [data-theme="dark"] .dupla-mid { background: #141816; }
+[data-theme="dark"] .balance-detail .balance-total { background: #141816; }
 [data-theme="dark"] .share-box { background: #121814; border-color: var(--line); }
 [data-theme="dark"] .flash-ok { background: #14301f; border-color: #1f4a2e; }
 [data-theme="dark"] .flash-err { background: #3a1614; border-color: #5c211d; }
