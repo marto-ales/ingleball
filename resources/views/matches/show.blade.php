@@ -245,7 +245,7 @@
                     @endphp
                     <div class="balance-detail">
                         <div class="balance-head">
-                            <span>Habilidad</span><span>A</span><span>B</span><span>Desfase</span>
+                            <span>Caracerística</span><span>A</span><span>B</span><span>Desfase</span>
                         </div>
                         @foreach ($order as $key)
                             <div class="balance-row">
