@@ -2,18 +2,17 @@
 
 namespace App\Services;
 
+use App\Models\Group;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 
 /**
  * Persistent configuration of the team balancing algorithm, editable by
- * organizers from the "Algoritmo" screen.
+ * organizers from the "Algoritmo" screen. Every group keeps its own copy.
  */
 class AlgorithmSettings
 {
     public const KEY = 'algorithm';
-
-    public const CACHE_KEY = 'algorithm.settings';
 
     /**
      * Weight each attribute gets from its position in the order: the first one
@@ -23,13 +22,37 @@ class AlgorithmSettings
      */
     private const RANKED_WEIGHTS = [0.30, 0.25, 0.15, 0.15, 0.15];
 
+    public function __construct(private ?int $groupId = null) {}
+
+    /**
+     * Copy of the settings for another group, keeping their own cache and row.
+     */
+    public function forGroup(int $groupId): self
+    {
+        return new self($groupId);
+    }
+
+    /**
+     * Group these settings belong to; falls back to the default group so
+     * console commands and tests work without an explicit group.
+     */
+    public function groupId(): int
+    {
+        return $this->groupId ??= Group::query()->orderBy('id')->value('id');
+    }
+
+    private function cacheKey(): string
+    {
+        return "algorithm.settings.{$this->groupId()}";
+    }
+
     /**
      * @return array{order: array<int, string>, random_tie_break: bool, spread_goalies: bool, self_weight: float, weight_by_form: bool, form_span: float}
      */
     public function all(): array
     {
-        $stored = Cache::remember(self::CACHE_KEY, now()->addDay(), function (): array {
-            $row = Setting::find(self::KEY);
+        $stored = Cache::remember($this->cacheKey(), now()->addDay(), function (): array {
+            $row = Setting::where('group_id', $this->groupId())->where('key', self::KEY)->first();
             $decoded = $row?->value !== null ? json_decode($row->value, true) : [];
 
             return is_array($decoded) ? $decoded : [];
@@ -101,11 +124,11 @@ class AlgorithmSettings
     public function update(array $data): void
     {
         Setting::updateOrCreate(
-            ['key' => self::KEY],
+            ['group_id' => $this->groupId(), 'key' => self::KEY],
             ['value' => json_encode($this->normalize($data))],
         );
 
-        Cache::forget(self::CACHE_KEY);
+        Cache::forget($this->cacheKey());
     }
 
     /**

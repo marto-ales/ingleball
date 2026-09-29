@@ -47,8 +47,8 @@
 
         @if ($user->is_organizer)
             <div class="field">
-                <label for="whatsapp_group">Enlace del grupo de WhatsApp <span class="muted small">(para recordatorios)</span></label>
-                <input id="whatsapp_group" name="whatsapp_group" value="{{ old('whatsapp_group', $user->whatsapp_group) }}" placeholder="https://chat.whatsapp.com/XXXXXXXX">
+                <label>Enlace del grupo de WhatsApp</label>
+                <p class="muted small mb0">El enlace de WhatsApp se configura por grupo, en <a href="{{ route('groups.show') }}">Mi grupo</a>.</p>
             </div>
         @endif
 

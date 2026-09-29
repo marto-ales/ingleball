@@ -57,18 +57,22 @@ final class PagesRenderTest extends TestCase
 
     public function test_organizer_can_define_whatsapp_group_and_it_shows_on_match_page(): void
     {
+        $this->actingAs($this->organizer)->patch(route('groups.update'), [
+            'name' => $this->organizer->group->name,
+            'whatsapp_group' => 'https://chat.whatsapp.com/AbCd1234',
+        ]);
+
+        $this->assertDatabaseHas('groups', [
+            'id' => $this->organizer->group_id,
+            'whatsapp_group' => 'https://chat.whatsapp.com/AbCd1234',
+        ]);
+
         $this->actingAs($this->organizer)->patch('/profile', [
             'name' => $this->organizer->name,
             'email' => null,
             'phone' => null,
-            'whatsapp_group' => 'https://chat.whatsapp.com/AbCd1234',
             'likes_goalie' => 1,
             'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'goalkeeping' => 8,
-        ]);
-
-        $this->assertDatabaseHas('users', [
-            'id' => $this->organizer->id,
-            'whatsapp_group' => 'https://chat.whatsapp.com/AbCd1234',
         ]);
 
         $this->assertDatabaseHas('players', [
@@ -229,7 +233,6 @@ final class PagesRenderTest extends TestCase
                 'name' => $this->organizer->name,
                 'email' => 'org@example.com',
                 'phone' => null,
-                'whatsapp_group' => null,
                 'likes_goalie' => 0,
                 'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'goalkeeping' => 5,
                 'theme' => 'arg',

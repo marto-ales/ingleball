@@ -11,7 +11,7 @@ class Player extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'speed', 'skill', 'passing', 'shooting', 'defense',
+        'user_id', 'group_id', 'speed', 'skill', 'passing', 'shooting', 'defense',
         'likes_goalie', 'goalkeeping', 'self_eval_completed_at',
     ];
 

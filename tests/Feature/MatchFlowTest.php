@@ -127,8 +127,8 @@ final class MatchFlowTest extends TestCase
     public function test_organizer_can_move_guest_between_going_and_substitute(): void
     {
         $organizer = User::factory()->organizer()->create();
-        $match = Partido::factory()->create(['created_by' => $organizer->id]);
-        $guest = Guest::create(['name' => 'Cheto', 'overall' => 5]);
+        $match = Partido::factory()->createdBy($organizer)->create();
+        $guest = Guest::factory()->inGroup($match->group_id)->create(['name' => 'Cheto', 'overall' => 5]);
         $match->entries()->create(['guest_id' => $guest->id, 'role' => 'going']);
 
         $this->actingAs($organizer)
@@ -155,8 +155,8 @@ final class MatchFlowTest extends TestCase
     public function test_organizer_removing_guest_via_manage_deletes_orphaned_guest(): void
     {
         $organizer = User::factory()->organizer()->create();
-        $match = Partido::factory()->create(['created_by' => $organizer->id]);
-        $guest = Guest::create(['name' => 'Cheto', 'overall' => 5]);
+        $match = Partido::factory()->createdBy($organizer)->create();
+        $guest = Guest::factory()->inGroup($match->group_id)->create(['name' => 'Cheto', 'overall' => 5]);
         $match->entries()->create(['guest_id' => $guest->id, 'role' => 'going']);
 
         $this->actingAs($organizer)
@@ -435,9 +435,8 @@ final class MatchFlowTest extends TestCase
 
     public function test_organizer_group_link_appears_in_attendance_suggestion(): void
     {
-        $organizer = User::factory()->organizer()->create([
-            'whatsapp_group' => 'https://chat.whatsapp.com/Grupo1',
-        ]);
+        $organizer = User::factory()->organizer()->create();
+        $organizer->group->update(['whatsapp_group' => 'https://chat.whatsapp.com/Grupo1']);
         $match = Partido::factory()->create(['created_by' => $organizer->id]);
 
         $this->actingAs($organizer)

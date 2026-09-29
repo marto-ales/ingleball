@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ScopedToGroup;
 use App\Notifications\ResetPassword;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -14,14 +16,14 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, ScopedToGroup;
 
     protected $fillable = [
         'name',
         'username',
         'email',
         'phone',
-        'whatsapp_group',
+        'group_id',
         'is_organizer',
         'banned_at',
         'is_managed',
@@ -58,6 +60,23 @@ class User extends Authenticatable
     public function player(): HasOne
     {
         return $this->hasOne(Player::class);
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
+    }
+
+    /**
+     * Move the user to another group along with their own profile. Ratings,
+     * matches and evaluations they took part in stay in the group they were
+     * played or written in, so that group's history stays intact.
+     */
+    public function moveToGroup(Group $group): void
+    {
+        $this->forceFill(['group_id' => $group->id])->save();
+
+        $this->player()->update(['group_id' => $group->id]);
     }
 
     public function ratingsGiven(): HasMany

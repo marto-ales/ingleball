@@ -21,7 +21,7 @@ class MessagingService
     public function message(Partido $match, Collection $teamA, Collection $teamB, Collection $entriesGoing, Collection $entriesSubstitute): string
     {
         $lines = [
-            '⚽ *Ingleball — '.$match->title.'*',
+            '⚽ *'.($match->group?->name ?? 'Ingleball').' — '.$match->title.'*',
             '🗓️ '.$match->played_at->format('d/m/Y').' a las '.$match->played_at->format('H:i'),
         ];
 

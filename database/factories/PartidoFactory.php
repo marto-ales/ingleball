@@ -22,12 +22,21 @@ class PartidoFactory extends Factory
             'venue' => fake()->streetAddress(),
             'size' => 5,
             'status' => 'open',
+            'group_id' => UserFactory::defaultGroupId(),
             'created_by' => User::factory(),
         ];
     }
 
     public function createdBy(User $user): static
     {
-        return $this->state(fn () => ['created_by' => $user->id]);
+        return $this->state(fn () => [
+            'created_by' => $user->id,
+            'group_id' => $user->group_id,
+        ]);
+    }
+
+    public function inGroup(int $groupId): static
+    {
+        return $this->state(fn (): array => ['group_id' => $groupId]);
     }
 }

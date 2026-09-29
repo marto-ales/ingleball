@@ -17,7 +17,7 @@ class Welcome extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: '¡Bienvenido a Ingleball!');
+        return new Envelope(subject: '¡Bienvenido a '.($this->user->group?->name ?? 'Ingleball').'!');
     }
 
     public function content(): Content

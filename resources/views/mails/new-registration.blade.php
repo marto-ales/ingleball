@@ -1,5 +1,5 @@
 <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 520px; margin: 0 auto; padding: 20px; color: #1c2521;">
-    <h1 style="color: #0b6e3f; margin: 0 0 12px;">&#9917; Ingleball</h1>
+    <h1 style="color: #0b6e3f; margin: 0 0 12px;">&#9917; {{ $user->group?->name ?? 'Ingleball' }}</h1>
     <p style="margin: 0 0 16px;">Se registró un nuevo jugador:</p>
     <p style="margin: 0 0 4px;"><strong>{{ $user->name }}</strong></p>
     <p style="margin: 0 0 4px; color: #5f6b64;">{{ $user->username }}</p>

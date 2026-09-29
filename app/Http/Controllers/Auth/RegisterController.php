@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Mail\NewRegistration;
 use App\Mail\Welcome;
+use App\Models\Group;
 use App\Models\User;
 use App\Rules\ValidCaptcha;
 use App\Support\Captcha;
@@ -31,6 +32,7 @@ class RegisterController extends Controller
             'email' => ['required', 'email', 'max:120'],
             'phone' => ['nullable', 'string', 'max:20'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'group_code' => ['required', 'string', 'exists:groups,join_code'],
         ];
 
         if (Captcha::enabled()) {
@@ -40,6 +42,8 @@ class RegisterController extends Controller
         $data = $request->validate($rules);
 
         $data['username'] = Str::lower($data['username']);
+
+        $group = Group::where('join_code', $data['group_code'])->firstOrFail();
 
         $usernameOwner = User::whereRaw('LOWER(username) = ?', [$data['username']])->first();
         if ($usernameOwner && ! $usernameOwner->is_managed) {
@@ -66,6 +70,8 @@ class RegisterController extends Controller
                 'password' => $data['password'],
                 'is_managed' => false,
             ])->save();
+
+            $user->moveToGroup($group);
         } else {
             $user = User::create([
                 'name' => $data['name'],
@@ -73,12 +79,14 @@ class RegisterController extends Controller
                 'email' => $data['email'],
                 'phone' => $data['phone'] ?? null,
                 'password' => $data['password'],
+                'group_id' => $group->id,
                 'is_organizer' => false,
             ]);
         }
 
         if (! $user->player()->exists()) {
             $user->player()->create([
+                'group_id' => $group->id,
                 'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5,
             ]);
         }
@@ -87,7 +95,10 @@ class RegisterController extends Controller
             Mail::to($user)->send(new Welcome($user));
         }
 
-        $organizers = User::where('is_organizer', true)->whereNotNull('email')->get();
+        $organizers = User::where('group_id', $group->id)
+            ->where('is_organizer', true)
+            ->whereNotNull('email')
+            ->get();
         if ($organizers->isNotEmpty()) {
             Mail::to($organizers)->send(new NewRegistration($user));
         }
@@ -97,7 +108,9 @@ class RegisterController extends Controller
 
         return redirect()->route('dashboard')->with(
             'status',
-            $managed ? '¡Bienvenido a Ingleball! Recuperaste tu historial como '.$user->name.'.' : '¡Bienvenido a Ingleball, '.$user->name.'!'
+            $managed
+                ? '¡Bienvenido a '.$group->name.'! Recuperaste tu historial como '.$user->name.'.'
+                : '¡Bienvenido a '.$group->name.', '.$user->name.'!'
         );
     }
 }

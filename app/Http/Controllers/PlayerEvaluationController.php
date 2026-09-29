@@ -20,6 +20,7 @@ class PlayerEvaluationController extends Controller
 
         $evaluation = $request->user()->evaluationsGiven()
             ->where('rated_user_id', $user->id)
+            ->where('group_id', $user->group_id)
             ->first();
 
         return view('evaluation.edit', [
@@ -42,7 +43,7 @@ class PlayerEvaluationController extends Controller
         ]);
 
         $request->user()->evaluationsGiven()->updateOrCreate(
-            ['rated_user_id' => $user->id],
+            ['rated_user_id' => $user->id, 'group_id' => $user->group_id],
             [
                 'speed' => (int) $data['speed'],
                 'skill' => (int) $data['skill'],

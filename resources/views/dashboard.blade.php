@@ -7,6 +7,9 @@
     <div>
         <h1>Hola, {{ auth()->user()->name }}</h1>
         <p class="lead">Tus partidos próximos y su estado.</p>
+        @if (auth()->user()->group)
+            <p class="muted small mb0">Grupo: <a href="{{ route('groups.show') }}">{{ auth()->user()->group->name }}</a></p>
+        @endif
     </div>
 </div>
 

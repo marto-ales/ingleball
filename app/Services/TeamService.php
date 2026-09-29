@@ -33,34 +33,37 @@ class TeamService
      */
     public function collect(Partido $match): array
     {
+        $settings = $this->settings->forGroup($match->group_id);
+        $scorer = $this->scorer->forGroup($match->group_id);
+
         $entries = $match->entries()
             ->with(['user', 'user.player', 'guest'])
             ->where('role', 'going')
             ->get();
 
         $participants = [];
-        $weights = $this->settings->weights();
+        $weights = $settings->weights();
 
         foreach ($entries as $entry) {
             if ($entry->user !== null) {
-                $attributes = $this->scorer->attributesForUser($entry->user);
+                $attributes = $scorer->attributesForUser($entry->user);
 
                 $participants[] = [
                     'user_id' => $entry->user->id,
                     'guest_id' => null,
                     'name' => $entry->user->name,
-                    'score' => $this->scorer->power($attributes, $weights),
+                    'score' => $scorer->power($attributes, $weights),
                     'attributes' => $attributes,
                     'likes_goalie' => (bool) ($entry->user->player?->likes_goalie ?? false),
                 ];
             } elseif ($entry->guest !== null) {
-                $attributes = $this->scorer->attributesForGuest($entry->guest);
+                $attributes = $scorer->attributesForGuest($entry->guest);
 
                 $participants[] = [
                     'user_id' => null,
                     'guest_id' => $entry->guest->id,
                     'name' => $entry->guest->name,
-                    'score' => $this->scorer->power($attributes, $weights),
+                    'score' => $scorer->power($attributes, $weights),
                     'attributes' => $attributes,
                     'likes_goalie' => false,
                 ];
@@ -82,11 +85,13 @@ class TeamService
         $autoSize = $this->chooseTeamSize(count($participants));
         $size = $preferredSize !== null ? min($preferredSize, $autoSize) : $autoSize;
 
+        $settings = $this->settings->forGroup($match->group_id);
+
         $selected = array_slice($participants, 0, $size * 2);
         $result = $this->balancer->balance($selected, $size, [
-            'weights' => $this->settings->weights(),
-            'random_tie_break' => $this->settings->randomTieBreak(),
-            'spread_goalies' => $this->settings->spreadGoalies(),
+            'weights' => $settings->weights(),
+            'random_tie_break' => $settings->randomTieBreak(),
+            'spread_goalies' => $settings->spreadGoalies(),
         ]);
 
         $match->teams()->delete();

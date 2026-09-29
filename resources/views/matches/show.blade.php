@@ -4,7 +4,7 @@
 
 @section('content')
 @php
-    $scorer = app(\App\Services\Scorer::class);
+    $scorer = app(\App\Services\Scorer::class)->forGroup($match->group_id);
     $attrKeys = ['speed', 'skill', 'passing', 'shooting', 'defense'];
     $attrLabels = ['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa'];
     $memberScore = function ($t) use ($scorer) {
@@ -203,7 +203,7 @@
                         habilidad; el reparto de 🧤 solo desempata entre armados igual de parejos.
                     </p>
                     @php
-                        $settings = app(\App\Services\AlgorithmSettings::class);
+                        $settings = app(\App\Services\AlgorithmSettings::class)->forGroup($match->group_id);
                         $weights = $settings->weights();
                         $order = $settings->order();
                         $attrSums = ['A' => [], 'B' => []];
@@ -452,7 +452,7 @@
                 @if ($waGroup)
                     <a class="btn wa-link" target="_blank" rel="noopener" href="{{ $waGroup }}">Abrir el grupo</a>
                 @elseif (auth()->user()->is_organizer)
-                    <span class="muted small">Definí el enlace del grupo en tu <a href="{{ route('profile.edit') }}">perfil</a>.</span>
+                    <span class="muted small">Definí el enlace de WhatsApp en <a href="{{ route('groups.show') }}">Mi grupo</a>.</span>
                 @endif
             </div>
         </div>

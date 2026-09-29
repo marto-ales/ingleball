@@ -3,18 +3,26 @@
 namespace App\Services;
 
 use App\Models\Partido;
+use Illuminate\Support\Facades\Auth;
 
 class RecurringMatchService
 {
     /**
      * Ensures the upcoming occurrence exists for every recurring template
-     * (matches flagged `recurring`). Returns the number of matches created.
+     * (matches flagged `recurring`) of the given group. Returns the number of matches created.
      */
-    public function ensureUpcoming(): int
+    public function ensureUpcoming(?int $groupId = null): int
     {
+        $groupId ??= Auth::check() ? Auth::user()->group_id : null;
         $created = 0;
 
-        foreach (Partido::where('recurring', true)->whereNull('recurring_id')->get() as $template) {
+        $query = Partido::where('recurring', true)->whereNull('recurring_id');
+
+        if ($groupId !== null) {
+            $query->where('group_id', $groupId);
+        }
+
+        foreach ($query->get() as $template) {
             $lastPlayed = $template->played_at;
 
             $lastCopy = Partido::where('recurring_id', $template->id)
@@ -52,6 +60,7 @@ class RecurringMatchService
                 'size' => $template->size,
                 'status' => Partido::STATUS_OPEN,
                 'created_by' => $template->created_by,
+                'group_id' => $template->group_id,
                 'recurring' => false,
                 'recurring_id' => $template->id,
             ]);

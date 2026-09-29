@@ -30,7 +30,6 @@ class ProfileController extends Controller
             'name' => ['required', 'string', 'max:80'],
             'email' => ['nullable', 'email', 'max:120'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'whatsapp_group' => ['nullable', 'string', 'max:255'],
             'speed' => ['required', 'integer', 'between:0,10'],
             'skill' => ['required', 'integer', 'between:0,10'],
             'passing' => ['required', 'integer', 'between:0,10'],
@@ -48,15 +47,12 @@ class ProfileController extends Controller
             'theme' => $data['theme'] ?? Themes::DEFAULT,
         ];
 
-        if ($user->is_organizer) {
-            $update['whatsapp_group'] = $data['whatsapp_group'] ?? null;
-        }
-
         $user->update($update);
 
         $user->player()->updateOrCreate(
             ['user_id' => $user->id],
             [
+                'group_id' => $user->group_id,
                 'speed' => (int) $data['speed'],
                 'skill' => (int) $data['skill'],
                 'passing' => (int) $data['passing'],

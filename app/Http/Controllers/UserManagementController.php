@@ -13,13 +13,19 @@ class UserManagementController extends Controller
 {
     public function index(): View
     {
-        $users = User::withCount('evaluationsReceived')
+        $groupId = auth()->user()->group_id;
+
+        $users = User::withCount(['evaluationsReceived' => fn ($query) => $query->where('group_id', $groupId)])
             ->with('player')
+            ->where('group_id', $groupId)
             ->orderByDesc('is_organizer')
             ->orderBy('name')
             ->get();
 
-        $myEvaluated = auth()->user()->evaluationsGiven()->pluck('rated_user_id')->all();
+        $myEvaluated = auth()->user()->evaluationsGiven()
+            ->where('group_id', $groupId)
+            ->pluck('rated_user_id')
+            ->all();
 
         return view('users.index', [
             'users' => $users,
@@ -48,12 +54,14 @@ class UserManagementController extends Controller
             'username' => $username,
             'phone' => $data['phone'] ?? null,
             'email' => $data['email'] ?? null,
+            'group_id' => auth()->user()->group_id,
             'is_managed' => true,
             'is_organizer' => false,
             'password' => Str::random(32),
         ]);
 
         $user->player()->create([
+            'group_id' => $user->group_id,
             'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5,
             'goalkeeping' => $data['goalkeeping'] ?? 5,
         ]);

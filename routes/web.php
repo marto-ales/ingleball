@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EntryController;
+use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\MatchController;
 use App\Http\Controllers\PlayerEvaluationController;
@@ -77,6 +78,11 @@ Route::middleware('auth')->group(function () {
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('profile/theme', [ProfileController::class, 'updateTheme'])->name('profile.theme');
+
+    Route::get('grupo', [GroupController::class, 'show'])->name('groups.show');
+    Route::patch('grupo', [GroupController::class, 'update'])->middleware('organizer')->name('groups.update');
+    Route::post('grupo/codigo', [GroupController::class, 'rotateCode'])->middleware('organizer')->name('groups.code');
+    Route::post('grupo', [GroupController::class, 'store'])->middleware('organizer')->name('groups.store');
 });
 
 Route::middleware('auth', 'organizer')->group(function () {

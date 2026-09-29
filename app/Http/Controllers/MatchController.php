@@ -95,11 +95,12 @@ class MatchController extends Controller
             'size' => $data['size'],
             'status' => Partido::STATUS_OPEN,
             'created_by' => $request->user()->id,
+            'group_id' => $request->user()->group_id,
             'recurring' => $request->boolean('recurring'),
         ]);
 
         if ($match->recurring) {
-            $this->recurring->ensureUpcoming();
+            $this->recurring->ensureUpcoming($match->group_id);
         }
 
         return redirect()
@@ -112,6 +113,7 @@ class MatchController extends Controller
         $match->autoFinish();
 
         $match->load([
+            'group',
             'entries.user', 'entries.guest',
             'guests',
             'result.mvpUser', 'result.mvpGuest',
@@ -132,12 +134,13 @@ class MatchController extends Controller
 
         $participants = $this->participants($match);
 
-        $availableUsers = User::whereNull('banned_at')
+        $availableUsers = User::where('group_id', $match->group_id)
+            ->whereNull('banned_at')
             ->whereNotIn('id', $match->entries()->whereNotNull('user_id')->pluck('user_id'))
             ->orderBy('name')
             ->get();
 
-        $waGroup = $me->is_organizer ? $me->whatsapp_group : null;
+        $waGroup = $match->group?->whatsapp_group;
 
         $shareMessage = $this->messaging->message($match, $teamA, $teamB, $entriesGoing, $entriesSubstitute);
 
@@ -163,7 +166,7 @@ class MatchController extends Controller
 
         if ($match->recurring) {
             $match->update(['recurring_id' => null]);
-            $this->recurring->ensureUpcoming();
+            $this->recurring->ensureUpcoming($match->group_id);
         }
 
         return back()->with(

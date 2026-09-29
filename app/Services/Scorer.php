@@ -14,6 +14,18 @@ class Scorer
     public function __construct(private AlgorithmSettings $settings) {}
 
     /**
+     * Scorer configured with the settings of another group.
+     */
+    public function forGroup(?int $groupId): self
+    {
+        if ($groupId === null || $groupId === $this->settings->groupId()) {
+            return $this;
+        }
+
+        return new self($this->settings->forGroup($groupId));
+    }
+
+    /**
      * Attribute profile of a registered player: the self-assessment blended
      * with the organizers' evaluations, then scaled by recent form.
      *
@@ -63,6 +75,7 @@ class Scorer
 
         $general = Rating::whereIn('match_id', $matchIds)
             ->where('rated_user_id', $user->id)
+            ->where('group_id', $user->group_id)
             ->avg('overall');
 
         $group = Rating::whereIn('match_id', $matchIds)->avg('overall');
@@ -100,6 +113,7 @@ class Scorer
 
         return Rating::whereIn('match_id', $matchIds)
             ->where('rated_user_id', $user->id)
+            ->where('group_id', $user->group_id)
             ->with('match')
             ->get()
             ->sortByDesc(fn (Rating $rating): int => (int) $rating->match?->played_at?->getTimestamp())
@@ -178,11 +192,13 @@ class Scorer
 
     private function organizerAverage(User $user, string $column): ?float
     {
-        if ($user->evaluationsReceived()->count() === 0) {
+        $evaluations = $user->evaluationsReceived()->where('group_id', $user->group_id);
+
+        if ($evaluations->count() === 0) {
             return null;
         }
 
-        return (float) $user->evaluationsReceived()->avg($column);
+        return (float) $evaluations->avg($column);
     }
 
     /**
@@ -194,6 +210,7 @@ class Scorer
     {
         return $user->entries()
             ->where('role', MatchEntry::ROLE_GOING)
+            ->whereHas('match', fn ($query) => $query->where('group_id', $user->group_id))
             ->with('match')
             ->get()
             ->map(fn (MatchEntry $entry): ?Partido => $entry->match)

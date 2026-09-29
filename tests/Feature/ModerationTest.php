@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Group;
 use App\Models\Partido;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -116,6 +117,7 @@ final class ModerationTest extends TestCase
         ]);
         $organizer->evaluationsGiven()->create([
             'rated_user_id' => $with->id,
+            'group_id' => $with->group_id,
             'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'goalkeeping' => 5,
         ]);
 
@@ -164,6 +166,7 @@ final class ModerationTest extends TestCase
             'email' => 'pancho@example.com',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
+            'group_code' => Group::query()->orderBy('id')->value('join_code'),
         ])->assertRedirect(route('dashboard'));
 
         $managed->refresh();
@@ -185,6 +188,7 @@ final class ModerationTest extends TestCase
             'email' => 'otra@example.com',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
+            'group_code' => Group::query()->orderBy('id')->value('join_code'),
         ])->assertSessionHasErrors('username');
 
         $this->assertGuest();

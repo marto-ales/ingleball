@@ -29,6 +29,9 @@ class PlayerFactory extends Factory
 
     public function forUser(User $user): static
     {
-        return $this->state(fn () => ['user_id' => $user->id]);
+        return $this->state(fn () => [
+            'user_id' => $user->id,
+            'group_id' => $user->group_id,
+        ]);
     }
 }
