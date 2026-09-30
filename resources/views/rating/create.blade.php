@@ -12,99 +12,148 @@
 </div>
 
 @php
-    $existingMap = $existing->map(fn ($r) => [
-        'overall' => $r->overall - 5,
-    ])->toArray();
+    $existingMap = $existing->mapWithKeys(fn ($r, $token) => [$token => $r->overall - 5]);
+
+    $pendingKey = 'ingleball.ratings.'.$me->id.'.'.$match->id;
 @endphp
 
 <div class="card card--ranking" style="max-width: 640px;">
     @if ($participants->isEmpty())
         <div class="empty">No hay rivales para calificar todavía.</div>
     @else
-        <form method="POST" action="{{ route('ratings.store', $match) }}">
+        <p class="muted small">Elegí a un jugador y mové la barra. Podés calificar a varios, y cuando termines apretá el botón para guardarlos todos juntos.</p>
+
+        <form method="POST" action="{{ route('ratings.store', $match) }}" id="ratings-form">
             @csrf
+
             <div class="field">
-                <label>¿A quién calificás? <span class="muted small">(tocá su tarjeta)</span></label>
+                <label>¿A quién querés calificar?</label>
                 <div class="pick-grid" id="pick-rated">
                     @foreach ($participants as $p)
-                        <button type="button" class="pick" data-token="{{ $p['token'] }}">{{ $p['name'] }}</button>
+                        <button
+                            type="button"
+                            class="pick{{ $existingMap->has($p['token']) ? ' rated' : '' }}"
+                            data-token="{{ $p['token'] }}"
+                            data-name="{{ $p['name'] }}"
+                        >{{ $p['name'] }}</button>
                     @endforeach
                 </div>
-                <input type="hidden" name="rated" id="rated" value="{{ old('rated') }}">
-                @error('rated')
-                    <p class="field-error">{{ $message }}</p>
-                @enderror
             </div>
 
             <div class="field">
-                <p class="muted mb0">Estás calificando a <strong id="current-name">Elegí un jugador para empezar</strong></p>
+                <p class="muted mb0">Estás calificando a <strong id="current-name">elegí un jugador</strong></p>
             </div>
 
             <div class="field">
                 <label>Calificación general</label>
-                <p class="muted small mb0">¿Qué nivel mostró en este partido? (0 = nivel esperado)</p>
-                @include('partials.scale-centered', ['name' => 'overall', 'label' => 'Calificación general', 'value' => old('overall', 5)])
+                <p class="muted small mb0">¿Qué nivel mostró en este partido? (0 es el nivel de siempre)</p>
+                @include('partials.scale-centered', [
+                    'name' => 'overall',
+                    'label' => 'Calificación general',
+                    'value' => 5,
+                ])
             </div>
 
-            <button class="btn btn-primary" type="submit">Guardar calificación</button>
+            <div id="ratings-fields"></div>
+
+            <div class="row" style="margin-top:18px;">
+                <button class="btn btn-primary" type="submit">Guardar calificaciones</button>
+            </div>
+
+            @error('ratings')
+                <p class="field-error">{{ $message }}</p>
+            @enderror
         </form>
     @endif
 </div>
 
 <script>
-    window.__existing = @json($existingMap);
     (function () {
-        const hidden = document.getElementById('rated');
-        const currentName = document.getElementById('current-name');
-        const buttons = document.querySelectorAll('#pick-rated .pick');
-        const fields = ['overall'];
+        const pendingKey = @json($pendingKey);
+        const form = document.getElementById('ratings-form');
+        if (!form) return;
 
-        function setScale(name, val) {
-            document.querySelectorAll('[name="' + name + '"]').forEach(function (el) {
-                if (el.type === 'range') {
-                    el.value = val;
-                    el.dispatchEvent(new Event('input', { bubbles: true }));
-                } else {
-                    el.checked = String(el.value) === String(val);
+        const existing = @json($existingMap->all());
+        const buttons = Array.prototype.slice.call(form.querySelectorAll('#pick-rated .pick'));
+        const slider = document.getElementById('overall');
+        const currentName = document.getElementById('current-name');
+        const fields = document.getElementById('ratings-fields');
+
+        // token -> overall (-5..5)
+        const values = Object.assign({}, existing);
+
+        function readPending() {
+            try {
+                return JSON.parse(localStorage.getItem(pendingKey) || '{}');
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function savePending() {
+            localStorage.setItem(pendingKey, JSON.stringify(values));
+        }
+
+        function markRated() {
+            buttons.forEach(function (btn) {
+                if (values[btn.dataset.token] != null) {
+                    btn.classList.add('rated');
                 }
             });
         }
 
-        function apply(token) {
-            const e = window.__existing[token];
-            fields.forEach(function (f) {
-                setScale(f, (e && e[f] != null) ? e[f] : 0);
-            });
+        let selected = null;
+        let syncing = false;
+
+        function showScore(value) {
+            syncing = true;
+            slider.value = String(value);
+            slider.dispatchEvent(new Event('input', { bubbles: true }));
+            syncing = false;
         }
 
-        function selectButton(btn) {
+        function select(btn) {
             buttons.forEach(function (b) { b.classList.remove('selected'); });
             btn.classList.add('selected');
-            hidden.value = btn.dataset.token;
-            currentName.textContent = btn.textContent.trim();
-            apply(btn.dataset.token);
+            selected = btn.dataset.token;
+            currentName.textContent = btn.dataset.name;
+            showScore(values[selected] == null ? 0 : values[selected]);
         }
 
         buttons.forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                selectButton(btn);
-            });
+            btn.addEventListener('click', function () { select(btn); });
         });
 
-        Object.keys(window.__existing).forEach(function (token) {
-            buttons.forEach(function (btn) {
-                if (btn.dataset.token === token) btn.classList.add('rated');
-            });
+        slider.addEventListener('input', function () {
+            if (syncing || selected === null) return;
+            values[selected] = parseInt(slider.value, 10);
+            markRated();
+            savePending();
         });
 
-        let target = null;
-        if (hidden.value) {
-            target = Array.prototype.find.call(buttons, function (b) { return b.dataset.token === hidden.value; }) || null;
-        }
-        if (!target) {
-            target = Array.prototype.find.call(buttons, function (b) { return ! b.classList.contains('rated'); }) || buttons[0];
-        }
-        if (target) selectButton(target);
+        Object.assign(values, readPending());
+        markRated();
+
+        const first = buttons.filter(function (b) { return values[b.dataset.token] == null; })[0] || buttons[0];
+        select(first);
+
+        form.addEventListener('submit', function (event) {
+            const tokens = Object.keys(values);
+            if (tokens.length === 0) {
+                event.preventDefault();
+                window.alert('Calificá al menos a un jugador.');
+                return;
+            }
+
+            fields.textContent = '';
+            tokens.forEach(function (token) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ratings[' + token + ']';
+                input.value = String(values[token]);
+                fields.appendChild(input);
+            });
+        });
     })();
 </script>
 @endsection

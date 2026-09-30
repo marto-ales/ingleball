@@ -26,6 +26,7 @@ final class PagesRenderTest extends TestCase
         $players = User::factory(4)->create();
 
         $this->openMatch = Partido::factory()->create(['created_by' => $this->organizer->id]);
+        $this->openMatch->entries()->create(['user_id' => $this->organizer->id, 'role' => 'going']);
         foreach ($players as $p) {
             $this->openMatch->entries()->create(['user_id' => $p->id, 'role' => 'going']);
         }
@@ -102,9 +103,13 @@ final class PagesRenderTest extends TestCase
             ->get('/matches/'.$this->openMatch->id.'/ratings')
             ->assertOk()
             ->assertSee('type="range"', false)
+            ->assertSee('id="pick-rated"', false)
+            ->assertSee('id="current-name"', false)
+            ->assertSee('Estás calificando a', false)
             ->assertSee('Calificación general')
-            ->assertSee('current-name', false)
-            ->assertSee('pick-rated', false);
+            ->assertSee('Guardar calificaciones')
+            // One slider at a time, driven by the player buttons.
+            ->assertDontSee('rating-player');
 
         $this->actingAs($this->organizer)
             ->get('/profile')

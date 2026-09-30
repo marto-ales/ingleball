@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Guest;
 use App\Models\Partido;
 use App\Models\Player;
+use App\Models\Rating;
 use App\Models\User;
 use App\Services\StatsService;
 use Database\Factories\UserFactory;
@@ -808,8 +809,7 @@ final class MatchFlowTest extends TestCase
 
         $this->actingAs($me)
             ->post(route('ratings.store', $match), [
-                'rated' => 'user:'.$me->id,
-                'overall' => 0,
+                'ratings' => ['user:'.$me->id => 0],
             ])
             ->assertStatus(422);
     }
@@ -825,8 +825,7 @@ final class MatchFlowTest extends TestCase
         // The slider goes -5..+5 (0 = neutral); stored overall stays 0-10.
         $this->actingAs($me)
             ->post(route('ratings.store', $match), [
-                'rated' => 'user:'.$other->id,
-                'overall' => -3,
+                'ratings' => ['user:'.$other->id => -3],
             ])
             ->assertRedirect();
 
@@ -839,10 +838,125 @@ final class MatchFlowTest extends TestCase
 
         $this->actingAs($me)
             ->post(route('ratings.store', $match), [
-                'rated' => 'user:'.$other->id,
-                'overall' => 6,
+                'ratings' => ['user:'.$other->id => 6],
             ])
-            ->assertSessionHasErrors('overall');
+            ->assertSessionHasErrors('ratings.user:'.$other->id);
+    }
+
+    public function test_multiple_ratings_are_saved_in_one_submit(): void
+    {
+        $me = User::factory()->create();
+        $a = User::factory()->create();
+        $b = User::factory()->create();
+        $match = Partido::factory()->create(['created_by' => $me->id]);
+        $match->entries()->create(['user_id' => $me->id, 'role' => 'going']);
+        $match->entries()->create(['user_id' => $a->id, 'role' => 'going']);
+        $match->entries()->create(['user_id' => $b->id, 'role' => 'going']);
+
+        $this->actingAs($me)
+            ->post(route('ratings.store', $match), [
+                'ratings' => [
+                    'user:'.$a->id => -2,
+                    'user:'.$b->id => 3,
+                ],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('ratings', [
+            'rater_user_id' => $me->id,
+            'rated_user_id' => $a->id,
+            'match_id' => $match->id,
+            'overall' => 3,
+        ]);
+        $this->assertDatabaseHas('ratings', [
+            'rater_user_id' => $me->id,
+            'rated_user_id' => $b->id,
+            'match_id' => $match->id,
+            'overall' => 8,
+        ]);
+    }
+
+    public function test_rating_page_shows_a_button_per_player_and_a_single_slider(): void
+    {
+        $me = User::factory()->create();
+        $a = User::factory()->create(['name' => 'Ana Bonita']);
+        $b = User::factory()->create(['name' => 'Beto Nuevo']);
+        $match = Partido::factory()->create(['created_by' => $me->id]);
+        $match->entries()->create(['user_id' => $me->id, 'role' => 'going']);
+        $match->entries()->create(['user_id' => $a->id, 'role' => 'going']);
+        $match->entries()->create(['user_id' => $b->id, 'role' => 'going']);
+
+        $response = $this->actingAs($me)->get(route('ratings.create', $match));
+
+        $response->assertOk();
+        // One button per rival, and no slider of its own per player.
+        $response->assertSee('data-token="user:'.$a->id.'"', false);
+        $response->assertSee('data-token="user:'.$b->id.'"', false);
+        // A single slider, driven by whichever button is selected.
+        preg_match_all('/<input[^>]*type="range"/', $response->getContent(), $sliders);
+        $this->assertCount(1, $sliders[0]);
+        $response->assertSee('id="current-name"', false);
+        $response->assertSee('Guardar calificaciones');
+    }
+
+    public function test_rating_page_marks_players_already_rated(): void
+    {
+        $me = User::factory()->create();
+        $a = User::factory()->create();
+        $b = User::factory()->create();
+        $match = Partido::factory()->create(['created_by' => $me->id]);
+        $match->entries()->create(['user_id' => $me->id, 'role' => 'going']);
+        $match->entries()->create(['user_id' => $a->id, 'role' => 'going']);
+        $match->entries()->create(['user_id' => $b->id, 'role' => 'going']);
+
+        Rating::create([
+            'rater_user_id' => $me->id,
+            'rated_user_id' => $a->id,
+            'match_id' => $match->id,
+            'group_id' => $match->group_id,
+            'overall' => 8,
+        ]);
+
+        $content = $this->actingAs($me)->get(route('ratings.create', $match))->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/class="pick rated"[^>]*data-token="user:'.$a->id.'"/',
+            $content,
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/class="pick rated"[^>]*data-token="user:'.$b->id.'"/',
+            $content,
+        );
+    }
+
+    public function test_only_players_who_attended_can_rate(): void
+    {
+        $me = User::factory()->create();
+        $other = User::factory()->create();
+        $substitute = User::factory()->create();
+        $match = Partido::factory()->create(['created_by' => $me->id]);
+        $match->entries()->create(['user_id' => $me->id, 'role' => 'going']);
+        $match->entries()->create(['user_id' => $other->id, 'role' => 'going']);
+        $match->entries()->create(['user_id' => $substitute->id, 'role' => 'substitute']);
+
+        // Substitute signs through as if attending, but never got a 'going' entry.
+        $this->actingAs($substitute)
+            ->get(route('ratings.create', $match))
+            ->assertForbidden();
+
+        $this->actingAs($substitute)
+            ->post(route('ratings.store', $match), [
+                'ratings' => ['user:'.$other->id => 0],
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('ratings', ['rater_user_id' => $substitute->id]);
+
+        // A real attendee can open the page.
+        $this->actingAs($me)
+            ->get(route('ratings.create', $match))
+            ->assertOk();
     }
 
     public function test_index_button_says_anotate_or_detalle_depending_on_signup(): void

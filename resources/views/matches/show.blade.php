@@ -364,13 +364,13 @@
             </div>
         @endif
 
-        @if ($match->played_at->isPast() && ! $match->isCancelled())
+        @if ($match->played_at->isPast() && ! $match->isCancelled() && $myEntry?->role === 'going')
             <div class="card card--ranking">
                 <div class="row between">
                     <h2 class="mb0">Calificar</h2>
                     <a class="btn btn-primary btn-sm" href="{{ route('ratings.create', $match) }}">Calificar jugadores</a>
                 </div>
-                <p class="muted small mb0 mt">Cada jugador califica a los demás. Esto alimenta el ranking y el armado equilibrado.</p>
+                <p class="muted small mb0 mt">Cada jugador que haya jugado califica a los demás. Esto alimenta el ranking y el armado equilibrado.</p>
             </div>
         @endif
     </div>
