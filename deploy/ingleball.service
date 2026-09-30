@@ -1,0 +1,28 @@
+# Unidad systemd para servir Ingleball con `php artisan serve`.
+#
+# Instalar en el LXC:
+#   sudo cp deploy/ingleball.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now ingleball.service
+#
+# Nota: se expone 0.0.0.0:8000 para que el nginx del host haga de proxy reverso
+# hacia <IP_del_LXC>:8000. Si el LXC no es de confianza, cambiar Host=127.0.0.1
+# y hacer el proxy desde un nginx dentro del contenedor.
+[Unit]
+Description=Ingleball (PHP built-in server)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/ingleball
+Environment=HOME=/srv/ingleball
+ExecStart=/usr/bin/php8.4 artisan serve --host=0.0.0.0 --port=8000
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
