@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\PlayerEvaluation;
 use App\Models\User;
+use Database\Factories\UserFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -63,13 +64,14 @@ final class PlayerEvaluationTest extends TestCase
     {
         $organizer = User::factory()->organizer()->create();
         $player = User::factory()->create();
-        $player->player()->create([
+        $player->playerFor(UserFactory::defaultGroupId())->update([
             'speed' => 8, 'skill' => 6, 'passing' => 5, 'shooting' => 7, 'defense' => 4, 'goalkeeping' => 9,
             'self_eval_completed_at' => now(),
         ]);
         PlayerEvaluation::create([
             'organizer_user_id' => $organizer->id,
             'rated_user_id' => $player->id,
+            'group_id' => UserFactory::defaultGroupId(),
             'speed' => 6, 'skill' => 7, 'passing' => 4, 'shooting' => 5, 'defense' => 6, 'goalkeeping' => 8,
         ]);
 

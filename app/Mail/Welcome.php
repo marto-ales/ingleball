@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\Group;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -13,17 +14,17 @@ class Welcome extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public User $user) {}
+    public function __construct(public User $user, public Group $group) {}
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: '¡Bienvenido a Ingleball!');
+        return new Envelope(subject: '¡Bienvenido a '.$this->group->name.'!');
     }
 
     public function content(): Content
     {
         return new Content(
-            htmlString: view('mails.welcome', ['user' => $this->user])->render(),
+            htmlString: view('mails.welcome', ['user' => $this->user, 'group' => $this->group])->render(),
         );
     }
 }

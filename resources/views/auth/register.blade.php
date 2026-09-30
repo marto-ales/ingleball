@@ -13,6 +13,12 @@
         <form method="POST" action="{{ route('register') }}">
             @csrf
             <div class="field">
+                <label for="group_code">Código del grupo</label>
+                <input id="group_code" type="text" name="group_code" value="{{ old('group_code') }}" required autocomplete="off">
+                @error('group_code')<div class="field-error">{{ $message }}</div>@enderror
+                <span class="muted small">Te lo pasa quien organiza el grupo.</span>
+            </div>
+            <div class="field">
                 <label for="name">Nombre</label>
                 <input id="name" type="text" name="name" value="{{ old('name') }}" required>
                 @error('name')<div class="field-error">{{ $message }}</div>@enderror

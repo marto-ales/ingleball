@@ -43,11 +43,21 @@
             @error('field_value')<div class="field-error">{{ $message }}</div>@enderror
         </div>
         <div class="field">
-            <label class="checkbox-line">
-                <input type="hidden" name="recurring" value="0">
-                <input type="checkbox" name="recurring" value="1" {{ old('recurring') ? 'checked' : '' }}>
-                Partido recurrente (se abre solo cada semana con los mismos datos)
-            </label>
+            <input type="hidden" name="recurring" id="recurring-value" value="{{ old('recurring') ? '1' : '0' }}" data-recurring-value>
+            <button type="button" class="btn {{ old('recurring') ? 'btn-primary' : '' }}" data-recurring-toggle aria-pressed="{{ old('recurring') ? 'true' : 'false' }}">
+                <span data-recurring-label>{{ old('recurring') ? '★ Partido recurrente: activado' : '★ Partido recurrente' }}</span>
+            </button>
+            <span class="muted small" style="margin-left: 10px;">Se abre solo cada semana con los mismos datos</span>
+            <script>
+                document.querySelector('[data-recurring-toggle]').addEventListener('click', function () {
+                    var value = document.getElementById('recurring-value');
+                    var on = value.value === '1';
+                    value.value = on ? '0' : '1';
+                    this.classList.toggle('btn-primary', !on);
+                    this.setAttribute('aria-pressed', on ? 'false' : 'true');
+                    this.querySelector('[data-recurring-label]').textContent = on ? '★ Partido recurrente' : '★ Partido recurrente: activado';
+                });
+            </script>
         </div>
         <button class="btn btn-primary" type="submit">Crear partido</button>
     </form>

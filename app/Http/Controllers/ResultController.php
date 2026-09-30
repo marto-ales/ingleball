@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Guest;
+use App\Models\Group;
 use App\Models\Partido;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,13 +21,32 @@ class ResultController extends Controller
             'mvp' => ['nullable', 'string', 'regex:/(user|guest):\d+/'],
         ]);
 
+        $mvpUserId = $this->userId($data['mvp'] ?? null);
+        $mvpGuestId = $this->guestId($data['mvp'] ?? null);
+
+        if ($mvpUserId !== null) {
+            abort_unless(
+                Group::membersQuery($match->group_id)->whereKey($mvpUserId)->exists(),
+                422,
+                'Ese jugador no es del grupo.',
+            );
+        }
+
+        if ($mvpGuestId !== null) {
+            abort_unless(
+                Guest::whereKey($mvpGuestId)->where('group_id', $match->group_id)->exists(),
+                422,
+                'Ese invitado no es del grupo.',
+            );
+        }
+
         $match->result()->updateOrCreate(
             ['match_id' => $match->id],
             [
                 'winner' => $data['winner'] === 'tie' ? null : $data['winner'],
                 'diff' => (int) ($data['diff'] ?? 0),
-                'mvp_user_id' => $this->userId($data['mvp'] ?? null),
-                'mvp_guest_id' => $this->guestId($data['mvp'] ?? null),
+                'mvp_user_id' => $mvpUserId,
+                'mvp_guest_id' => $mvpGuestId,
             ],
         );
 

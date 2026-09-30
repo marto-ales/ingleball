@@ -18,6 +18,7 @@ class GuestFactory extends Factory
         return [
             'name' => fake()->name(),
             'phone' => fake()->phoneNumber(),
+            'group_id' => UserFactory::defaultGroupId(),
             'speed' => fake()->numberBetween(4, 8),
             'skill' => fake()->numberBetween(4, 8),
             'passing' => fake()->numberBetween(4, 8),
@@ -25,5 +26,10 @@ class GuestFactory extends Factory
             'defense' => fake()->numberBetween(4, 8),
             'overall' => fake()->numberBetween(5, 8),
         ];
+    }
+
+    public function inGroup(int $groupId): static
+    {
+        return $this->state(fn (): array => ['group_id' => $groupId]);
     }
 }

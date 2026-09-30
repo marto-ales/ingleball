@@ -11,7 +11,7 @@ class Rating extends Model
     use HasFactory;
 
     protected $fillable = [
-        'rater_user_id', 'rated_user_id', 'rated_guest_id', 'match_id',
+        'rater_user_id', 'rated_user_id', 'rated_guest_id', 'match_id', 'group_id',
         'overall',
     ];
 

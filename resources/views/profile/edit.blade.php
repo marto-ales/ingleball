@@ -45,12 +45,10 @@
             </div>
         </div>
 
-        @if ($user->is_organizer)
-            <div class="field">
-                <label for="whatsapp_group">Enlace del grupo de WhatsApp <span class="muted small">(para recordatorios)</span></label>
-                <input id="whatsapp_group" name="whatsapp_group" value="{{ old('whatsapp_group', $user->whatsapp_group) }}" placeholder="https://chat.whatsapp.com/XXXXXXXX">
-            </div>
-        @endif
+        <div class="field">
+            <label>Grupo {{ $activeGroup?->name ?? '' }}</label>
+            <p class="muted small mb0">Esta autoevaluación y tu perfil de arquero son de {{ $activeGroup?->name ?? 'este grupo' }}. Si jugás en otros grupos, cada uno tiene los suyos: se cambian en <a href="{{ route('groups.show') }}">Mi grupo</a>.</p>
+        </div>
 
         <div class="divider"></div>
         <h2>Apariencia</h2>

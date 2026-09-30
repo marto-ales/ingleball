@@ -11,7 +11,7 @@ class PlayerEvaluation extends Model
     use HasFactory;
 
     protected $fillable = [
-        'organizer_user_id', 'rated_user_id',
+        'organizer_user_id', 'rated_user_id', 'group_id',
         'speed', 'skill', 'passing', 'shooting', 'defense', 'goalkeeping',
     ];
 

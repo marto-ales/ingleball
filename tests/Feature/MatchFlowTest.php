@@ -7,6 +7,7 @@ use App\Models\Partido;
 use App\Models\Player;
 use App\Models\User;
 use App\Services\StatsService;
+use Database\Factories\UserFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -127,8 +128,8 @@ final class MatchFlowTest extends TestCase
     public function test_organizer_can_move_guest_between_going_and_substitute(): void
     {
         $organizer = User::factory()->organizer()->create();
-        $match = Partido::factory()->create(['created_by' => $organizer->id]);
-        $guest = Guest::create(['name' => 'Cheto', 'overall' => 5]);
+        $match = Partido::factory()->createdBy($organizer)->create();
+        $guest = Guest::factory()->inGroup($match->group_id)->create(['name' => 'Cheto', 'overall' => 5]);
         $match->entries()->create(['guest_id' => $guest->id, 'role' => 'going']);
 
         $this->actingAs($organizer)
@@ -155,8 +156,8 @@ final class MatchFlowTest extends TestCase
     public function test_organizer_removing_guest_via_manage_deletes_orphaned_guest(): void
     {
         $organizer = User::factory()->organizer()->create();
-        $match = Partido::factory()->create(['created_by' => $organizer->id]);
-        $guest = Guest::create(['name' => 'Cheto', 'overall' => 5]);
+        $match = Partido::factory()->createdBy($organizer)->create();
+        $guest = Guest::factory()->inGroup($match->group_id)->create(['name' => 'Cheto', 'overall' => 5]);
         $match->entries()->create(['guest_id' => $guest->id, 'role' => 'going']);
 
         $this->actingAs($organizer)
@@ -435,10 +436,9 @@ final class MatchFlowTest extends TestCase
 
     public function test_organizer_group_link_appears_in_attendance_suggestion(): void
     {
-        $organizer = User::factory()->organizer()->create([
-            'whatsapp_group' => 'https://chat.whatsapp.com/Grupo1',
-        ]);
+        $organizer = User::factory()->organizer()->create();
         $match = Partido::factory()->create(['created_by' => $organizer->id]);
+        $match->group->update(['whatsapp_group' => 'https://chat.whatsapp.com/Grupo1']);
 
         $this->actingAs($organizer)
             ->patch(route('entries.update', $match), ['role' => 'going'])
@@ -566,7 +566,7 @@ final class MatchFlowTest extends TestCase
         foreach ($speeds as $index => $speed) {
             $player = User::factory()->create();
 
-            Player::factory()->forUser($player)->create([
+            $player->playerFor(UserFactory::defaultGroupId())->update([
                 'speed' => $speed,
                 'skill' => 5,
                 'passing' => 5,

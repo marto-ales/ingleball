@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ActiveGroup;
 use App\Support\Themes;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -11,14 +12,20 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
+    public function __construct(private ActiveGroup $activeGroup) {}
+
+    /**
+     * The self assessment belongs to the group in use: the same account keeps
+     * a different profile in each group it plays in.
+     */
     public function edit(Request $request): View
     {
         $user = $request->user();
-        $user->load('player');
+        $user->loadMissing('players');
 
         return view('profile.edit', [
             'user' => $user,
-            'profile' => $user->player,
+            'profile' => $user->playerFor($this->activeGroup->id()),
         ]);
     }
 
@@ -30,7 +37,6 @@ class ProfileController extends Controller
             'name' => ['required', 'string', 'max:80'],
             'email' => ['nullable', 'email', 'max:120'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'whatsapp_group' => ['nullable', 'string', 'max:255'],
             'speed' => ['required', 'integer', 'between:0,10'],
             'skill' => ['required', 'integer', 'between:0,10'],
             'passing' => ['required', 'integer', 'between:0,10'],
@@ -48,14 +54,10 @@ class ProfileController extends Controller
             'theme' => $data['theme'] ?? Themes::DEFAULT,
         ];
 
-        if ($user->is_organizer) {
-            $update['whatsapp_group'] = $data['whatsapp_group'] ?? null;
-        }
-
         $user->update($update);
 
-        $user->player()->updateOrCreate(
-            ['user_id' => $user->id],
+        $user->players()->updateOrCreate(
+            ['user_id' => $user->id, 'group_id' => $this->activeGroup->id()],
             [
                 'speed' => (int) $data['speed'],
                 'skill' => (int) $data['skill'],

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ScopedToGroup;
+use Database\Factories\PartidoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +13,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Partido extends Model
 {
-    use HasFactory;
+    /**
+     * Route model binding only ever hands out matches for the caller's own
+     * group, so no request can reach another group's match by id.
+     *
+     * @use HasFactory<PartidoFactory>
+     */
+    use HasFactory, ScopedToGroup;
 
     protected $table = 'matches';
 
@@ -25,7 +33,7 @@ class Partido extends Model
 
     protected $fillable = [
         'title', 'played_at', 'venue', 'field_value', 'size', 'status', 'created_by', 'locked_at',
-        'recurring', 'recurring_id',
+        'recurring', 'recurring_id', 'group_id',
     ];
 
     /**
@@ -45,6 +53,11 @@ class Partido extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
     }
 
     public function entries(): HasMany

@@ -48,12 +48,18 @@ class LoginController extends Controller
             ]);
         }
 
-        if (Auth::user()->isBanned()) {
+        // A block belongs to a membership, not to the account: someone kept
+        // out of one group can still sign in to play in the others. Only a
+        // person blocked everywhere has nothing left to sign in for.
+        $signedIn = Auth::user();
+        $signedIn->load('memberships');
+
+        if ($signedIn->memberships->isNotEmpty() && $signedIn->memberships->every(fn ($membership) => $membership->isBanned())) {
             Auth::logout();
             $request->session()->invalidate();
 
             throw ValidationException::withMessages([
-                'identity' => __('Tu cuenta fue bloqueada. Contactá a un organizador.'),
+                'identity' => __('Estás bloqueado en todos tus grupos. Contactá a un organizador.'),
             ]);
         }
 

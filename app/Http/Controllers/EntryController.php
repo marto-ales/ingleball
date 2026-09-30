@@ -55,7 +55,7 @@ class EntryController extends Controller
                         ? 'La lista de titulares está completa: quedaste como suplente.'
                         : 'Quedaste como suplente.')
             )
-            ->with('attendance', $this->attendanceSuggestion($request, $match, $role));
+            ->with('attendance', $this->attendanceSuggestion($match, $role));
     }
 
     public function destroy(Request $request, Partido $match): RedirectResponse
@@ -71,7 +71,7 @@ class EntryController extends Controller
 
         return back()
             ->with('status', 'Te quitaste de la lista.')
-            ->with('attendance', $this->attendanceSuggestion($request, $match, 'out'));
+            ->with('attendance', $this->attendanceSuggestion($match, 'out'));
     }
 
     public function manage(Request $request, Partido $match): RedirectResponse
@@ -88,10 +88,12 @@ class EntryController extends Controller
 
         if (isset($data['user_id'])) {
             $target = User::findOrFail($data['user_id']);
-            abort_if($target->isBanned(), 403, 'Ese jugador está suspendido.');
+            abort_unless($target->isMemberOf($match->group_id), 404, 'Ese jugador no es del grupo.');
+            abort_if($target->isBannedIn($match->group_id), 403, 'Ese jugador está suspendido.');
             $key = 'user_id';
         } else {
             $target = Guest::findOrFail($data['guest_id']);
+            abort_unless($target->group_id === $match->group_id, 404, 'Ese invitado no es del grupo.');
             $key = 'guest_id';
         }
 
@@ -128,7 +130,7 @@ class EntryController extends Controller
     /**
      * @return array{role: string, title: string, message: string, wa_group: ?string}
      */
-    private function attendanceSuggestion(Request $request, Partido $match, string $role): array
+    private function attendanceSuggestion(Partido $match, string $role): array
     {
         $title = match ($role) {
             'substitute' => 'Quedaste como suplente',
@@ -143,7 +145,7 @@ class EntryController extends Controller
 
         $message = $this->messaging->message($match, $teamA, $teamB, $entriesGoing, $entriesSubstitute);
 
-        $waGroup = $request->user()->is_organizer ? $request->user()->whatsapp_group : null;
+        $waGroup = $match->group?->whatsapp_group;
 
         return [
             'role' => $role,

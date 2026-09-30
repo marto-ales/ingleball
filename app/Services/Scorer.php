@@ -14,6 +14,27 @@ class Scorer
     public function __construct(private AlgorithmSettings $settings) {}
 
     /**
+     * The group this scorer speaks for: the one it was configured with, which
+     * is the group whose players, ratings and evaluations it may read.
+     */
+    private function groupId(): int
+    {
+        return $this->settings->groupId();
+    }
+
+    /**
+     * Scorer configured with the settings of another group.
+     */
+    public function forGroup(?int $groupId): self
+    {
+        if ($groupId === null || $groupId === $this->settings->groupId()) {
+            return $this;
+        }
+
+        return new self($this->settings->forGroup($groupId));
+    }
+
+    /**
      * Attribute profile of a registered player: the self-assessment blended
      * with the organizers' evaluations, then scaled by recent form.
      *
@@ -39,7 +60,7 @@ class Scorer
      */
     public function goalkeepingForUser(User $user): float
     {
-        $self = (float) ($user->player?->goalkeeping ?? 5);
+        $self = (float) ($user->playerFor($this->groupId())?->goalkeeping ?? 5);
         $others = $this->organizerAverage($user, 'goalkeeping');
 
         return round($others === null ? $self : $this->blend($self, $others), 2);
@@ -63,6 +84,7 @@ class Scorer
 
         $general = Rating::whereIn('match_id', $matchIds)
             ->where('rated_user_id', $user->id)
+            ->where('group_id', $this->groupId())
             ->avg('overall');
 
         $group = Rating::whereIn('match_id', $matchIds)->avg('overall');
@@ -100,6 +122,7 @@ class Scorer
 
         return Rating::whereIn('match_id', $matchIds)
             ->where('rated_user_id', $user->id)
+            ->where('group_id', $this->groupId())
             ->with('match')
             ->get()
             ->sortByDesc(fn (Rating $rating): int => (int) $rating->match?->played_at?->getTimestamp())
@@ -156,7 +179,7 @@ class Scorer
      */
     private function blendedAttributes(User $user): array
     {
-        $player = $user->player;
+        $player = $user->playerFor($this->groupId());
         $attributes = [];
 
         foreach ((array) config('balance.attributes') as $key) {
@@ -178,11 +201,13 @@ class Scorer
 
     private function organizerAverage(User $user, string $column): ?float
     {
-        if ($user->evaluationsReceived()->count() === 0) {
+        $evaluations = $user->evaluationsReceived()->where('group_id', $this->groupId());
+
+        if ($evaluations->count() === 0) {
             return null;
         }
 
-        return (float) $user->evaluationsReceived()->avg($column);
+        return (float) $evaluations->avg($column);
     }
 
     /**
@@ -194,6 +219,7 @@ class Scorer
     {
         return $user->entries()
             ->where('role', MatchEntry::ROLE_GOING)
+            ->whereHas('match', fn ($query) => $query->where('group_id', $this->groupId()))
             ->with('match')
             ->get()
             ->map(fn (MatchEntry $entry): ?Partido => $entry->match)
