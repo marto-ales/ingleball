@@ -34,7 +34,10 @@ chown -R "$APP_USER":"$APP_USER" "$APP_DIR/vendor"
 echo "==> backup SQLite before migrating"
 if [ -f "$APP_DIR/database/database.sqlite" ]; then
     BACKUP="$APP_DIR/storage/app/backups/database-$(date +%Y%m%d-%H%M%S).sqlite"
-    mkdir -p "$APP_DIR/storage/app/backups"
+    # El deploy corre como root; el directorio de backups debe quedar
+    # escribible por el usuario de la app, o el cp siguiente falla con
+    # "Permiso denegado".
+    sudo -u "$APP_USER" mkdir -p "$APP_DIR/storage/app/backups"
     sudo -u "$APP_USER" cp "$APP_DIR/database/database.sqlite" "$BACKUP"
     echo "    backup en $BACKUP"
 fi
