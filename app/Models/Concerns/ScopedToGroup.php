@@ -2,22 +2,30 @@
 
 namespace App\Models\Concerns;
 
+use App\Support\ActiveGroup;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * Route model binding for models that belong to a group: a row of another
- * group is simply not found, so no id can reach across groups.
+ * group is simply not found, so no id can reach across groups. Models with a
+ * group_id column filter on it; User overrides scopeInGroup to go through the
+ * group_user membership instead.
  */
 trait ScopedToGroup
 {
+    public function scopeInGroup(Builder $query, ?int $groupId): Builder
+    {
+        return $query->when(
+            $groupId !== null,
+            fn (Builder $query) => $query->where($this->qualifyColumn('group_id'), $groupId)
+        );
+    }
+
     public function resolveRouteBinding($value, $field = null): ?Model
     {
-        $query = $this->newQuery();
+        $query = $this->scopeInGroup($this->newQuery(), app(ActiveGroup::class)->id());
 
-        if ($field === null && auth()->check() && auth()->user()->group_id !== null) {
-            $query->where('group_id', auth()->user()->group_id);
-        }
-
-        return $query->where($this->getRouteKeyName(), $value)->first();
+        return $query->where($field ?? $this->getRouteKeyName(), $value)->first();
     }
 }

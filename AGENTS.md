@@ -72,6 +72,10 @@ The systemd unit runs `php8.4 artisan serve --host=0.0.0.0 --port=8000` as `www-
 sudo ./deploy.sh
 ```
 
-`deploy.sh` does: `git pull --ff-only` (as `www-data`, needs an SSH deploy key to the repo), `composer install --no-dev --optimize-autoloader`, `migrate --force`, `config:cache`/`route:cache`/`view:cache`, then restarts the unit. No npm/vite build: CSS is a static file in `public/css`.
+`deploy.sh` does: `git pull --ff-only` is manual (as `www-data`, needs an SSH deploy key to the repo), then a SQLite backup copy into `storage/app/backups` before migrating, `composer install --no-dev --optimize-autoloader`, `migrate --force`, `config:cache`/`route:cache`/`view:cache`, then restarts the unit. No npm/vite build: CSS is a static file in `public/css`.
+
+## Test run
+
+`XDEBUG_MODE=off php artisan test --no-coverage` from the repo root (skips coverage speed). The feature suite is SQLite `:memory:` via `RefreshDatabase`. Important: run tests with caches cleared (`php artisan optimize:clear`), because a cached config carries `APP_ENV=production` and the CSRF middleware then rejects every POST with 419. Deployment runs caches; the test run must not start from them.
 </laravel-boost-guidelines>
 </laravel-boost-guidelines>

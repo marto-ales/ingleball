@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Group;
 use App\Models\Player;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -27,11 +28,21 @@ class PlayerFactory extends Factory
         ];
     }
 
-    public function forUser(User $user): static
+    /**
+     * A profile belongs to an account inside one group: the same person has
+     * one of these per group they play in.
+     */
+    public function forUser(User $user, Group|int|null $group = null): static
     {
+        $groupId = match (true) {
+            $group instanceof Group => $group->id,
+            is_int($group) => $group,
+            default => (int) ($user->memberships->first()?->group_id ?? UserFactory::defaultGroupId()),
+        };
+
         return $this->state(fn () => [
             'user_id' => $user->id,
-            'group_id' => $user->group_id,
+            'group_id' => $groupId,
         ]);
     }
 }

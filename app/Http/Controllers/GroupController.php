@@ -3,29 +3,61 @@
 namespace App\Http\Controllers;
 
 use App\Models\Group;
+use App\Services\GroupMembershipService;
+use App\Support\ActiveGroup;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use RuntimeException;
 
 class GroupController extends Controller
 {
+    public function __construct(
+        private ActiveGroup $activeGroup,
+        private GroupMembershipService $memberships,
+    ) {}
+
     /**
-     * "Mi grupo" screen: name, join code and WhatsApp link of the caller's group.
+     * "Mi grupo" screen: the group in use, the code that lets others join it
+     * and the list of the groups this account belongs to.
      */
-    public function show(Request $request): View
+    public function show(): View
     {
-        $group = $request->user()->group;
+        $group = $this->activeGroup->group();
+        $user = request()->user();
 
         return view('groups.show', [
             'group' => $group,
-            'memberCount' => $group?->users()->count() ?? 0,
+            'memberCount' => $group?->memberCount() ?? 0,
             'matchCount' => $group?->matches()->count() ?? 0,
+            'membership' => $group !== null ? $user->membershipIn($group->id) : null,
         ]);
+    }
+
+    /**
+     * Work in another group of the same account. Everything on screen keeps
+     * pointing at the group chosen here.
+     */
+    public function activate(Request $request): RedirectResponse
+    {
+        $data = $request->validate(['group' => ['required', 'integer']]);
+
+        abort_unless(
+            $request->user()->isMemberOf((int) $data['group']) && ! $request->user()->isBannedIn((int) $data['group']),
+            403,
+            'No pertenecés a ese grupo.'
+        );
+
+        $this->activeGroup->activate(Group::findOrFail($data['group']));
+
+        return redirect()->route('dashboard')->with('status', 'Ahora estás en '.$this->activeGroup->group()->name.'.');
     }
 
     public function update(Request $request): RedirectResponse
     {
-        $group = $this->ownGroup($request);
+        $group = $this->activeGroup->group();
+
+        abort_if($group === null, 404, 'No tenés un grupo asignado.');
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:80'],
@@ -34,7 +66,7 @@ class GroupController extends Controller
 
         $group->update([
             'name' => $data['name'],
-            'whatsapp_group' => $data['whatsapp_group'] ?? null,
+            'whatsapp_group' => ($data['whatsapp_group'] ?? null) ?: null,
         ]);
 
         return back()->with('status', 'Grupo actualizado.');
@@ -42,7 +74,9 @@ class GroupController extends Controller
 
     public function rotateCode(Request $request): RedirectResponse
     {
-        $group = $this->ownGroup($request);
+        $group = $this->activeGroup->group();
+
+        abort_if($group === null, 404, 'No tenés un grupo asignado.');
 
         $group->update(['join_code' => Group::randomJoinCode()]);
 
@@ -50,35 +84,50 @@ class GroupController extends Controller
     }
 
     /**
-     * An organizer can start another group and move into it; the players they
-     * invite join with the new code.
+     * One account, several groups: joining with a code adds the group and the
+     * player profile that goes with it, and leaves the account alone.
      */
-    public function store(Request $request): RedirectResponse
+    public function join(Request $request): RedirectResponse
     {
-        abort_unless($request->user()->is_organizer, 403);
-
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:80'],
+            'group_code' => ['required', 'string', 'exists:groups,join_code'],
         ]);
 
-        $group = Group::create([
-            'name' => $data['name'],
-            'join_code' => Group::randomJoinCode(),
-        ]);
+        $group = Group::where('join_code', $data['group_code'])->firstOrFail();
+        $user = $request->user();
 
-        $request->user()->moveToGroup($group);
+        if ($user->isMemberOf($group->id)) {
+            $this->activeGroup->activate($group);
 
-        return redirect()
-            ->route('groups.show')
-            ->with('status', 'Creaste el grupo '.$group->name.'. Compartí el código para invitar.');
+            return back()->with('status', 'Ya pertenecías a '.$group->name.'.');
+        }
+
+        $this->memberships->join($user, $group);
+        $this->activeGroup->activate($group);
+
+        return back()->with('status', 'Te sumaste a '.$group->name.'.');
     }
 
-    private function ownGroup(Request $request): Group
+    /**
+     * Leaving drops the profile, the ratings, the evaluations and the entries
+     * of that group. The account, its login and its other groups stay.
+     */
+    public function leave(Request $request): RedirectResponse
     {
-        $group = $request->user()->group;
+        $group = $this->activeGroup->group();
 
         abort_if($group === null, 404, 'No tenés un grupo asignado.');
 
-        return $group;
+        $name = $group->name;
+
+        try {
+            $this->memberships->leave($request->user(), $group);
+        } catch (RuntimeException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        $this->activeGroup->forget();
+
+        return back()->with('status', 'Saliste de '.$name.'.');
     }
 }

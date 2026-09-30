@@ -16,15 +16,33 @@
         <div class="container topbar-inner">
             <a class="brand" href="{{ route('dashboard') }}">⚽ Ingleball</a>
             <nav class="nav">
+                @if ($activeGroup !== null)
+                    @if ($myGroups->count() > 1)
+                        <form method="POST" action="{{ route('groups.activate') }}" class="inline group-switch">
+                            @csrf
+                            <label class="sr-only" for="group-switch">Grupo</label>
+                            <select id="group-switch" name="group" onchange="this.form.submit()">
+                                @foreach ($myGroups as $membership)
+                                    <option value="{{ $membership->group_id }}" @selected($membership->group_id === $activeGroup->id)>
+                                        {{ $membership->group->name }}{{ $membership->is_organizer ? ' ★' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <noscript><button class="btn btn-ghost btn-sm" type="submit">Cambiar</button></noscript>
+                        </form>
+                    @else
+                        <a href="{{ route('groups.show') }}" title="Mi grupo">{{ $activeGroup->name }}</a>
+                    @endif
+                @endif
                 <a href="{{ route('dashboard') }}">Inicio</a>
                 <a href="{{ route('stats.index') }}">Estadísticas</a>
                 <a href="{{ route('groups.show') }}">Mi grupo</a>
-                @if (auth()->user()->is_organizer)
+                @if ($isOrganizer)
                     <a href="{{ route('users.manage.index') }}">Usuarios</a>
                     <a href="{{ route('algorithm.index') }}">Algoritmo</a>
                     <a class="btn btn-primary btn-sm" href="{{ route('matches.create') }}">+ Nuevo partido</a>
                 @endif
-                <a href="{{ route('profile.edit') }}" title="{{ auth()->user()->group?->name }}">{{ auth()->user()->name }}</a>
+                <a href="{{ route('profile.edit') }}" title="{{ $activeGroup?->name }}">{{ auth()->user()->name }}</a>
                 <div class="theme-switch">
                     <button type="button" class="theme-btn" aria-haspopup="true" aria-expanded="false" aria-label="Cambiar tema de color" title="Tema de color">
                         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.41-1.01S12.7 17.64 12.7 17c0-.96.78-1.74 1.74-1.74h.87A3.7 3.7 0 0 0 19 11.56C19 6.95 15.99 3 12 3zM7.5 10a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-3a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3.75-1.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3.75 2A1.5 1.5 0 1 1 18 6.5a1.5 1.5 0 0 1 0 3z"/></svg>

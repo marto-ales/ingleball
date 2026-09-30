@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Partido;
-use Illuminate\Support\Facades\Auth;
+use App\Support\ActiveGroup;
 
 class RecurringMatchService
 {
@@ -13,7 +13,7 @@ class RecurringMatchService
      */
     public function ensureUpcoming(?int $groupId = null): int
     {
-        $groupId ??= Auth::check() ? Auth::user()->group_id : null;
+        $groupId ??= app(ActiveGroup::class)->id();
         $created = 0;
 
         $query = Partido::where('recurring', true)->whereNull('recurring_id');

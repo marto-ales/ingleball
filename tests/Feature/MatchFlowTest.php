@@ -7,6 +7,7 @@ use App\Models\Partido;
 use App\Models\Player;
 use App\Models\User;
 use App\Services\StatsService;
+use Database\Factories\UserFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -436,8 +437,8 @@ final class MatchFlowTest extends TestCase
     public function test_organizer_group_link_appears_in_attendance_suggestion(): void
     {
         $organizer = User::factory()->organizer()->create();
-        $organizer->group->update(['whatsapp_group' => 'https://chat.whatsapp.com/Grupo1']);
         $match = Partido::factory()->create(['created_by' => $organizer->id]);
+        $match->group->update(['whatsapp_group' => 'https://chat.whatsapp.com/Grupo1']);
 
         $this->actingAs($organizer)
             ->patch(route('entries.update', $match), ['role' => 'going'])
@@ -565,7 +566,7 @@ final class MatchFlowTest extends TestCase
         foreach ($speeds as $index => $speed) {
             $player = User::factory()->create();
 
-            Player::factory()->forUser($player)->create([
+            $player->playerFor(UserFactory::defaultGroupId())->update([
                 'speed' => $speed,
                 'skill' => 5,
                 'passing' => 5,

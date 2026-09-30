@@ -28,9 +28,10 @@
             @error('email')<div class="field-error">{{ $message }}</div>@enderror
         </div>
         <div class="field">
-            <label for="is-organizer-btn">Es organizador</label>
-            <input type="hidden" name="is_organizer" id="is-organizer-input" value="{{ old('is_organizer', $user->is_organizer ? 1 : 0) ? 1 : 0 }}">
-            <button type="button" class="switch-btn {{ old('is_organizer', $user->is_organizer ? 1 : 0) ? 'on' : '' }}" id="is-organizer-btn" aria-pressed="{{ old('is_organizer', $user->is_organizer ? 1 : 0) ? 'true' : 'false' }}">
+            <label for="is-organizer-btn">Es organizador de {{ $activeGroup?->name ?? 'este grupo' }}</label>
+            <span class="muted small">En otros grupos puede ser un jugador común.</span>
+            <input type="hidden" name="is_organizer" id="is-organizer-input" value="{{ old('is_organizer', $membership->is_organizer ? 1 : 0) ? 1 : 0 }}">
+            <button type="button" class="switch-btn {{ old('is_organizer', $membership->is_organizer ? 1 : 0) ? 'on' : '' }}" id="is-organizer-btn" aria-pressed="{{ old('is_organizer', $membership->is_organizer ? 1 : 0) ? 'true' : 'false' }}">
                 <span class="switch-dot"></span>
                 <span>Organizador</span>
             </button>

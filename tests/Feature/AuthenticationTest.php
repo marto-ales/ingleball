@@ -42,6 +42,14 @@ final class AuthenticationTest extends TestCase
         $this->assertDatabaseHas('users', [
             'username' => 'marta',
             'email' => 'marta@example.com',
+        ]);
+        $this->assertDatabaseHas('group_user', [
+            'user_id' => User::where('username', 'marta')->value('id'),
+            'group_id' => Group::query()->orderBy('id')->value('id'),
+            'is_organizer' => 0,
+        ]);
+        $this->assertDatabaseHas('players', [
+            'user_id' => User::where('username', 'marta')->value('id'),
             'group_id' => Group::query()->orderBy('id')->value('id'),
         ]);
         $response->assertRedirect(route('dashboard'));
@@ -83,8 +91,10 @@ final class AuthenticationTest extends TestCase
             'group_code' => 'OTHERGRP',
         ]);
 
-        $this->assertDatabaseHas('users', ['username' => 'marta', 'group_id' => $group->id]);
-        $this->assertDatabaseHas('players', ['group_id' => $group->id]);
+        $userId = User::where('username', 'marta')->value('id');
+
+        $this->assertDatabaseHas('group_user', ['user_id' => $userId, 'group_id' => $group->id]);
+        $this->assertDatabaseHas('players', ['group_id' => $group->id, 'user_id' => $userId]);
     }
 
     public function test_registration_requires_email(): void
@@ -107,7 +117,7 @@ final class AuthenticationTest extends TestCase
         User::factory()->organizer()->create(['email' => 'org@example.com', 'username' => 'orga']);
 
         $other = Group::factory()->withCode('OTHERGRP')->create();
-        User::factory()->organizer()->inGroup($other)->create(['email' => 'otro@example.com']);
+        User::factory()->inGroup($other)->organizer()->create(['email' => 'otro@example.com']);
 
         $this->post('/register', [
             'name' => 'Marta',

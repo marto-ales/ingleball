@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Guest;
+use App\Models\Group;
 use App\Models\Partido;
 use App\Models\Rating;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -67,7 +67,7 @@ class RatingController extends Controller
         if ($type === 'user') {
             abort_unless($id !== $me->id, 422, 'No puedes calificarte a ti mismo.');
             abort_unless(
-                User::whereKey($id)->where('group_id', $match->group_id)->exists(),
+                Group::membersQuery($match->group_id)->whereKey($id)->exists(),
                 404,
                 'Ese jugador no es del grupo.',
             );

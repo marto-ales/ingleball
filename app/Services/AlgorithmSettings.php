@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Group;
 use App\Models\Setting;
+use App\Support\ActiveGroup;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -33,12 +34,12 @@ class AlgorithmSettings
     }
 
     /**
-     * Group these settings belong to; falls back to the default group so
+     * Group these settings belong to: the one in use, or the first one so
      * console commands and tests work without an explicit group.
      */
     public function groupId(): int
     {
-        return $this->groupId ??= Group::query()->orderBy('id')->value('id');
+        return $this->groupId ??= app(ActiveGroup::class)->id() ?? Group::query()->orderBy('id')->value('id');
     }
 
     private function cacheKey(): string

@@ -4,14 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Partido;
 use App\Services\RecurringMatchService;
+use App\Support\ActiveGroup;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
+    public function __construct(private ActiveGroup $activeGroup) {}
+
     public function index(Request $request, RecurringMatchService $recurring): View
     {
-        $groupId = $request->user()->group_id;
+        $groupId = $this->activeGroup->id();
 
         $recurring->ensureUpcoming($groupId);
 
@@ -45,8 +48,8 @@ class DashboardController extends Controller
             ->get()
             ->keyBy('match_id');
 
-        $needsSelfEval = $request->user()->player === null
-            || $request->user()->player->self_eval_completed_at === null;
+        $profile = $request->user()->playerFor($groupId);
+        $needsSelfEval = $profile === null || $profile->self_eval_completed_at === null;
 
         $needsEmail = blank($request->user()->email);
 

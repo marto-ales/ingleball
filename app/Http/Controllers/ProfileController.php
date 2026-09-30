@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ActiveGroup;
 use App\Support\Themes;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -11,14 +12,20 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
+    public function __construct(private ActiveGroup $activeGroup) {}
+
+    /**
+     * The self assessment belongs to the group in use: the same account keeps
+     * a different profile in each group it plays in.
+     */
     public function edit(Request $request): View
     {
         $user = $request->user();
-        $user->load('player');
+        $user->loadMissing('players');
 
         return view('profile.edit', [
             'user' => $user,
-            'profile' => $user->player,
+            'profile' => $user->playerFor($this->activeGroup->id()),
         ]);
     }
 
@@ -49,10 +56,9 @@ class ProfileController extends Controller
 
         $user->update($update);
 
-        $user->player()->updateOrCreate(
-            ['user_id' => $user->id],
+        $user->players()->updateOrCreate(
+            ['user_id' => $user->id, 'group_id' => $this->activeGroup->id()],
             [
-                'group_id' => $user->group_id,
                 'speed' => (int) $data['speed'],
                 'skill' => (int) $data['skill'],
                 'passing' => (int) $data['passing'],

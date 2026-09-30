@@ -8,6 +8,8 @@ use App\Mail\Welcome;
 use App\Models\Group;
 use App\Models\User;
 use App\Rules\ValidCaptcha;
+use App\Services\GroupMembershipService;
+use App\Support\ActiveGroup;
 use App\Support\Captcha;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,8 +19,19 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
+/**
+ * One account, several groups. Registering creates the account and its first
+ * membership; the groups after that are added with their code from "Mi grupo",
+ * which is why a username that already has a password points there instead of
+ * failing.
+ */
 class RegisterController extends Controller
 {
+    public function __construct(
+        private GroupMembershipService $memberships,
+        private ActiveGroup $activeGroup,
+    ) {}
+
     public function show(): View
     {
         return view('auth.register');
@@ -48,18 +61,27 @@ class RegisterController extends Controller
         $usernameOwner = User::whereRaw('LOWER(username) = ?', [$data['username']])->first();
         if ($usernameOwner && ! $usernameOwner->is_managed) {
             throw ValidationException::withMessages([
-                'username' => __('El nombre de usuario ya está en uso.'),
+                'username' => __('Ese usuario ya existe. Iniciá sesión y sumate al grupo con su código.'),
             ]);
         }
 
         $emailOwner = User::where('email', $data['email'])->first();
         if ($emailOwner && ! $emailOwner->is_managed) {
             throw ValidationException::withMessages([
-                'email' => __('El correo ya está en uso.'),
+                'email' => __('Ese correo ya está en uso.'),
             ]);
         }
 
         $managed = $usernameOwner?->is_managed ? $usernameOwner : ($emailOwner?->is_managed ? $emailOwner : null);
+
+        // A managed player is a stub the organizer of one group created. It is
+        // reclaimed by whoever registers with the code of that very group; a
+        // different group's code must not pull the account into it.
+        if ($managed && ! $managed->isMemberOf($group->id)) {
+            throw ValidationException::withMessages([
+                'group_code' => __('Ese jugador gestionado pertenece a otro grupo. Usá el código de su grupo para recuperarlo.'),
+            ]);
+        }
 
         if ($managed) {
             $user = $managed;
@@ -70,8 +92,6 @@ class RegisterController extends Controller
                 'password' => $data['password'],
                 'is_managed' => false,
             ])->save();
-
-            $user->moveToGroup($group);
         } else {
             $user = User::create([
                 'name' => $data['name'],
@@ -79,32 +99,32 @@ class RegisterController extends Controller
                 'email' => $data['email'],
                 'phone' => $data['phone'] ?? null,
                 'password' => $data['password'],
-                'group_id' => $group->id,
-                'is_organizer' => false,
             ]);
         }
 
-        if (! $user->player()->exists()) {
-            $user->player()->create([
-                'group_id' => $group->id,
-                'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5,
-            ]);
-        }
+        $this->memberships->join($user, $group);
 
         if ($user->email) {
-            Mail::to($user)->send(new Welcome($user));
+            Mail::to($user)->send(new Welcome($user, $group));
         }
 
-        $organizers = User::where('group_id', $group->id)
-            ->where('is_organizer', true)
+        $organizers = Group::membersQuery($group->id)
+            ->whereHas('memberships', fn ($query) => $query
+                ->where('group_id', $group->id)
+                ->where('is_organizer', true))
             ->whereNotNull('email')
             ->get();
+
         if ($organizers->isNotEmpty()) {
-            Mail::to($organizers)->send(new NewRegistration($user));
+            Mail::to($organizers)->send(new NewRegistration($user, $group));
         }
 
         Auth::login($user);
         $request->session()->regenerate();
+
+        // Sólo después de iniciar sesión: el grupo activo se resuelve sobre la
+        // cuenta autenticada, y recién sabemos cuál es la primera membresía.
+        $this->activeGroup->activate($group);
 
         return redirect()->route('dashboard')->with(
             'status',

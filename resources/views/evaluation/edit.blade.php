@@ -16,7 +16,7 @@
     $radarKeys = ['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'goalkeeping' => 'Arco'];
     $radarValues = [];
     foreach ($radarKeys as $key => $label) {
-        $radarValues[$key] = (int) old($key, $e?->{$key} ?? $player->player?->{$key} ?? 5);
+        $radarValues[$key] = (int) old($key, $e?->{$key} ?? $player->playerFor($activeGroup?->id)?->{$key} ?? 5);
     }
 @endphp
 
@@ -35,7 +35,7 @@
         @foreach ($radarKeys as $key => $label)
             <div class="field">
                 <label>{{ $label }}</label>
-                @include('partials.scale', ['name' => $key, 'label' => $label, 'value' => old($key, $e?->{$key} ?? $player->player?->{$key} ?? 5)])
+                @include('partials.scale', ['name' => $key, 'label' => $label, 'value' => old($key, $e?->{$key} ?? $player->playerFor($activeGroup?->id)?->{$key} ?? 5)])
             </div>
         @endforeach
 

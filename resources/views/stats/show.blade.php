@@ -8,12 +8,12 @@
         <h1>{{ $player->name }}</h1>
         <p class="lead">
             @user: {{ $player->username }}
-            @if ($player->is_organizer) · organizador @endif
+            @if ($player->isOrganizerIn($activeGroup?->id)) · organizador @endif
         </p>
     </div>
     <div class="row between" style="gap:8px;flex-wrap:wrap;">
         <a class="btn btn-sm" href="{{ route('stats.index') }}">← Estadísticas</a>
-        @if (auth()->user()->is_organizer && ! auth()->user()->is($player))
+        @if ($isOrganizer && ! auth()->user()->is($player))
             <a class="btn btn-primary btn-sm" href="{{ route('evaluation.edit', $player) }}">Evaluar jugador</a>
         @endif
     </div>
@@ -39,7 +39,7 @@
                         <span class="score-tag tip" tabindex="0">
                             {{ number_format($profile[$key], 1) }}
                             <span class="tipbox" role="tooltip">
-                                <span class="tipbox-num tip-self">{{ $player->player?->{$key} ?? '—' }}</span>
+                                <span class="tipbox-num tip-self">{{ $player->playerFor($activeGroup?->id)?->{$key} ?? '—' }}</span>
                                 <span class="tipbox-num tip-org">{{ isset($orgEval[$key]) ? number_format($orgEval[$key], 1) : '—' }}</span>
                             </span>
                         </span>
@@ -50,7 +50,7 @@
                     <span class="score-tag tip" tabindex="0">
                         {{ number_format($goalkeeping, 1) }}
                         <span class="tipbox" role="tooltip">
-                            <span class="tipbox-num tip-self">{{ $player->player?->goalkeeping ?? '—' }}</span>
+                            <span class="tipbox-num tip-self">{{ $player->playerFor($activeGroup?->id)?->goalkeeping ?? '—' }}</span>
                             <span class="tipbox-num tip-org">{{ isset($orgEval['goalkeeping']) ? number_format($orgEval['goalkeeping'], 1) : '—' }}</span>
                         </span>
                     </span>
@@ -59,7 +59,7 @@
                 <li><span>Rendimiento reciente</span><span class="score-tag">×{{ number_format($form['multiplier'], 2) }}</span></li>
                 <li>
                     <span>¿Le gusta ir al arco?</span>
-                    <span class="score-tag">{{ $player->player ? ($player->player->likes_goalie ? 'Sí' : 'No') : '—' }}</span>
+                    <span class="score-tag">{{ $player->playerFor($activeGroup?->id) ? ($player->playerFor($activeGroup?->id)->likes_goalie ? 'Sí' : 'No') : '—' }}</span>
                 </li>
             </ul>
         </div>

@@ -7,15 +7,14 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Every list, leaderboard and lookup filters by group, so each group_id gets
  * an index. The evaluation uniqueness also includes the group: the same
- * organizer can evaluate the same player again once the player belongs to
- * another group.
+ * organizer evaluates the same account once per group, independently.
  */
 return new class extends Migration
 {
     /**
      * @var list<string>
      */
-    private array $tables = ['users', 'matches', 'guests', 'players', 'ratings', 'player_evaluations'];
+    private array $tables = ['matches', 'guests', 'players', 'ratings', 'player_evaluations'];
 
     public function up(): void
     {

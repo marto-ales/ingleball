@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\ActiveGroup;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -14,13 +15,15 @@ use Illuminate\View\View;
  */
 class PlayerEvaluationController extends Controller
 {
+    public function __construct(private ActiveGroup $activeGroup) {}
+
     public function edit(Request $request, User $user): View
     {
         abort_if($user->is($request->user()), 403, 'No podés evaluarte a vos mismo.');
 
         $evaluation = $request->user()->evaluationsGiven()
             ->where('rated_user_id', $user->id)
-            ->where('group_id', $user->group_id)
+            ->where('group_id', $this->activeGroup->id())
             ->first();
 
         return view('evaluation.edit', [
@@ -43,7 +46,7 @@ class PlayerEvaluationController extends Controller
         ]);
 
         $request->user()->evaluationsGiven()->updateOrCreate(
-            ['rated_user_id' => $user->id, 'group_id' => $user->group_id],
+            ['rated_user_id' => $user->id, 'group_id' => $this->activeGroup->id()],
             [
                 'speed' => (int) $data['speed'],
                 'skill' => (int) $data['skill'],

@@ -37,7 +37,7 @@ class TeamService
         $scorer = $this->scorer->forGroup($match->group_id);
 
         $entries = $match->entries()
-            ->with(['user', 'user.player', 'guest'])
+            ->with(['user', 'user.players', 'guest'])
             ->where('role', 'going')
             ->get();
 
@@ -54,7 +54,7 @@ class TeamService
                     'name' => $entry->user->name,
                     'score' => $scorer->power($attributes, $weights),
                     'attributes' => $attributes,
-                    'likes_goalie' => (bool) ($entry->user->player?->likes_goalie ?? false),
+                    'likes_goalie' => (bool) ($entry->user->playerFor($match->group_id)?->likes_goalie ?? false),
                 ];
             } elseif ($entry->guest !== null) {
                 $attributes = $scorer->attributesForGuest($entry->guest);

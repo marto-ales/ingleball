@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Group;
 use App\Models\Partido;
-use App\Models\User;
 use App\Services\MessagingService;
 use App\Services\RecurringMatchService;
 use App\Services\ReminderService;
 use App\Services\TeamService;
+use App\Support\ActiveGroup;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -19,6 +21,7 @@ class MatchController extends Controller
         private ReminderService $reminders,
         private MessagingService $messaging,
         private RecurringMatchService $recurring,
+        private ActiveGroup $activeGroup,
     ) {}
 
     public function create(): View
@@ -95,7 +98,7 @@ class MatchController extends Controller
             'size' => $data['size'],
             'status' => Partido::STATUS_OPEN,
             'created_by' => $request->user()->id,
-            'group_id' => $request->user()->group_id,
+            'group_id' => $this->activeGroup->id(),
             'recurring' => $request->boolean('recurring'),
         ]);
 
@@ -134,8 +137,10 @@ class MatchController extends Controller
 
         $participants = $this->participants($match);
 
-        $availableUsers = User::where('group_id', $match->group_id)
-            ->whereNull('banned_at')
+        $availableUsers = Group::membersQuery($match->group_id)
+            ->whereDoesntHave('memberships', fn (Builder $query) => $query
+                ->where('group_id', $match->group_id)
+                ->whereNotNull('banned_at'))
             ->whereNotIn('id', $match->entries()->whereNotNull('user_id')->pluck('user_id'))
             ->orderBy('name')
             ->get();

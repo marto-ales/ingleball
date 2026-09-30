@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\AlgorithmSettings;
+use App\Support\ActiveGroup;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -10,11 +11,11 @@ use Illuminate\View\View;
 
 class AlgorithmController extends Controller
 {
-    public function __construct(private AlgorithmSettings $settings) {}
+    public function __construct(private AlgorithmSettings $settings, private ActiveGroup $activeGroup) {}
 
     public function index(Request $request): View
     {
-        $settings = $this->settings->forGroup($request->user()->group_id);
+        $settings = $this->settings->forGroup($this->activeGroup->id());
 
         return view('algorithm.index', [
             'attributes' => (array) config('balance.attributes'),
@@ -30,7 +31,7 @@ class AlgorithmController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
-        $settings = $this->settings->forGroup($request->user()->group_id);
+        $settings = $this->settings->forGroup($this->activeGroup->id());
         $attributes = (array) config('balance.attributes');
 
         $data = $request->validate([

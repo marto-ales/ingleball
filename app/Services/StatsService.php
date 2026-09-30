@@ -6,6 +6,7 @@ use App\Models\Group;
 use App\Models\MatchResult;
 use App\Models\Partido;
 use App\Models\User;
+use App\Support\ActiveGroup;
 use Illuminate\Support\Collection;
 
 class StatsService
@@ -19,9 +20,7 @@ class StatsService
      */
     public function leaderboard(?int $groupId = null): Collection
     {
-        $groupId ??= auth()->check()
-            ? auth()->user()->group_id
-            : Group::query()->orderBy('id')->value('id');
+        $groupId ??= app(ActiveGroup::class)->id() ?? Group::query()->orderBy('id')->value('id');
 
         $totalMatches = Partido::where('group_id', $groupId)
             ->where('status', Partido::STATUS_FINISHED)
@@ -29,8 +28,8 @@ class StatsService
 
         $scorer = $this->scorer->forGroup($groupId);
 
-        return User::with('player')
-            ->where('group_id', $groupId)
+        return Group::membersQuery($groupId)
+            ->with('players')
             ->orderBy('id')
             ->get()
             ->map(function (User $user) use ($groupId, $scorer, $totalMatches): array {

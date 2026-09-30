@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Guest;
+use App\Models\Group;
 use App\Models\Partido;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -26,7 +26,7 @@ class ResultController extends Controller
 
         if ($mvpUserId !== null) {
             abort_unless(
-                User::whereKey($mvpUserId)->where('group_id', $match->group_id)->exists(),
+                Group::membersQuery($match->group_id)->whereKey($mvpUserId)->exists(),
                 422,
                 'Ese jugador no es del grupo.',
             );

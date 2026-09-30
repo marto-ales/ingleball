@@ -1,7 +1,11 @@
 <?php
 
+use App\Console\Commands\AddUserToGroupCommand;
+use App\Console\Commands\CreateGroupCommand;
 use App\Console\Commands\RatingsDetailCommand;
+use App\Http\Middleware\EnsureActiveGroup;
 use App\Http\Middleware\EnsureUserIsOrganizer;
+use App\Support\ActiveGroup;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withCommands([
         RatingsDetailCommand::class,
+        CreateGroupCommand::class,
+        AddUserToGroupCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: [
@@ -25,10 +31,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'organizer' => EnsureUserIsOrganizer::class,
+            'group' => EnsureActiveGroup::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
-    })->create();
+    })
+    ->withSingletons([
+        ActiveGroup::class,
+    ])->create();

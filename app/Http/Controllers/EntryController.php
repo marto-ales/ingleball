@@ -88,8 +88,8 @@ class EntryController extends Controller
 
         if (isset($data['user_id'])) {
             $target = User::findOrFail($data['user_id']);
-            abort_unless($target->group_id === $match->group_id, 404, 'Ese jugador no es del grupo.');
-            abort_if($target->isBanned(), 403, 'Ese jugador está suspendido.');
+            abort_unless($target->isMemberOf($match->group_id), 404, 'Ese jugador no es del grupo.');
+            abort_if($target->isBannedIn($match->group_id), 403, 'Ese jugador está suspendido.');
             $key = 'user_id';
         } else {
             $target = Guest::findOrFail($data['guest_id']);
