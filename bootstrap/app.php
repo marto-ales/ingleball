@@ -2,7 +2,14 @@
 
 use App\Console\Commands\AddUserToGroupCommand;
 use App\Console\Commands\CreateGroupCommand;
+use App\Console\Commands\CreateUserCommand;
+use App\Console\Commands\DeleteUserCommand;
+use App\Console\Commands\ListGroupsCommand;
+use App\Console\Commands\ListUsersCommand;
+use App\Console\Commands\MakeOrganizerCommand;
 use App\Console\Commands\RatingsDetailCommand;
+use App\Console\Commands\RemoveOrganizerCommand;
+use App\Console\Commands\UpdateUserCommand;
 use App\Http\Middleware\EnsureActiveGroup;
 use App\Http\Middleware\EnsureUserIsOrganizer;
 use App\Support\ActiveGroup;
@@ -21,6 +28,13 @@ return Application::configure(basePath: dirname(__DIR__))
         RatingsDetailCommand::class,
         CreateGroupCommand::class,
         AddUserToGroupCommand::class,
+        CreateUserCommand::class,
+        UpdateUserCommand::class,
+        DeleteUserCommand::class,
+        MakeOrganizerCommand::class,
+        RemoveOrganizerCommand::class,
+        ListGroupsCommand::class,
+        ListUsersCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: [
