@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\AlgorithmSettings;
+use App\Support\ActiveGroup;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -10,24 +11,27 @@ use Illuminate\View\View;
 
 class AlgorithmController extends Controller
 {
-    public function __construct(private AlgorithmSettings $settings) {}
+    public function __construct(private AlgorithmSettings $settings, private ActiveGroup $activeGroup) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
+        $settings = $this->settings->forGroup($this->activeGroup->id());
+
         return view('algorithm.index', [
             'attributes' => (array) config('balance.attributes'),
-            'order' => $this->settings->order(),
-            'weightSequence' => array_values($this->settings->weights()),
-            'randomTieBreak' => $this->settings->randomTieBreak(),
-            'spreadGoalies' => $this->settings->spreadGoalies(),
-            'selfWeight' => $this->settings->selfWeight(),
-            'weightByForm' => $this->settings->weightByForm(),
-            'formSpan' => $this->settings->formSpan(),
+            'order' => $settings->order(),
+            'weightSequence' => array_values($settings->weights()),
+            'randomTieBreak' => $settings->randomTieBreak(),
+            'spreadGoalies' => $settings->spreadGoalies(),
+            'selfWeight' => $settings->selfWeight(),
+            'weightByForm' => $settings->weightByForm(),
+            'formSpan' => $settings->formSpan(),
         ]);
     }
 
     public function update(Request $request): RedirectResponse
     {
+        $settings = $this->settings->forGroup($this->activeGroup->id());
         $attributes = (array) config('balance.attributes');
 
         $data = $request->validate([
@@ -55,9 +59,9 @@ class AlgorithmController extends Controller
         // The form span only applies while the recent-form adjustment is on.
         $formSpan = $weightByForm
             ? (float) ($data['form_span'] ?? config('balance.form_span', 0.2))
-            : $this->settings->formSpan();
+            : $settings->formSpan();
 
-        $this->settings->update([
+        $settings->update([
             'order' => $order,
             'random_tie_break' => $request->boolean('random_tie_break'),
             'spread_goalies' => $request->boolean('spread_goalies'),

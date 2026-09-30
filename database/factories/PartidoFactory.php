@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Group;
 use App\Models\Partido;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,12 +23,31 @@ class PartidoFactory extends Factory
             'venue' => fake()->streetAddress(),
             'size' => 5,
             'status' => 'open',
+            'group_id' => UserFactory::defaultGroupId(),
             'created_by' => User::factory(),
         ];
     }
 
-    public function createdBy(User $user): static
+    /**
+     * The match belongs to the group of the person who created it: one account
+     * may play in several groups, and each match stays in one of them.
+     */
+    public function createdBy(User $user, Group|int|null $group = null): static
     {
-        return $this->state(fn () => ['created_by' => $user->id]);
+        return $this->state(function () use ($user, $group): array {
+            $groupId = $group instanceof Group
+                ? $group->id
+                : ($group ?? $user->memberships()->orderBy('group_id')->value('group_id'));
+
+            return [
+                'created_by' => $user->id,
+                'group_id' => $groupId,
+            ];
+        });
+    }
+
+    public function inGroup(int $groupId): static
+    {
+        return $this->state(fn (): array => ['group_id' => $groupId]);
     }
 }

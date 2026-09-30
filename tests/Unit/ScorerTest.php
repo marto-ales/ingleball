@@ -9,6 +9,7 @@ use App\Models\PlayerEvaluation;
 use App\Models\Rating;
 use App\Models\User;
 use App\Services\AlgorithmSettings;
+use Database\Factories\UserFactory;
 use App\Services\Scorer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -33,7 +34,7 @@ final class ScorerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        Player::factory()->forUser($user)->create(array_merge([
+        $user->playerFor(UserFactory::defaultGroupId())->update(array_merge([
             'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5,
             'defense' => 5, 'goalkeeping' => 5,
         ], $attributes));
@@ -49,6 +50,7 @@ final class ScorerTest extends TestCase
         return PlayerEvaluation::create(array_merge([
             'organizer_user_id' => $organizer->id,
             'rated_user_id' => $player->id,
+            'group_id' => UserFactory::defaultGroupId(),
             'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5,
             'defense' => 5, 'goalkeeping' => 5,
         ], $attributes));
@@ -109,7 +111,7 @@ final class ScorerTest extends TestCase
 
         $match->entries()->create(['user_id' => $user->id, 'role' => 'going']);
 
-        Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $user->id, 'match_id' => $match->id, 'overall' => 8]);
+        Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $user->id, 'match_id' => $match->id, 'group_id' => UserFactory::defaultGroupId(), 'overall' => 8]);
 
         $form = $this->scorer->formForUser($user);
 
@@ -135,7 +137,7 @@ final class ScorerTest extends TestCase
         $low->entries()->create(['user_id' => $user->id, 'role' => 'going']);
 
         // Stored 0 is centered -5 → -20%, the floor.
-        Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $user->id, 'match_id' => $low->id, 'overall' => 0]);
+        Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $user->id, 'match_id' => $low->id, 'group_id' => UserFactory::defaultGroupId(), 'overall' => 0]);
         $this->assertSame(0.8, $this->scorer->formForUser($user)['multiplier']);
 
         $high = Partido::factory()->create([
@@ -146,7 +148,7 @@ final class ScorerTest extends TestCase
         $high->entries()->create(['user_id' => $user->id, 'role' => 'going']);
 
         // Stored 10 is centered +5 → +20%, the ceiling.
-        Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $user->id, 'match_id' => $high->id, 'overall' => 10]);
+        Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $user->id, 'match_id' => $high->id, 'group_id' => UserFactory::defaultGroupId(), 'overall' => 10]);
         $this->assertSame(1.2, $this->scorer->formForUser($user)['multiplier']);
     }
 
@@ -165,7 +167,7 @@ final class ScorerTest extends TestCase
 
         $match->entries()->create(['user_id' => $user->id, 'role' => 'going']);
 
-        Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $user->id, 'match_id' => $match->id, 'overall' => 8]);
+        Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $user->id, 'match_id' => $match->id, 'group_id' => UserFactory::defaultGroupId(), 'overall' => 8]);
 
         // Stored 8 is centered +3; 3/5·0.4 = 0.24 → ×1.24.
         $this->assertEqualsWithDelta(1.24, $this->scorer->formForUser($user)['multiplier'], 0.001);
@@ -188,8 +190,8 @@ final class ScorerTest extends TestCase
         $match->entries()->create(['user_id' => $user->id, 'role' => 'going']);
         $match->entries()->create(['user_id' => $other->id, 'role' => 'going']);
 
-        Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $user->id, 'match_id' => $match->id, 'overall' => 8]);
-        Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $other->id, 'match_id' => $match->id, 'overall' => 4]);
+        Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $user->id, 'match_id' => $match->id, 'group_id' => UserFactory::defaultGroupId(), 'overall' => 8]);
+        Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $other->id, 'match_id' => $match->id, 'group_id' => UserFactory::defaultGroupId(), 'overall' => 4]);
 
         app(AlgorithmSettings::class)->update(['self_weight' => 1.0, 'weight_by_form' => false]);
 
@@ -211,7 +213,7 @@ final class ScorerTest extends TestCase
             ]);
 
             $match->entries()->create(['user_id' => $user->id, 'role' => 'going']);
-            Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $user->id, 'match_id' => $match->id, 'overall' => $overall]);
+            Rating::create(['rater_user_id' => $rater->id, 'rated_user_id' => $user->id, 'match_id' => $match->id, 'group_id' => UserFactory::defaultGroupId(), 'overall' => $overall]);
         }
 
         $form = $this->scorer->formForUser($user);

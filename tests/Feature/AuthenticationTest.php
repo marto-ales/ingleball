@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Mail\NewRegistration;
 use App\Mail\Welcome;
+use App\Models\Group;
 use App\Models\Partido;
 use App\Models\User;
 use App\Support\Captcha;
@@ -15,6 +16,11 @@ use Tests\TestCase;
 final class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;
+
+    private function defaultGroupCode(): string
+    {
+        return Group::query()->orderBy('id')->value('join_code');
+    }
 
     public function test_login_screen_renders(): void
     {
@@ -29,11 +35,66 @@ final class AuthenticationTest extends TestCase
             'email' => 'marta@example.com',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
+            'group_code' => $this->defaultGroupCode(),
         ]);
 
         $this->assertAuthenticated();
-        $this->assertDatabaseHas('users', ['username' => 'marta', 'email' => 'marta@example.com']);
+        $this->assertDatabaseHas('users', [
+            'username' => 'marta',
+            'email' => 'marta@example.com',
+        ]);
+        $this->assertDatabaseHas('group_user', [
+            'user_id' => User::where('username', 'marta')->value('id'),
+            'group_id' => Group::query()->orderBy('id')->value('id'),
+            'is_organizer' => 0,
+        ]);
+        $this->assertDatabaseHas('players', [
+            'user_id' => User::where('username', 'marta')->value('id'),
+            'group_id' => Group::query()->orderBy('id')->value('id'),
+        ]);
         $response->assertRedirect(route('dashboard'));
+    }
+
+    public function test_registration_requires_a_valid_group_code(): void
+    {
+        $this->post('/register', [
+            'name' => 'Marta',
+            'username' => 'marta',
+            'email' => 'marta@example.com',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+        ])->assertSessionHasErrors('group_code');
+
+        $this->post('/register', [
+            'name' => 'Marta',
+            'username' => 'marta',
+            'email' => 'marta@example.com',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+            'group_code' => 'NOCODE123',
+        ])->assertSessionHasErrors('group_code');
+
+        $this->assertGuest();
+        $this->assertDatabaseMissing('users', ['username' => 'marta']);
+    }
+
+    public function test_registration_with_a_code_joins_that_group(): void
+    {
+        $group = Group::factory()->withCode('OTHERGRP')->create();
+
+        $this->post('/register', [
+            'name' => 'Marta',
+            'username' => 'marta',
+            'email' => 'marta@example.com',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+            'group_code' => 'OTHERGRP',
+        ]);
+
+        $userId = User::where('username', 'marta')->value('id');
+
+        $this->assertDatabaseHas('group_user', ['user_id' => $userId, 'group_id' => $group->id]);
+        $this->assertDatabaseHas('players', ['group_id' => $group->id, 'user_id' => $userId]);
     }
 
     public function test_registration_requires_email(): void
@@ -43,16 +104,20 @@ final class AuthenticationTest extends TestCase
             'username' => 'marta',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
+            'group_code' => $this->defaultGroupCode(),
         ]);
 
         $response->assertSessionHasErrors('email');
         $this->assertGuest();
     }
 
-    public function test_registration_mails_user_and_notifies_organizers(): void
+    public function test_registration_mails_user_and_notifies_organizers_of_that_group(): void
     {
         Mail::fake();
         User::factory()->organizer()->create(['email' => 'org@example.com', 'username' => 'orga']);
+
+        $other = Group::factory()->withCode('OTHERGRP')->create();
+        User::factory()->inGroup($other)->organizer()->create(['email' => 'otro@example.com']);
 
         $this->post('/register', [
             'name' => 'Marta',
@@ -60,10 +125,12 @@ final class AuthenticationTest extends TestCase
             'email' => 'marta@example.com',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
+            'group_code' => $this->defaultGroupCode(),
         ]);
 
         Mail::assertSent(Welcome::class, fn ($mail) => $mail->hasTo('marta@example.com'));
         Mail::assertSent(NewRegistration::class, fn ($mail) => $mail->hasTo('org@example.com'));
+        Mail::assertNotSent(NewRegistration::class, fn ($mail) => $mail->hasTo('otro@example.com'));
     }
 
     public function test_users_can_login_with_username_and_password(): void
@@ -102,6 +169,7 @@ final class AuthenticationTest extends TestCase
             'email' => 'marta88@example.com',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
+            'group_code' => $this->defaultGroupCode(),
         ]);
 
         $this->assertAuthenticated();

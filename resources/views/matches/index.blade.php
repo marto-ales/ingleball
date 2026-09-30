@@ -5,7 +5,7 @@
 @section('content')
 <div class="page-head">
     <div><h1>Partidos</h1></div>
-    @if (auth()->user()->is_organizer)
+    @if ($isOrganizer)
         <a class="btn btn-primary" href="{{ route('matches.create') }}">+ Nuevo partido</a>
     @endif
 </div>

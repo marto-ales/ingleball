@@ -1,5 +1,5 @@
 <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 520px; margin: 0 auto; padding: 20px; color: #1c2521;">
-    <h1 style="color: #0b6e3f; margin: 0 0 12px;">&#9917; Ingleball</h1>
+    <h1 style="color: #0b6e3f; margin: 0 0 12px;">&#9917; {{ $match->group?->name ?? 'Ingleball' }}</h1>
     <p style="margin: 0 0 16px;">Recordatorio de partido:</p>
     <h2 style="margin: 0 0 8px; font-size: 20px;">{{ $match->title }}</h2>
     <p style="font-size: 16px; margin: 6px 0;">&#128197; {{ ucfirst($match->played_at->isoFormat('dddd, D [de] MMMM [de] YYYY · HH:mm')) }}</p>

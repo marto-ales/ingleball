@@ -1,4 +1,4 @@
-@if (auth()->user()->is_organizer && $match->isOpen())
+@if ($isOrganizer && $match->isOpen())
     <div class="row-actions">
         <button type="button" class="btn-icon row-actions-btn" aria-haspopup="true" aria-expanded="false" aria-label="Acciones del jugador" title="Acciones">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>

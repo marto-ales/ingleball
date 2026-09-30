@@ -4,7 +4,7 @@
 
 @section('content')
 @php
-    $scorer = app(\App\Services\Scorer::class);
+    $scorer = app(\App\Services\Scorer::class)->forGroup($match->group_id);
     $attrKeys = ['speed', 'skill', 'passing', 'shooting', 'defense'];
     $attrLabels = ['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa'];
     $memberScore = function ($t) use ($scorer) {
@@ -40,7 +40,7 @@
     </div>
 </div>
 
-@if (auth()->user()->is_organizer)
+@if ($isOrganizer)
     <div class="card card--info row">
         <strong>Organización</strong>
         @if ($match->isCancelled())
@@ -130,7 +130,7 @@
             @endif
         </div>
 
-        @if (auth()->user()->is_organizer && $match->isOpen())
+        @if ($isOrganizer && $match->isOpen())
             <div class="card card--info">
                 <h2>Agregar jugadores</h2>
                 @if ($availableUsers->isEmpty())
@@ -155,7 +155,7 @@
             </div>
         @endif
 
-        @if (auth()->user()->is_organizer && $match->isOpen())
+        @if ($isOrganizer && $match->isOpen())
             <div class="card card--info">
                 <h2>Añadir invitado</h2>
                 <form method="POST" action="{{ route('guests.store', $match) }}">
@@ -189,21 +189,21 @@
             <div class="card">
                 <div class="row between">
                     <h2>Equipos</h2>
-                    @if (auth()->user()->is_organizer && $match->isLocked())
+                    @if ($isOrganizer && $match->isLocked())
                         <form method="POST" action="{{ route('teams.generate', $match) }}" class="inline" onsubmit="return confirm('¿Regenerar equipos? Se reemplazará el armado actual.');">
                             @csrf
                             <button class="btn btn-sm" type="submit">🔄 Regenerar</button>
                         </form>
                     @endif
                 </div>
-                @if (auth()->user()->is_organizer)
+                @if ($isOrganizer)
                     <p class="muted small mb0 mt">
                         Duplas de extremos: cada fila es una dupla que junta al de mayor puntaje con el de menor, y así
                         sucesivamente; cada dupla aporta un jugador a cada equipo. El armado minimiza el desfase por
                         habilidad; el reparto de 🧤 solo desempata entre armados igual de parejos.
                     </p>
                     @php
-                        $settings = app(\App\Services\AlgorithmSettings::class);
+                        $settings = app(\App\Services\AlgorithmSettings::class)->forGroup($match->group_id);
                         $weights = $settings->weights();
                         $order = $settings->order();
                         $attrSums = ['A' => [], 'B' => []];
@@ -229,7 +229,7 @@
                                     $attrSums[$side][$key] += (float) ($attrs[$key] ?? 5);
                                 }
 
-                                $teamGoalies[$side] += ($t->user?->player?->likes_goalie ?? false) ? 1 : 0;
+                                $teamGoalies[$side] += ($t->user?->playerFor($match->group_id)?->likes_goalie ?? false) ? 1 : 0;
                                 $teamTotals[$side] += $memberScore($t);
                             }
                         }
@@ -292,9 +292,9 @@
                         <div class="dupla">
                             <div class="dupla-side dupla-a">
                                 @if ($a)
-                                    <span class="who">{{ $a->user?->name ?? $a->guest?->name }}@if ($a->user?->player?->likes_goalie) 🧤 @endif</span>
+                                    <span class="who">{{ $a->user?->name ?? $a->guest?->name }}@if ($a->user?->playerFor($match->group_id)?->likes_goalie) 🧤 @endif</span>
                                     @if ($a->guest)<span class="tag-guest">inv.</span>@endif
-                                    @if (auth()->user()->is_organizer)
+                                    @if ($isOrganizer)
                                         @php $attrsA = $a->user ? $scorer->attributesForUser($a->user) : $scorer->attributesForGuest($a->guest); @endphp
                                         <span class="score-tag" title="{{ implode(' · ', array_map(fn ($key) => $attrLabels[$key].': '.round($attrsA[$key] ?? 5, 1), $attrKeys)) }}">{{ number_format($memberScore($a), 1) }}</span>
                                     @endif
@@ -304,15 +304,15 @@
                             </div>
                             <div class="dupla-mid">
                                 <span>{{ $loop->iteration }}</span>
-                                @if ($sum !== null && auth()->user()->is_organizer)
+                                @if ($sum !== null && $isOrganizer)
                                     <b>{{ number_format($sum, 1) }}</b>
                                 @endif
                             </div>
                             <div class="dupla-side dupla-b">
                                 @if ($b)
-                                    <span class="who">{{ $b->user?->name ?? $b->guest?->name }}@if ($b->user?->player?->likes_goalie) 🧤 @endif</span>
+                                    <span class="who">{{ $b->user?->name ?? $b->guest?->name }}@if ($b->user?->playerFor($match->group_id)?->likes_goalie) 🧤 @endif</span>
                                     @if ($b->guest)<span class="tag-guest">inv.</span>@endif
-                                    @if (auth()->user()->is_organizer)
+                                    @if ($isOrganizer)
                                         @php $attrsB = $b->user ? $scorer->attributesForUser($b->user) : $scorer->attributesForGuest($b->guest); @endphp
                                         <span class="score-tag" title="{{ implode(' · ', array_map(fn ($key) => $attrLabels[$key].': '.round($attrsB[$key] ?? 5, 1), $attrKeys)) }}">{{ number_format($memberScore($b), 1) }}</span>
                                     @endif
@@ -323,7 +323,7 @@
                         </div>
                     @endforeach
                 </div>
-                @if (auth()->user()->is_organizer && $match->isLocked())
+                @if ($isOrganizer && $match->isLocked())
                     <div class="divider"></div>
                     <h3>Intercambiar jugadores</h3>
                     @foreach ($teamA as $t)
@@ -353,7 +353,7 @@
                         El armado todavía no se generó.
                     @endif
                 </p>
-                @if (auth()->user()->is_organizer && $match->isLocked() && $goingCount >= 4)
+                @if ($isOrganizer && $match->isLocked() && $goingCount >= 4)
                     <div class="row mt">
                         <form method="POST" action="{{ route('teams.generate', $match) }}" class="inline">
                             @csrf
@@ -400,7 +400,7 @@
             </p>
         @endif
 
-        @if (auth()->user()->is_organizer && $match->isFinished())
+        @if ($isOrganizer && $match->isFinished())
             <div class="divider"></div>
             @php
                 $resultRow = $match->result;
@@ -451,8 +451,8 @@
                 <button type="button" class="btn" id="copy-share">Copiar mensaje</button>
                 @if ($waGroup)
                     <a class="btn wa-link" target="_blank" rel="noopener" href="{{ $waGroup }}">Abrir el grupo</a>
-                @elseif (auth()->user()->is_organizer)
-                    <span class="muted small">Definí el enlace del grupo en tu <a href="{{ route('profile.edit') }}">perfil</a>.</span>
+                @elseif ($isOrganizer)
+                    <span class="muted small">Definí el enlace de WhatsApp en <a href="{{ route('groups.show') }}">Mi grupo</a>.</span>
                 @endif
             </div>
         </div>

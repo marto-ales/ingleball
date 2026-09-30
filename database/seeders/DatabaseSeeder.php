@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Group;
 use App\Models\Guest;
 use App\Models\Partido;
 use App\Models\Rating;
@@ -18,6 +19,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $group = Group::query()->orderBy('id')->first()
+            ?? Group::create(['name' => 'Ingleball', 'join_code' => Group::randomJoinCode()]);
+
+        $groupId = $group->id;
+
         $organizers = [
             User::factory()->organizer()->create([
                 'name' => 'Marta', 'username' => 'marta',
@@ -39,6 +45,7 @@ class DatabaseSeeder extends Seeder
         // Self-assessments for every registered player.
         foreach ($all as $user) {
             $user->player()->create([
+                'group_id' => $groupId,
                 'speed' => fake()->numberBetween(4, 9),
                 'skill' => fake()->numberBetween(4, 9),
                 'passing' => fake()->numberBetween(4, 9),
@@ -56,6 +63,7 @@ class DatabaseSeeder extends Seeder
                 Rating::create([
                     'rater_user_id' => $rater->id,
                     'rated_user_id' => $rated->id,
+                    'group_id' => $groupId,
                     'overall' => fake()->numberBetween(5, 10),
                 ]);
             }
@@ -70,7 +78,12 @@ class DatabaseSeeder extends Seeder
         foreach ($all->random(9) as $user) {
             $saturday->entries()->create(['user_id' => $user->id, 'role' => 'going']);
         }
-        $guest = Guest::create(['name' => 'Cheto (invitado)', 'phone' => '+5491155550099', 'overall' => 7]);
+        $guest = Guest::create([
+            'name' => 'Cheto (invitado)',
+            'phone' => '+5491155550099',
+            'group_id' => $groupId,
+            'overall' => 7,
+        ]);
         $saturday->entries()->create(['guest_id' => $guest->id, 'role' => 'going']);
 
         // Managed player: sits in the list but has no password (cannot log in).
@@ -82,6 +95,7 @@ class DatabaseSeeder extends Seeder
             'is_managed' => true,
         ]);
         $managed->player()->create([
+            'group_id' => $groupId,
             'speed' => 6, 'skill' => 6, 'passing' => 6, 'shooting' => 6, 'defense' => 5,
         ]);
         $saturday->entries()->create(['user_id' => $managed->id, 'role' => 'substitute']);

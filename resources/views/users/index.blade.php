@@ -28,19 +28,19 @@
                     <tr>
                         <td>
                             {{ $user->name }}
-                            @if ($user->is_organizer) <span class="badge badge-organizer">Org</span> @endif
+                            @if ($user->isOrganizerIn($activeGroup?->id)) <span class="badge badge-organizer">Org</span> @endif
                             @if ($user->is_managed) <span class="badge badge-managed">Gestionado</span> @endif
                         </td>
                         <td class="muted">{{ $user->username }}</td>
                         <td>
-                            @if ($user->isBanned())
+                            @if ($user->isBannedIn($activeGroup?->id))
                                 <span class="badge badge-banned">Bloqueado</span>
                             @else
                                 <span class="badge badge-active">Activo</span>
                             @endif
                         </td>
                         <td>
-                            @if ($user->player?->self_eval_completed_at)
+                            @if ($user->playerFor($activeGroup?->id)?->self_eval_completed_at)
                                 <span class="badge badge-active">Sí</span>
                             @else
                                 <span class="muted">No</span>
@@ -60,7 +60,7 @@
                                         <span class="opt-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></span>
                                         Editar
                                     </a>
-                                    @if ($user->isBanned())
+                                    @if ($user->isBannedIn($activeGroup?->id))
                                         <form method="POST" action="{{ route('users.manage.unblock', $user) }}">
                                             @csrf
                                             <button type="submit" class="row-opt">
@@ -78,12 +78,11 @@
                                         </form>
                                     @endif
                                     @if (! $user->is(auth()->user()))
-                                        <form method="POST" action="{{ route('users.manage.destroy', $user) }}" onsubmit="return confirm('¿Eliminar la cuenta de {{ addslashes($user->name) }}? Su historial se pierde.');">
+                                        <form method="POST" action="{{ route('users.manage.expel', $user) }}" onsubmit="return confirm('¿Sacar a {{ addslashes($user->name) }} de {{ $activeGroup?->name ?? 'este grupo' }}? Pierde su perfil y sus notas acá; su cuenta y sus otros grupos quedan igual.');">
                                             @csrf
-                                            @method('DELETE')
                                             <button type="submit" class="row-opt danger">
                                                 <span class="opt-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
-                                                Eliminar
+                                                Sacar del grupo
                                             </button>
                                         </form>
                                     @endif

@@ -28,7 +28,7 @@ class GuestController extends Controller
 
         $guestData = $data;
         unset($guestData['role']);
-        $guest = $this->findOrGlobal($guestData);
+        $guest = $this->findOrGroup($match, $guestData);
         if ($match->entries()->where('guest_id', $guest->id)->exists()) {
             return back()->with('status', $guest->name.' ya está en la lista.');
         }
@@ -69,12 +69,20 @@ class GuestController extends Controller
         return back()->with('status', 'Invitado retirado.');
     }
 
-    private function findOrGlobal(array $data): Guest
+    /**
+     * A guest is reused across the matches of their own group only, so the
+     * same phone number in another group creates a separate record.
+     */
+    private function findOrGroup(Partido $match, array $data): Guest
     {
+        $data['group_id'] = $match->group_id;
         $phone = ! empty($data['phone']) ? preg_replace('/[^0-9]/', '', $data['phone']) : null;
 
         $existing = $phone
-            ? Guest::whereNotNull('phone')->get()->first(fn (Guest $g) => preg_replace('/[^0-9]/', '', (string) $g->phone) === $phone)
+            ? Guest::where('group_id', $match->group_id)
+                ->whereNotNull('phone')
+                ->get()
+                ->first(fn (Guest $g) => preg_replace('/[^0-9]/', '', (string) $g->phone) === $phone)
             : null;
 
         if ($existing) {

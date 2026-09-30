@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Guest;
+use App\Models\Group;
 use App\Models\Partido;
 use App\Models\Rating;
 use Illuminate\Http\RedirectResponse;
@@ -64,14 +66,24 @@ class RatingController extends Controller
 
         if ($type === 'user') {
             abort_unless($id !== $me->id, 422, 'No puedes calificarte a ti mismo.');
+            abort_unless(
+                Group::membersQuery($match->group_id)->whereKey($id)->exists(),
+                404,
+                'Ese jugador no es del grupo.',
+            );
             Rating::updateOrCreate(
                 ['rater_user_id' => $me->id, 'rated_user_id' => $id, 'match_id' => $match->id],
-                $attributes,
+                $attributes + ['group_id' => $match->group_id],
             );
         } else {
+            abort_unless(
+                Guest::whereKey($id)->where('group_id', $match->group_id)->exists(),
+                404,
+                'Ese invitado no es del grupo.',
+            );
             Rating::updateOrCreate(
                 ['rater_user_id' => $me->id, 'rated_guest_id' => $id, 'match_id' => $match->id],
-                $attributes,
+                $attributes + ['group_id' => $match->group_id],
             );
         }
 

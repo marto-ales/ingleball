@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Group;
 use App\Models\Partido;
 use App\Models\User;
+use Database\Factories\UserFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -58,8 +60,9 @@ final class ModerationTest extends TestCase
         $user = User::factory()->create([
             'username' => 'marta',
             'password' => Hash::make('secret123'),
-            'banned_at' => now(),
         ]);
+
+        $user->memberships()->update(['banned_at' => now()]);
 
         $this->from('/login')->post('/login', ['identity' => 'marta', 'password' => 'secret123'])
             ->assertSessionHasErrors('identity');
@@ -67,7 +70,24 @@ final class ModerationTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_organizer_can_block_unblock_and_delete_users(): void
+    public function test_a_block_in_one_group_does_not_stop_the_login_for_the_others(): void
+    {
+        $other = Group::factory()->create();
+
+        $user = User::factory()
+            ->alsoInGroup($other)
+            ->alsoInGroup(UserFactory::defaultGroupId())
+            ->create(['username' => 'marta', 'password' => Hash::make('secret123')]);
+
+        $user->membershipIn(UserFactory::defaultGroupId())->update(['banned_at' => now()]);
+
+        $this->post('/login', ['identity' => 'marta', 'password' => 'secret123'])
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_organizer_can_block_unblock_and_expel_users(): void
     {
         $organizer = User::factory()->organizer()->create();
         $target = User::factory()->create();
@@ -76,46 +96,76 @@ final class ModerationTest extends TestCase
             ->post(route('users.manage.block', $target))
             ->assertRedirect();
 
-        $this->assertNotNull($target->refresh()->banned_at);
+        $this->assertTrue($target->refresh()->isBannedIn(UserFactory::defaultGroupId()));
 
         $this->actingAs($organizer)
             ->post(route('users.manage.unblock', $target))
             ->assertRedirect();
 
-        $this->assertNull($target->refresh()->banned_at);
+        $this->assertFalse($target->refresh()->isBannedIn(UserFactory::defaultGroupId()));
 
         $this->actingAs($organizer)
-            ->delete(route('users.manage.destroy', $target))
+            ->post(route('users.manage.expel', $target))
             ->assertRedirect();
 
-        $this->assertDatabaseMissing('users', ['id' => $target->id]);
+        // The account and its login survive: only the membership is gone.
+        $this->assertDatabaseHas('users', ['id' => $target->id]);
+        $this->assertDatabaseMissing('group_user', [
+            'user_id' => $target->id,
+            'group_id' => UserFactory::defaultGroupId(),
+        ]);
+        $this->assertDatabaseMissing('players', [
+            'user_id' => $target->id,
+            'group_id' => UserFactory::defaultGroupId(),
+        ]);
     }
 
-    public function test_organizer_cannot_delete_themselves(): void
+    public function test_expelling_a_member_does_not_touch_their_other_groups(): void
+    {
+        $other = Group::factory()->create();
+
+        $organizer = User::factory()->organizer()->create();
+        $target = User::factory()->alsoInGroup($other)->alsoInGroup(UserFactory::defaultGroupId())->create();
+
+        $this->actingAs($organizer)
+            ->post(route('users.manage.expel', $target))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('users', ['id' => $target->id]);
+        $this->assertDatabaseHas('group_user', ['user_id' => $target->id, 'group_id' => $other->id]);
+        $this->assertDatabaseHas('players', ['user_id' => $target->id, 'group_id' => $other->id]);
+    }
+
+    public function test_organizer_cannot_remove_themselves(): void
     {
         $organizer = User::factory()->organizer()->create();
 
         $this->actingAs($organizer)
-            ->delete(route('users.manage.destroy', $organizer))
+            ->post(route('users.manage.expel', $organizer))
             ->assertForbidden();
 
         $this->assertDatabaseHas('users', ['id' => $organizer->id]);
+        $this->assertDatabaseHas('group_user', [
+            'user_id' => $organizer->id,
+            'group_id' => UserFactory::defaultGroupId(),
+        ]);
     }
 
     public function test_user_list_shows_self_evaluation_status_and_evaluate_button(): void
     {
         $organizer = User::factory()->organizer()->create();
         $without = User::factory()->create();
-        $without->player()->create([
+        $without->playerFor(UserFactory::defaultGroupId())->update([
             'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'goalkeeping' => 5,
         ]);
         $with = User::factory()->create();
-        $with->player()->create([
+        $with->playerFor(UserFactory::defaultGroupId())->update([
             'speed' => 6, 'skill' => 6, 'passing' => 6, 'shooting' => 6, 'defense' => 6, 'goalkeeping' => 7,
             'self_eval_completed_at' => now(),
         ]);
         $organizer->evaluationsGiven()->create([
             'rated_user_id' => $with->id,
+            'group_id' => UserFactory::defaultGroupId(),
             'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'goalkeeping' => 5,
         ]);
 
@@ -133,7 +183,7 @@ final class ModerationTest extends TestCase
     public function test_saving_profile_marks_self_evaluation_as_completed(): void
     {
         $user = User::factory()->create();
-        $user->player()->create([
+        $user->playerFor(UserFactory::defaultGroupId())->update([
             'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'goalkeeping' => 5,
         ]);
 
@@ -145,13 +195,13 @@ final class ModerationTest extends TestCase
             'speed' => 6, 'skill' => 6, 'passing' => 6, 'shooting' => 6, 'defense' => 6, 'goalkeeping' => 7,
         ]);
 
-        $this->assertNotNull($user->player->fresh()->self_eval_completed_at);
+        $this->assertNotNull($user->playerFor(UserFactory::defaultGroupId())->fresh()->self_eval_completed_at);
     }
 
     public function test_registration_adopts_managed_user_and_keeps_player_history(): void
     {
         $managed = User::factory()->create(['name' => 'Pancho', 'username' => 'pancho', 'is_managed' => true]);
-        $managed->player()->create([
+        $managed->playerFor(UserFactory::defaultGroupId())->update([
             'speed' => 6, 'skill' => 6, 'passing' => 6, 'shooting' => 6, 'defense' => 5,
         ]);
 
@@ -164,6 +214,7 @@ final class ModerationTest extends TestCase
             'email' => 'pancho@example.com',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
+            'group_code' => Group::query()->orderBy('id')->value('join_code'),
         ])->assertRedirect(route('dashboard'));
 
         $managed->refresh();
@@ -171,7 +222,7 @@ final class ModerationTest extends TestCase
         $this->assertAuthenticatedAs($managed);
         $this->assertFalse($managed->is_managed);
         $this->assertSame('Pancho Real', $managed->name);
-        $this->assertTrue($managed->player()->exists());
+        $this->assertNotNull($managed->playerFor(UserFactory::defaultGroupId()));
         $this->assertDatabaseHas('match_entries', ['match_id' => $match->id, 'user_id' => $managed->id]);
     }
 
@@ -185,6 +236,7 @@ final class ModerationTest extends TestCase
             'email' => 'otra@example.com',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
+            'group_code' => Group::query()->orderBy('id')->value('join_code'),
         ])->assertSessionHasErrors('username');
 
         $this->assertGuest();

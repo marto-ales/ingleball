@@ -1,6 +1,6 @@
 <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 520px; margin: 0 auto; padding: 20px; color: #1c2521;">
-    <h1 style="color: #0b6e3f; margin: 0 0 12px;">&#9917; Ingleball</h1>
-    <p style="margin: 0 0 16px;">¡Bienvenido a Ingleball, <strong>{{ $user->name }}</strong>!</p>
+    <h1 style="color: #0b6e3f; margin: 0 0 12px;">&#9917; {{ $group->name }}</h1>
+    <p style="margin: 0 0 16px;">¡Bienvenido a {{ $group->name }}, <strong>{{ $user->name }}</strong>!</p>
     <p style="margin: 0 0 8px;">Tu cuenta quedó lista. Anotate en los próximos partidos, calificá a tus compañeros y seguí tu historial de rendimiento.</p>
     <p style="margin: 24px 0 0;">
         <a href="{{ route('dashboard') }}"
