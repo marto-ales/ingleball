@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', config('app.name', 'Ingleball')) · Ingleball</title>
+    <title>@yield('title', config('app.name', 'Ingleball')) · {{ $activeGroup?->name ?? config('app.name', 'Ingleball') }}</title>
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
@@ -14,14 +14,13 @@
     @auth
     <header class="topbar">
         <div class="container topbar-inner">
-            <a class="brand" href="{{ route('dashboard') }}">⚽ Ingleball</a>
+            <a class="brand" href="{{ route('dashboard') }}">⚽ {{ $activeGroup?->name ?? 'Ingleball' }}</a>
             <nav class="nav">
                 @if ($activeGroup !== null)
                     @if ($myGroups->count() > 1)
                         <form method="POST" action="{{ route('groups.activate') }}" class="inline group-switch">
                             @csrf
-                            <label class="sr-only" for="group-switch">Grupo</label>
-                            <select id="group-switch" name="group" onchange="this.form.submit()">
+                            <select id="group-switch" name="group" aria-label="Grupo" onchange="this.form.submit()">
                                 @foreach ($myGroups as $membership)
                                     <option value="{{ $membership->group_id }}" @selected($membership->group_id === $activeGroup->id)>
                                         {{ $membership->group->name }}{{ $membership->is_organizer ? ' ★' : '' }}
@@ -30,8 +29,6 @@
                             </select>
                             <noscript><button class="btn btn-ghost btn-sm" type="submit">Cambiar</button></noscript>
                         </form>
-                    @else
-                        <a href="{{ route('groups.show') }}" title="Mi grupo">{{ $activeGroup->name }}</a>
                     @endif
                 @endif
                 <a href="{{ route('dashboard') }}">Inicio</a>
