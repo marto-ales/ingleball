@@ -302,7 +302,12 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
 .dupla-b { background: #fdf3ee; }
 .dupla-mid { flex: 0 0 92px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 4px 6px; background: var(--card-bg); border-left: 1px solid var(--line); border-right: 1px solid var(--line); font-size: 11px; color: var(--muted); line-height: 1.2; }
 .dupla-mid b { font-size: 13px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+.dupla-mid .dupla-skill-name { font-weight: 600; color: var(--ink); text-transform: none; letter-spacing: 0; }
+.dupla-skill { display: none; }
 .dupla-off { opacity: .4; font-style: italic; font-weight: 500; }
+/* Team blocks for narrow screens: the desktop table turns into one block per
+   team, so these labels are only useful there and stay hidden on wide ones. */
+.dupla-label { display: none; }
 .balance-detail { margin: 10px 0 2px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 12px; }
 .balance-detail > div { display: grid; grid-template-columns: 1fr 48px 48px 56px; gap: 6px; padding: 6px 12px; align-items: center; }
 .balance-detail .balance-head { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid var(--line); padding: 5px 12px; }
@@ -426,8 +431,19 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
 @media (max-width: 720px) {
   .grid-2, .grid-3, .form-row, .teams { grid-template-columns: 1fr; }
   .dupla-head { display: none; }
-  .dupla { flex-direction: column; }
-  .dupla-mid { flex: none; flex-direction: row; gap: 8px; justify-content: center; border: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 4px 6px; }
+  /* Each row is flattened into the column below, so the sides can be grouped
+     by team: every player of A first, then every player of B. */
+  .duplas { gap: 0; }
+  .dupla { display: contents; }
+  .dupla-label { display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .dupla-label-a { order: 0; }
+  .dupla-a { order: 1; border-top: 1px solid var(--line); }
+  .dupla-label-b { order: 2; border-top: 1px solid var(--line); }
+  .dupla-b { order: 3; border-top: 1px solid var(--line); }
+  .dupla-mid { display: none; }
+  /* The middle column is gone on narrow screens, so each player carries the
+     skill its row compares to keep the pairing readable. */
+  .dupla-skill { display: inline-flex; flex: none; align-items: center; padding: 1px 7px; border: 1px solid var(--line); border-radius: 999px; font-size: 10px; font-weight: 600; color: var(--muted); }
   .score-big { font-size: 24px; }
 
   .topbar-inner { height: auto; flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px 14px 8px; border-radius: 20px; }

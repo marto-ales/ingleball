@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\MatchTeam;
 use App\Models\Partido;
 
 class TeamService
@@ -105,6 +106,58 @@ class TeamService
         }
 
         return $result;
+    }
+
+    /**
+     * How alike the two players sitting on the same sheet row are, as a
+     * percentage: 100 for the same profile, 0 for the widest gap the 0-10 scale
+     * allows. It is the very distance the lineup ordering minimizes, so the
+     * number the organizer reads is the one the algorithm worked with.
+     */
+    public function similarityPercent(?MatchTeam $rowA, ?MatchTeam $rowB, Partido $match): ?float
+    {
+        if ($rowA === null || $rowB === null) {
+            return null;
+        }
+
+        $settings = $this->settings->forGroup($match->group_id);
+        $scorer = $this->scorer->forGroup($match->group_id);
+        $weights = $settings->weights();
+
+        $player = function (MatchTeam $row) use ($scorer, $weights): ?array {
+            if ($row->user !== null) {
+                $attributes = $scorer->attributesForUser($row->user);
+            } elseif ($row->guest !== null) {
+                $attributes = $scorer->attributesForGuest($row->guest);
+            } else {
+                return null;
+            }
+
+            return ['score' => $scorer->power($attributes, $weights), 'attributes' => $attributes];
+        };
+
+        $playerA = $player($rowA);
+        $playerB = $player($rowB);
+
+        if ($playerA === null || $playerB === null) {
+            return null;
+        }
+
+        return $this->balancer->similarityPercent($playerA, $playerB, $weights);
+    }
+
+    /**
+     * The skills the sheet rows compare, heaviest first: row 1 is the first one
+     * here, row 2 the second, and so on, which is the order the lineup pass
+     * walks them in.
+     *
+     * @return array<int, string>
+     */
+    public function rowDimensions(Partido $match): array
+    {
+        return $this->balancer->dimensionsByWeight(
+            $this->settings->forGroup($match->group_id)->weights(),
+        );
     }
 
     private function persist(Partido $match, string $team, int $position, array $participant): void

@@ -5,6 +5,7 @@
 @section('content')
 @php
     $scorer = app(\App\Services\Scorer::class)->forGroup($match->group_id);
+    $teamService = app(\App\Services\TeamService::class);
     $attrKeys = ['speed', 'skill', 'passing', 'shooting', 'defense'];
     $attrLabels = ['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa'];
     $memberScore = function ($t) use ($scorer) {
@@ -198,9 +199,10 @@
                 </div>
                 @if ($isOrganizer)
                     <p class="muted small mb0 mt">
-                        Duplas de extremos: cada fila es una dupla que junta al de mayor puntaje con el de menor, y así
-                        sucesivamente; cada dupla aporta un jugador a cada equipo. El armado minimiza el desfase por
-                        habilidad; el reparto de 🧤 solo desempata entre armados igual de parejos.
+                        El armado reparte por duplas de extremos: cada dupla junta al de mayor puntaje con el de menor, y
+                        así sucesivamente, y aporta un jugador a cada equipo para que ambos queden parejos. Después de
+                        armarlos, cada equipo se ordena por característica para que las filas comparen lo mejor de cada
+                        lado. El reparto de 🧤 solo desempata entre armados igual de parejos.
                     </p>
                     @php
                         $settings = app(\App\Services\AlgorithmSettings::class)->forGroup($match->group_id);
@@ -269,25 +271,33 @@
                     <p class="muted small">
                         El desfase de cada habilidad es la diferencia entre equipos multiplicada por su importancia.
                         El armado elige la combinación con menor desbalanceo total; el puntaje es solo la suma de las
-                        calificaciones de cada jugador.
+                        calificaciones de cada jugador. Las filas se ordenan por característica, siguiendo el orden de
+                        peso de las habilidades: la primera enfrenta al más rápido de cada equipo, la segunda al más
+                        habilidoso, y así hasta la última. La similitud de la fila dice qué tan parecidos son los dos
+                        perfiles, de 100% (idénticos) a 0% (la mayor distancia posible en la escala).
                     </p>
                 @endif
                 @php
-                    $teamAPos = $teamA->keyBy('position');
-                    $teamBPos = $teamB->keyBy('position');
-                    $positions = $teamA->pluck('position')->merge($teamB->pluck('position'))->unique()->sort()->values();
+$teamAPos = $teamA->keyBy('position');
+    $teamBPos = $teamB->keyBy('position');
+    $rowDimensions = $teamService->rowDimensions($match);
+    $positions = $teamA->pluck('position')->merge($teamB->pluck('position'))->unique()->sort()->values();
                 @endphp
                 <div class="dupla-head">
                     <span class="side-a">Equipo A ({{ $teamA->count() }})</span>
-                    <span class="side-mid">dupla</span>
+                    <span class="side-mid">similitud</span>
                     <span class="side-b">Equipo B ({{ $teamB->count() }})</span>
                 </div>
                 <div class="duplas">
+                    <div class="dupla-label dupla-label-a">Equipo A ({{ $teamA->count() }})</div>
+                    <div class="dupla-label dupla-label-b">Equipo B ({{ $teamB->count() }})</div>
                     @foreach ($positions as $pos)
                         @php
                             $a = $teamAPos[$pos] ?? null;
                             $b = $teamBPos[$pos] ?? null;
-                            $sum = $a && $b ? $memberScore($a) + $memberScore($b) : null;
+                            $dimension = $rowDimensions[$pos] ?? null;
+                            $skill = $dimension !== null ? ($attrLabels[$dimension] ?? $dimension) : null;
+                            $similarity = $a && $b ? $teamService->similarityPercent($a, $b, $match) : null;
                         @endphp
                         <div class="dupla">
                             <div class="dupla-side dupla-a">
@@ -298,14 +308,16 @@
                                         @php $attrsA = $a->user ? $scorer->attributesForUser($a->user) : $scorer->attributesForGuest($a->guest); @endphp
                                         <span class="score-tag" title="{{ implode(' · ', array_map(fn ($key) => $attrLabels[$key].': '.round($attrsA[$key] ?? 5, 1), $attrKeys)) }}">{{ number_format($memberScore($a), 1) }}</span>
                                     @endif
+                                    @if ($skill)<span class="dupla-skill">{{ $skill }}</span>@endif
                                 @else
                                     <span class="who dupla-off">Sin par (impar)</span>
                                 @endif
                             </div>
                             <div class="dupla-mid">
                                 <span>{{ $loop->iteration }}</span>
-                                @if ($sum !== null && $isOrganizer)
-                                    <b>{{ number_format($sum, 1) }}</b>
+                                @if ($skill)<span class="dupla-skill-name">{{ $skill }}</span>@endif
+                                @if ($similarity !== null && $isOrganizer)
+                                    <b title="Qué tan parecidos son los perfiles de {{ $a->user?->name ?? $a->guest?->name }} y {{ $b->user?->name ?? $b->guest?->name }}">{{ $similarity }}%</b>
                                 @endif
                             </div>
                             <div class="dupla-side dupla-b">
@@ -316,6 +328,7 @@
                                         @php $attrsB = $b->user ? $scorer->attributesForUser($b->user) : $scorer->attributesForGuest($b->guest); @endphp
                                         <span class="score-tag" title="{{ implode(' · ', array_map(fn ($key) => $attrLabels[$key].': '.round($attrsB[$key] ?? 5, 1), $attrKeys)) }}">{{ number_format($memberScore($b), 1) }}</span>
                                     @endif
+                                    @if ($skill)<span class="dupla-skill">{{ $skill }}</span>@endif
                                 @else
                                     <span class="who dupla-off">Sin par (impar)</span>
                                 @endif

@@ -196,6 +196,115 @@ final class TeamBalancerTest extends TestCase
         $this->assertContains($sums($second['teamA']), [$sums($first['teamA']), $sums($first['teamB'])]);
     }
 
+    public function test_each_row_pairs_the_best_of_a_characteristic_with_the_other_team(): void
+    {
+        $weights = ['speed' => 0.3, 'skill' => 0.25, 'passing' => 0.15, 'shooting' => 0.15, 'defense' => 0.15];
+
+        // Two specialists per characteristic, so whichever way they end up
+        // split, one of each is available on both sides.
+        $specialists = [
+            'veloz' => 'speed', 'veloz-2' => 'speed',
+            'habil' => 'skill', 'habil-2' => 'skill',
+            'pase' => 'pase', 'pase-2' => 'pase',
+            'tiro' => 'shooting', 'tiro-2' => 'shooting',
+            'muro' => 'defense', 'muro-2' => 'defense',
+        ];
+
+        $participants = [];
+
+        foreach ($specialists as $name => $dimension) {
+            $rank = str_ends_with($name, '-2') ? 9 : 10;
+            $participants[] = [
+                'name' => $name,
+                'attributes' => $this->attributes([$dimension => $rank]),
+                'score' => 0.0,
+            ];
+        }
+
+        $result = $this->balancer->balance($participants, 5, ['weights' => $weights]);
+
+        $this->assertCount(5, $result['teamA']);
+        $this->assertCount(5, $result['teamB']);
+
+        // Walking the characteristics by importance, the row must hold the best
+        // player each team has left in that characteristic: the fastest of A
+        // meets the fastest of B, the most skillful of each team is next, and so
+        // on down to the last one.
+        $dimensions = array_keys($weights);
+
+        foreach (['teamA', 'teamB'] as $side) {
+            $pending = $result[$side];
+
+            foreach ($dimensions as $row => $dimension) {
+                $best = null;
+
+                foreach ($pending as $player) {
+                    if ($best === null || $player['attributes'][$dimension] > $best['attributes'][$dimension]) {
+                        $best = $player;
+                    }
+                }
+
+                $this->assertSame(
+                    $best['name'],
+                    $result[$side][$row]['name'],
+                    "En la fila {$row} de {$side} no está el mejor en {$dimension}",
+                );
+
+                $pending = array_values(array_filter($pending, fn ($player) => $player['name'] !== $best['name']));
+            }
+        }
+    }
+
+    public function test_lining_up_keeps_the_teams_and_their_balance(): void
+    {
+        $participants = collect([10, 9, 8, 7, 6, 5, 4, 3, 2, 1])->map(fn ($s) => ['score' => (float) $s])->all();
+
+        $result = $this->balancer->balance($participants, 5);
+
+        $sumA = collect($result['teamA'])->sum('score');
+        $sumB = collect($result['teamB'])->sum('score');
+
+        $this->assertLessThanOrEqual(2.0, abs($sumA - $sumB));
+        $this->assertSame(10, count($result['teamA']) + count($result['teamB']));
+
+        // Without attributes the score is the only dimension, so each team comes
+        // out sorted by it.
+        foreach (['teamA', 'teamB'] as $side) {
+            $scores = collect($result[$side])->map(fn ($p) => $p['score'])->all();
+            $ascending = $scores;
+            $descending = $scores;
+            sort($ascending);
+            rsort($descending);
+
+            $this->assertTrue($scores === $ascending || $scores === $descending);
+        }
+    }
+
+    public function test_similarity_percent_reads_from_the_same_distance(): void
+    {
+        $same = ['score' => 7.0, 'attributes' => $this->attributes(['speed' => 8])];
+        $clone = ['score' => 7.0, 'attributes' => $this->attributes(['speed' => 8])];
+
+        $this->assertSame(100.0, $this->balancer->similarityPercent($same, $clone));
+
+        // Ten points apart on every attribute and on the score is the widest
+        // gap the 0-10 scale allows.
+        $low = ['score' => 0.0, 'attributes' => $this->attributes(['speed' => 0, 'skill' => 0, 'passing' => 0, 'shooting' => 0, 'defense' => 0])];
+        $high = ['score' => 10.0, 'attributes' => $this->attributes(['speed' => 10, 'skill' => 10, 'passing' => 10, 'shooting' => 10, 'defense' => 10])];
+
+        $this->assertSame(0.0, $this->balancer->similarityPercent($low, $high));
+
+        // Halfway profiles land in the middle, and the closer pair scores higher.
+        $middleA = ['score' => 5.0, 'attributes' => $this->attributes(['speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5])];
+        $middleB = ['score' => 6.0, 'attributes' => $this->attributes(['speed' => 6, 'skill' => 6, 'passing' => 6, 'shooting' => 6, 'defense' => 6])];
+        $farC = ['score' => 8.0, 'attributes' => $this->attributes(['speed' => 8, 'skill' => 8, 'passing' => 8, 'shooting' => 8, 'defense' => 8])];
+
+        $this->assertGreaterThan(
+            $this->balancer->similarityPercent($middleA, $farC),
+            $this->balancer->similarityPercent($middleA, $middleB),
+        );
+    }
+
     public function test_odd_attendance_gives_the_extra_player_to_the_weaker_team(): void
     {
         $participants = [

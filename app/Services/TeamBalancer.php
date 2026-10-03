@@ -17,6 +17,14 @@ class TeamBalancer
      * keeps the teams as even as possible per attribute is chosen; a polite
      * goalkeeper on each side only breaks ties among equally balanced ones.
      *
+     * Once each team is settled, its players are lined up so every row compares
+     * like with like: walking the characteristics by importance, the best player
+     * still unpaired on one side faces the best one still unpaired on the other,
+     * so the fastest of each team heads the sheet, the most skillful of each
+     * team is next, and the defense matchup comes last. That pass only reorders
+     * the players already assigned, so the balance computed above is left
+     * untouched.
+     *
      * Participants are plain arrays with a 'score' and, when available, an
      * 'attributes' map and a 'likes_goalie' flag. When no attributes are given
      * the score itself is used as a single dimension, keeping the old behavior.
@@ -79,10 +87,189 @@ class TeamBalancer
             }
         }
 
+        [$teamA, $teamB] = $this->orderByRanking($teamA, $teamB, $participants, $profiles, $weights);
+
         return [
             'teamA' => array_map(fn (int $i) => $participants[$i], $teamA),
             'teamB' => array_map(fn (int $i) => $participants[$i], $teamB),
         ];
+    }
+
+    /**
+     * Line up both teams so every row compares like with like: going through
+     * the characteristics by importance, the best player still unpaired on one
+     * side faces the best one still unpaired on the other. The fastest of A
+     * therefore meets the fastest of B, the most skillful meets the most
+     * skillful, the best in defense meets the best in defense, and so on.
+     *
+     * The balance is untouched: the same players stay on the same team, this
+     * only decides the order they are listed in.
+     *
+     * @param  array<int, int>  $teamA
+     * @param  array<int, int>  $teamB
+     * @return array{0: array<int, int>, 1: array<int, int>}
+     */
+    private function orderByRanking(array $teamA, array $teamB, array $participants, array $profiles, array $weights): array
+    {
+        $pendingA = $this->sortedByName($teamA, $participants);
+        $pendingB = $this->sortedByName($teamB, $participants);
+        $orderedA = [];
+        $orderedB = [];
+
+        foreach ($this->dimensionsByWeight($weights) as $dimension) {
+            $best = $this->bestOf($pendingA, $dimension, $profiles);
+
+            if ($best !== null) {
+                $orderedA[] = $best;
+                $pendingA = array_values(array_filter($pendingA, fn (int $i): bool => $i !== $best));
+            }
+
+            $best = $this->bestOf($pendingB, $dimension, $profiles);
+
+            if ($best !== null) {
+                $orderedB[] = $best;
+                $pendingB = array_values(array_filter($pendingB, fn (int $i): bool => $i !== $best));
+            }
+        }
+
+        // More players than characteristics, or an odd attendance leaving one
+        // team a man over: whoever is left keeps a row at the bottom.
+        return [
+            [...$orderedA, ...array_values($pendingA)],
+            [...$orderedB, ...array_values($pendingB)],
+        ];
+    }
+
+    /**
+     * The characteristics to compare by, heaviest first: the rows of the sheet
+     * follow the importance each skill has. Equal weights keep the order they
+     * are configured in. Public so the match sheet can label each row with the
+     * very skill it compares.
+     *
+     * @param  array<string, float>  $weights
+     * @return array<int, string>
+     */
+    public function dimensionsByWeight(array $weights): array
+    {
+        $dimensions = array_keys($weights);
+
+        usort($dimensions, fn (string $a, string $b): int => ($weights[$b] ?? 0.0) <=> ($weights[$a] ?? 0.0));
+
+        return $dimensions;
+    }
+
+    /**
+     * The highest player of a team in one characteristic, ties going to the
+     * first one by name so the answer never depends on the signup order.
+     *
+     * @param  array<int, int>  $pending
+     * @param  array<int, array>  $profiles
+     */
+    private function bestOf(array $pending, string $dimension, array $profiles): ?int
+    {
+        $best = null;
+        $bestValue = -INF;
+
+        foreach ($pending as $index) {
+            $value = (float) ($profiles[$index][$dimension] ?? 0.0);
+
+            if ($best === null || $value > $bestValue + self::EPSILON) {
+                $best = $index;
+                $bestValue = $value;
+            }
+        }
+
+        return $best;
+    }
+
+    /**
+     * @param  array<int, int>  $indices
+     * @param  array<int, array>  $participants
+     * @return array<int, int>
+     */
+    private function sortedByName(array $indices, array $participants): array
+    {
+        usort($indices, function (int $a, int $b) use ($participants): int {
+            $byName = strcmp($this->nameOf($a, $participants), $this->nameOf($b, $participants));
+
+            return $byName !== 0 ? $byName : $a <=> $b;
+        });
+
+        return $indices;
+    }
+
+    /**
+     * @param  array<int, array>  $participants
+     */
+    private function nameOf(int $index, array $participants): string
+    {
+        return (string) ($participants[$index]['name'] ?? $participants[$index]['id'] ?? $index);
+    }
+
+    /**
+     * How alike two players are, as a cost to minimize: the weighted gap on
+     * every attribute plus the gap on their overall score. This is the distance
+     * the lineup is ordered by, exposed so the match sheet can show the same
+     * number the algorithm used.
+     *
+     * @param  array{score: float, attributes?: array<string, float>}  $playerA
+     * @param  array{score: float, attributes?: array<string, float>}  $playerB
+     * @param  array<string, float>|null  $weights
+     */
+    public function similarityBetween(array $playerA, array $playerB, ?array $weights = null): float
+    {
+        $weights ??= (array) config('balance.attribute_weights');
+        $attributesA = (array) ($playerA['attributes'] ?? []);
+        $attributesB = (array) ($playerB['attributes'] ?? []);
+
+        $cost = 0.0;
+
+        foreach ($weights as $dimension => $weight) {
+            $gap = abs((float) ($attributesA[$dimension] ?? 0.0) - (float) ($attributesB[$dimension] ?? 0.0));
+            $cost += (float) $weight * $gap;
+        }
+
+        return $cost + abs((float) ($playerA['score'] ?? 0.0) - (float) ($playerB['score'] ?? 0.0));
+    }
+
+    /**
+     * The same distance as a percentage to read on a sheet: 100 when the two
+     * profiles match, and 0 when they are as far apart as the scale allows.
+     *
+     * @param  array{score: float, attributes?: array<string, float>}  $playerA
+     * @param  array{score: float, attributes?: array<string, float>}  $playerB
+     * @param  array<string, float>|null  $weights
+     */
+    public function similarityPercent(array $playerA, array $playerB, ?array $weights = null): float
+    {
+        $weights ??= (array) config('balance.attribute_weights');
+        $widest = $this->widestGap($weights);
+
+        if ($widest <= 0.0) {
+            return 100.0;
+        }
+
+        $similarity = 100.0 * (1.0 - $this->similarityBetween($playerA, $playerB, $weights) / $widest);
+
+        return round(max(0.0, min(100.0, $similarity)));
+    }
+
+    /**
+     * The largest distance two players can be apart: attributes and overall
+     * score all live on a 0-10 scale, so ten points on every weighted attribute
+     * plus the ten points of score the same gap adds up to.
+     *
+     * @param  array<string, float>  $weights
+     */
+    private function widestGap(array $weights): float
+    {
+        $total = 0.0;
+
+        foreach ($weights as $weight) {
+            $total += (float) $weight;
+        }
+
+        return 20.0 * $total;
     }
 
     /**
@@ -174,15 +361,9 @@ class TeamBalancer
                 return $byPower;
             }
 
-            $nameA = (string) ($participants[$a]['name'] ?? $participants[$a]['id'] ?? $a);
-            $nameB = (string) ($participants[$b]['name'] ?? $participants[$b]['id'] ?? $b);
-            $byName = strcmp($nameA, $nameB);
+            $byName = strcmp($this->nameOf($a, $participants), $this->nameOf($b, $participants));
 
-            if ($byName !== 0) {
-                return $byName;
-            }
-
-            return $a <=> $b;
+            return $byName !== 0 ? $byName : $a <=> $b;
         });
     }
 

@@ -624,10 +624,21 @@ final class MatchFlowTest extends TestCase
             ->assertOk()
             ->assertSee('Equipo A (4)')
             ->assertSee('Equipo B (4)')
-            ->assertSee('Duplas de extremos')
+            ->assertSee('duplas de extremos')
+            ->assertSee('similitud')
             ->getContent();
 
         $this->assertSame(4, substr_count($content, 'class="dupla">'));
+        // Narrow screens get one block per team out of the same markup.
+        $this->assertSame(1, substr_count($content, 'dupla-label dupla-label-a'));
+        $this->assertSame(1, substr_count($content, 'dupla-label dupla-label-b'));
+        // One similarity per row, as a percentage.
+        $this->assertSame(4, preg_match_all('/<b title="Qué tan parecidos son [^"]+">\d+%<\/b>/', $content));
+        // Each row names the skill it compares, and repeats it per player for
+        // narrow screens where the middle column is hidden.
+        $this->assertSame(4, substr_count($content, 'class="dupla-skill-name"'));
+        $this->assertSame(8, substr_count($content, 'class="dupla-skill"'));
+        $this->assertSame(1, substr_count($content, '<span class="dupla-skill-name">Velocidad</span>'));
     }
 
     public function test_player_swap_only_moves_the_two_chosen_players(): void
