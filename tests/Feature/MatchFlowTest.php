@@ -641,6 +641,40 @@ final class MatchFlowTest extends TestCase
         $this->assertSame(1, substr_count($content, '<span class="dupla-skill-name">Velocidad</span>'));
     }
 
+    public function test_a_plain_member_also_sees_the_attribute_gap_of_the_teams(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $players = User::factory(8)->create();
+        $match = Partido::factory()->create(['created_by' => $organizer->id]);
+
+        foreach ($players as $player) {
+            $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
+        }
+
+        $match->update(['status' => Partido::STATUS_LOCKED, 'locked_at' => now()]);
+
+        $this->actingAs($organizer)
+            ->post(route('teams.generate', $match), ['size' => 4])
+            ->assertRedirect();
+
+        $content = $this->actingAs($players->first())
+            ->get(route('matches.show', $match))
+            ->assertOk()
+            ->assertSee('Característica')
+            ->assertSee('Desfase')
+            ->assertSee('Desbalanceo')
+            ->assertSee('Puntaje A')
+            ->getContent();
+
+        // One row per attribute plus the goalkeeper line, and the total on its own.
+        $this->assertSame(1, substr_count($content, 'balance-detail'));
+        $this->assertSame(6, substr_count($content, 'class="balance-row"'));
+        $this->assertSame(1, substr_count($content, 'balance-row balance-total'));
+        // What stays for the organizer alone: the numbers that judge the lineup.
+        $this->assertSame(0, preg_match_all('/<b title="Qué tan parecidos son /', $content));
+        $this->assertSame(0, substr_count($content, '🔄 Regenerar'));
+    }
+
     public function test_player_swap_only_moves_the_two_chosen_players(): void
     {
         $organizer = User::factory()->organizer()->create();
