@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\MatchTeam;
 use App\Models\Partido;
+use Illuminate\Support\Collection;
 
 class TeamService
 {
@@ -144,6 +145,54 @@ class TeamService
         }
 
         return $this->balancer->similarityPercent($playerA, $playerB, $weights);
+    }
+
+    /**
+     * The two teams in sheet order for the current settings, keeping the stored
+     * membership as it is. Only the rows are recomputed, so a team arranged
+     * before the characteristic order changed (or saved with an older lineup)
+     * still reads with the order the organizer sees today.
+     *
+     * @param  Collection<int, MatchTeam>  $teamA
+     * @param  Collection<int, MatchTeam>  $teamB
+     * @return array{teamA: Collection<int, MatchTeam>, teamB: Collection<int, MatchTeam>}
+     */
+    public function arrangeRows($teamA, $teamB, Partido $match): array
+    {
+        $settings = $this->settings->forGroup($match->group_id);
+        $scorer = $this->scorer->forGroup($match->group_id);
+        $weights = $settings->weights();
+
+        $rows = $teamA->concat($teamB)->keyBy('id');
+
+        $participant = function (MatchTeam $row) use ($scorer, $weights, $match): array {
+            if ($row->user !== null) {
+                $attributes = $scorer->attributesForUser($row->user);
+            } elseif ($row->guest !== null) {
+                $attributes = $scorer->attributesForGuest($row->guest);
+            } else {
+                $attributes = [];
+            }
+
+            return [
+                'id' => $row->id,
+                'name' => $row->user?->name ?? $row->guest?->name ?? '',
+                'score' => $scorer->power($attributes, $weights),
+                'attributes' => $attributes,
+                'likes_goalie' => (bool) ($row->user?->playerFor($match->group_id)?->likes_goalie ?? false),
+            ];
+        };
+
+        $arranged = $this->balancer->arrange(
+            $teamA->map($participant)->all(),
+            $teamB->map($participant)->all(),
+            $weights,
+        );
+
+        return [
+            'teamA' => collect($arranged['teamA'])->map(fn (array $row) => $rows[$row['id']])->values(),
+            'teamB' => collect($arranged['teamB'])->map(fn (array $row) => $rows[$row['id']])->values(),
+        ];
     }
 
     /**

@@ -7,7 +7,9 @@ use App\Models\Partido;
 use App\Models\Player;
 use App\Models\Rating;
 use App\Models\User;
+use App\Services\AlgorithmSettings;
 use App\Services\StatsService;
+use App\Services\TeamService;
 use Database\Factories\UserFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -673,6 +675,62 @@ final class MatchFlowTest extends TestCase
         // What stays for the organizer alone: the numbers that judge the lineup.
         $this->assertSame(0, preg_match_all('/<b title="Qué tan parecidos son /', $content));
         $this->assertSame(0, substr_count($content, '🔄 Regenerar'));
+    }
+
+    public function test_the_sheet_follows_the_characteristic_order_in_force_now(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $group = UserFactory::defaultGroupId();
+        $match = Partido::factory()->create(['created_by' => $organizer->id, 'size' => 5, 'group_id' => $group]);
+
+        // Speed and skill run in opposite directions, so the fastest of a team
+        // is never at the same time its most skillful one.
+        $profiles = [[10, 1], [9, 2], [8, 3], [7, 4], [6, 5], [5, 6], [4, 7], [3, 8], [2, 9], [1, 10]];
+
+        foreach ($profiles as [$speed, $skill]) {
+            $player = User::factory()->create();
+            $player->playerFor($group)->update([
+                'speed' => $speed,
+                'skill' => $skill,
+                'passing' => 5,
+                'shooting' => 5,
+                'defense' => 5,
+            ]);
+            $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
+        }
+
+        $match->update(['status' => Partido::STATUS_LOCKED]);
+
+        $settings = app(AlgorithmSettings::class)->forGroup($group);
+
+        // The teams are generated with speed first...
+        $settings->update(['order' => ['speed', 'skill', 'passing', 'shooting', 'defense'], 'random_tie_break' => false]);
+        $this->actingAs($organizer)->post(route('teams.generate', $match), ['size' => 5])->assertRedirect();
+
+        // ...and the organizer raises skill to the top afterwards.
+        $settings->update(['order' => ['skill', 'speed', 'passing', 'shooting', 'defense'], 'random_tie_break' => false]);
+
+        $this->actingAs($organizer)
+            ->get(route('matches.show', $match))
+            ->assertOk()
+            ->assertSeeInOrder(
+                ['<span class="dupla-skill-name">Habilidad</span>', '<span class="dupla-skill-name">Velocidad</span>'],
+                false,
+            );
+
+        // The stored rows caught up on their own: the head of each team is its
+        // most skillful player, not the fastest one the old order left there.
+        foreach (['A', 'B'] as $side) {
+            $rows = $match->teams()->where('team', $side)->get()->load('user', 'guest');
+            $skillById = $rows->mapWithKeys(fn ($row) => [$row->id => $row->user->playerFor($group)->skill]);
+            $speedById = $rows->mapWithKeys(fn ($row) => [$row->id => $row->user->playerFor($group)->speed]);
+
+            $arranged = app(TeamService::class)->arrangeRows($rows, collect(), $match)['teamA'];
+            $head = $arranged->first()->id;
+
+            $this->assertSame($skillById->max(), $skillById[$head], "El equipo {$side} no encabeza con su mejor habilidad");
+            $this->assertNotSame($speedById->max(), $speedById[$head], "El equipo {$side} sigue encabezado por su más rápido");
+        }
     }
 
     public function test_player_swap_only_moves_the_two_chosen_players(): void

@@ -96,6 +96,40 @@ class TeamBalancer
     }
 
     /**
+     * Put two teams already picked into sheet order, and nothing else: who is
+     * on each team is left alone, this decides the row each player is listed
+     * in. The same order the lineup pass uses, exposed so a stored team can be
+     * re-listed with the current settings without regenerating it.
+     *
+     * @param  array<int, array{score: float, attributes?: array<string, float>, likes_goalie?: bool}>  $teamA
+     * @param  array<int, array{score: float, attributes?: array<string, float>, likes_goalie?: bool}>  $teamB
+     * @param  array<string, float>  $weights
+     * @return array{teamA: array, teamB: array}
+     */
+    public function arrange(array $teamA, array $teamB, array $weights): array
+    {
+        $teamA = array_values($teamA);
+        $teamB = array_values($teamB);
+        $participants = [...$teamA, ...$teamB];
+        $profiles = [];
+
+        foreach ($participants as $index => $participant) {
+            $profiles[$index] = $this->profile($participant, $weights);
+        }
+
+        $countA = count($teamA);
+        $indicesA = $countA > 0 ? range(0, $countA - 1) : [];
+        $indicesB = count($teamB) > 0 ? range($countA, count($participants) - 1) : [];
+
+        [$orderA, $orderB] = $this->orderByRanking($indicesA, $indicesB, $participants, $profiles, $weights);
+
+        return [
+            'teamA' => array_map(fn (int $i) => $participants[$i], $orderA),
+            'teamB' => array_map(fn (int $i) => $participants[$i], $orderB),
+        ];
+    }
+
+    /**
      * Line up both teams so every row compares like with like: going through
      * the characteristics by importance, the best player still unpaired on one
      * side faces the best one still unpaired on the other. The fastest of A

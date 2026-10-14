@@ -132,6 +132,13 @@ class MatchController extends Controller
         $teamA = $match->teams()->where('team', 'A')->orderBy('position')->get(['match_teams.*'])->load('user', 'guest');
         $teamB = $match->teams()->where('team', 'B')->orderBy('position')->get(['match_teams.*'])->load('user', 'guest');
 
+        // Re-list the stored teams with the order in force now, so the rows
+        // compare the right characteristic even if the lineup was saved with a
+        // different one. Membership is untouched.
+        $arranged = $this->teams->arrangeRows($teamA, $teamB, $match);
+        $teamA = $arranged['teamA'];
+        $teamB = $arranged['teamB'];
+
         $goingCount = $match->entries()->where('role', 'going')->count();
         $autoSize = $this->teams->chooseTeamSize($goingCount);
 
