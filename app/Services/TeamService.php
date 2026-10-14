@@ -189,9 +189,19 @@ class TeamService
             $weights,
         );
 
+        // The sheet lists the rows by their stored position, so the returned
+        // models carry the row they now belong to. Only the models in this
+        // response are touched; nothing is saved.
+        $renumber = function (array $row, int $index) use ($rows): MatchTeam {
+            $stored = $rows[$row['id']];
+            $stored->position = $index;
+
+            return $stored;
+        };
+
         return [
-            'teamA' => collect($arranged['teamA'])->map(fn (array $row) => $rows[$row['id']])->values(),
-            'teamB' => collect($arranged['teamB'])->map(fn (array $row) => $rows[$row['id']])->values(),
+            'teamA' => collect($arranged['teamA'])->map($renumber)->values(),
+            'teamB' => collect($arranged['teamB'])->map($renumber)->values(),
         ];
     }
 

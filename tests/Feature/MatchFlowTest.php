@@ -677,6 +677,69 @@ final class MatchFlowTest extends TestCase
         $this->assertSame(0, substr_count($content, '🔄 Regenerar'));
     }
 
+    public function test_a_finished_match_still_shows_the_current_characteristic_order(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $group = UserFactory::defaultGroupId();
+        $match = Partido::factory()->create(['created_by' => $organizer->id, 'size' => 5, 'group_id' => $group]);
+
+        // Speed and skill run in opposite directions, so the fastest of a team
+        // is never at the same time its most skillful one.
+        $profiles = [[10, 1], [9, 2], [8, 3], [7, 4], [6, 5], [5, 6], [4, 7], [3, 8], [2, 9], [1, 10]];
+        $players = [];
+
+        foreach ($profiles as [$speed, $skill]) {
+            $player = User::factory()->create();
+            $player->playerFor($group)->update([
+                'speed' => $speed,
+                'skill' => $skill,
+                'passing' => 5,
+                'shooting' => 5,
+                'defense' => 5,
+            ]);
+            $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
+            $players[$player->id] = ['speed' => $speed, 'skill' => $skill];
+        }
+
+        $settings = app(AlgorithmSettings::class)->forGroup($group);
+
+        // The lineup was saved with speed first...
+        $settings->update(['order' => ['speed', 'skill', 'passing', 'shooting', 'defense'], 'random_tie_break' => false]);
+        $match->update(['status' => Partido::STATUS_LOCKED]);
+        $this->actingAs($organizer)->post(route('teams.generate', $match), ['size' => 5])->assertRedirect();
+
+        // ...and the match was finished and re-listed after skill moved up.
+        $match->update(['status' => Partido::STATUS_FINISHED]);
+        $settings->update(['order' => ['skill', 'speed', 'passing', 'shooting', 'defense'], 'random_tie_break' => false]);
+
+        $html = $this->actingAs($organizer)
+            ->get(route('matches.show', $match))
+            ->assertOk()
+            ->getContent();
+
+        $doc = new \DOMDocument;
+        libxml_use_internal_errors(true);
+        $doc->loadHTML('<?xml encoding="utf-8"?>'.$html, LIBXML_NOERROR | LIBXML_NOWARNING);
+        libxml_use_internal_errors(false);
+
+        $listed = [];
+        foreach ((new \DOMXPath($doc))->query("//div[@class='dupla-side dupla-a']/span[@class='who']") as $node) {
+            $listed[] = trim($node->textContent);
+        }
+
+        $this->assertCount(5, $listed, 'No se listaron los cinco del equipo A');
+
+        // The head of the team must be its most skillful player, whoever the
+        // old speed-first lineup left there.
+        $teamA = $match->teams()->where('team', 'A')->get()->keyBy('id');
+
+        $bestSkill = $teamA->sortByDesc(fn ($row) => $players[$row->user_id]['skill'])->first();
+        $fastest = $teamA->sortByDesc(fn ($row) => $players[$row->user_id]['speed'])->first();
+
+        $this->assertStringStartsWith($bestSkill->user->name, $listed[0]);
+        $this->assertFalse(str_starts_with($listed[0], $fastest->user->name));
+    }
+
     public function test_the_sheet_follows_the_characteristic_order_in_force_now(): void
     {
         $organizer = User::factory()->organizer()->create();
