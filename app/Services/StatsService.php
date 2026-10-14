@@ -71,7 +71,7 @@ class StatsService
                     'goalkeeping' => $scorer->goalkeepingForUser($user),
                 ];
             })
-            ->sortByDesc('score')
+            ->sortByDesc(fn (array $row): array => [$row['attendance'], $row['winRate'] ?? -1, $row['score']])
             ->values();
     }
 }

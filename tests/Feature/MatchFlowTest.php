@@ -1242,6 +1242,53 @@ final class MatchFlowTest extends TestCase
             ->assertSee('Ganados');
     }
 
+    public function test_leaderboard_orders_by_attendance_then_wins_then_score(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+
+        $makeMatch = function (string $winner, array $teamA, array $teamB) use ($organizer): void {
+            $match = Partido::factory()->create([
+                'created_by' => $organizer->id,
+                'status' => Partido::STATUS_FINISHED,
+                'played_at' => now()->subDay(),
+            ]);
+
+            foreach ([MatchTeam::TEAM_A => $teamA, MatchTeam::TEAM_B => $teamB] as $team => $players) {
+                foreach ($players as $player) {
+                    $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
+                    MatchTeam::create(['match_id' => $match->id, 'team' => $team, 'position' => 0, 'user_id' => $player->id]);
+                }
+            }
+
+            MatchResult::create(['match_id' => $match->id, 'winner' => $winner, 'diff' => 1]);
+        };
+
+        $a = User::factory()->create();
+        $b = User::factory()->create();
+        $c = User::factory()->create();
+
+        foreach ([[$a, 2], [$b, 5], [$c, 9]] as [$player, $speed]) {
+            $player->playerFor(UserFactory::defaultGroupId())->update([
+                'speed' => $speed, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5,
+                'self_eval_completed_at' => now(),
+            ]);
+        }
+
+        // A and B win match one, C loses; in match two C wins and A loses, so
+        // A and C sit on the same attendance and win rate.
+        $makeMatch('A', [$a, $b], [$c]);
+        $makeMatch('B', [$a], [$c]);
+
+        $order = app(StatsService::class)->leaderboard()
+            ->map(fn (array $row): int => $row['user']->id)
+            ->filter(fn (int $id): bool => in_array($id, [$a->id, $b->id, $c->id], true))
+            ->values();
+
+        // C and A share attendance and win rate; C's higher score breaks the
+        // tie. B plays half the matches, so it trails despite winning them all.
+        $this->assertSame([$c->id, $a->id, $b->id], $order->all());
+    }
+
     public function test_attendance_counts_finished_matches_only(): void
     {
         $organizer = User::factory()->organizer()->create();
