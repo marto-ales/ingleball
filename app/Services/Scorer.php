@@ -116,6 +116,17 @@ class Scorer
     }
 
     /**
+     * The weight of each characteristic in force. Public so a score can be
+     * shown broken down into the parts that built it.
+     *
+     * @return array<string, float>
+     */
+    public function weights(): array
+    {
+        return $this->settings->weights();
+    }
+
+    /**
      * The general ratings this player received, one per finished match within
      * the form window, newest first. Used to explain the Rendimiento column.
      *

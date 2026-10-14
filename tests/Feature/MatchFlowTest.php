@@ -1151,6 +1151,26 @@ final class MatchFlowTest extends TestCase
             ->assertDontSee('Anotate');
     }
 
+    public function test_stats_index_breaks_the_score_into_its_characteristics(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $player = User::factory()->create();
+        $player->playerFor(UserFactory::defaultGroupId())->update([
+            'speed' => 8, 'skill' => 4, 'passing' => 5, 'shooting' => 5, 'defense' => 5,
+            'self_eval_completed_at' => now(),
+        ]);
+
+        $this->actingAs($organizer)
+            ->get(route('stats.index'))
+            ->assertOk()
+            ->assertSee('Suma ponderada de las características')
+            ->assertSee('Velocidad')
+            // The speed value travels with its weight, so the tooltip shows how
+            // the score was put together.
+            ->assertSee('8.0 · 30%')
+            ->assertSee('4.0 · 25%');
+    }
+
     public function test_attendance_counts_finished_matches_only(): void
     {
         $organizer = User::factory()->organizer()->create();

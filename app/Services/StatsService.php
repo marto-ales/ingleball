@@ -44,6 +44,8 @@ class StatsService
                 return [
                     'user' => $user,
                     'score' => $scorer->scoreForUser($user, $form),
+                    'profile' => $scorer->attributesForUser($user, $form),
+                    'weights' => $scorer->weights(),
                     'matches' => $played,
                     'attendance' => $totalMatches > 0 ? round($played / $totalMatches * 100) : 0,
                     'mvp' => MatchResult::where('mvp_user_id', $user->id)
