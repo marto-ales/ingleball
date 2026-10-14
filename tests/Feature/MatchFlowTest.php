@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Guest;
+use App\Models\MatchResult;
+use App\Models\MatchTeam;
 use App\Models\Partido;
 use App\Models\Player;
 use App\Models\Rating;
@@ -1169,6 +1171,75 @@ final class MatchFlowTest extends TestCase
             // the score was put together.
             ->assertSee('8.0 · 30%')
             ->assertSee('4.0 · 25%');
+    }
+
+    public function test_win_rate_counts_wins_over_the_matches_played(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $player = User::factory()->create();
+
+        // Four finished matches with the player on team A, winning three.
+        foreach (['A', 'A', 'A', 'B'] as $winner) {
+            $match = Partido::factory()->create([
+                'created_by' => $organizer->id,
+                'status' => Partido::STATUS_FINISHED,
+                'played_at' => now()->subDay(),
+            ]);
+            $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
+            MatchTeam::create(['match_id' => $match->id, 'team' => 'A', 'position' => 0, 'user_id' => $player->id]);
+            MatchResult::create(['match_id' => $match->id, 'winner' => $winner, 'diff' => 1]);
+        }
+
+        $row = app(StatsService::class)->leaderboard()->firstWhere(fn ($r) => $r['user']->is($player));
+
+        $this->assertSame(4, $row['matches']);
+        $this->assertSame(3, $row['wins']);
+        $this->assertSame(75, $row['winRate']);
+
+        $this->actingAs($organizer)
+            ->get(route('stats.index'))
+            ->assertOk()
+            ->assertSee('Ganados')
+            ->assertSee('75%')
+            ->assertSee('3 de 4');
+    }
+
+    public function test_a_tie_is_played_but_not_won(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $player = User::factory()->create();
+
+        $match = Partido::factory()->create([
+            'created_by' => $organizer->id,
+            'status' => Partido::STATUS_FINISHED,
+            'played_at' => now()->subDay(),
+        ]);
+        $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
+        MatchTeam::create(['match_id' => $match->id, 'team' => 'A', 'position' => 0, 'user_id' => $player->id]);
+        MatchResult::create(['match_id' => $match->id, 'winner' => null, 'diff' => 0]);
+
+        $row = app(StatsService::class)->leaderboard()->firstWhere(fn ($r) => $r['user']->is($player));
+
+        $this->assertSame(1, $row['matches']);
+        $this->assertSame(0, $row['wins']);
+        $this->assertSame(0, $row['winRate']);
+    }
+
+    public function test_win_rate_is_absent_when_no_match_was_played(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        User::factory()->create();
+
+        $empty = app(StatsService::class)->leaderboard()
+            ->firstWhere(fn ($r) => $r['matches'] === 0);
+
+        $this->assertNotNull($empty);
+        $this->assertNull($empty['winRate']);
+
+        $this->actingAs($organizer)
+            ->get(route('stats.index'))
+            ->assertOk()
+            ->assertSee('Ganados');
     }
 
     public function test_attendance_counts_finished_matches_only(): void

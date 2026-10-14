@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Group;
 use App\Models\MatchResult;
+use App\Models\MatchTeam;
 use App\Models\Partido;
 use App\Models\User;
 use App\Support\ActiveGroup;
@@ -41,12 +42,25 @@ class StatsService
                     ->count();
                 $form = $scorer->formForUser($user);
 
+                // Matches the player was on the winning team of, among the
+                // finished ones: a tie stores a null winner, so it never counts.
+                $wins = MatchTeam::query()
+                    ->join('match_results', 'match_results.match_id', '=', 'match_teams.match_id')
+                    ->join('matches', 'matches.id', '=', 'match_teams.match_id')
+                    ->where('match_teams.user_id', $user->id)
+                    ->where('matches.group_id', $groupId)
+                    ->where('matches.status', Partido::STATUS_FINISHED)
+                    ->whereColumn('match_teams.team', 'match_results.winner')
+                    ->count();
+
                 return [
                     'user' => $user,
                     'score' => $scorer->scoreForUser($user, $form),
                     'profile' => $scorer->attributesForUser($user, $form),
                     'weights' => $scorer->weights(),
                     'matches' => $played,
+                    'wins' => $wins,
+                    'winRate' => $played > 0 ? (int) round($wins / $played * 100) : null,
                     'attendance' => $totalMatches > 0 ? round($played / $totalMatches * 100) : 0,
                     'mvp' => MatchResult::where('mvp_user_id', $user->id)
                         ->whereHas('match', fn ($q) => $q->where('group_id', $groupId))

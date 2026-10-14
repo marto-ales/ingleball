@@ -24,7 +24,7 @@
                 <th class="num"><span class="tip">Calificaciones<span class="tipbox tipbox--col"><span class="tip-head">Calificaciones</span>Promedio de la calificación general que te pusieron tus compañeros en tus últimos {{ $formWindow }} partidos finalizados (sin contar tu autoevaluación).</span></span></th>
                 <th class="num">Rendimiento</th>
                 <th class="num">MVP</th>
-                <th class="num">Partidos</th>
+                <th class="num">Ganados</th>
                 <th class="num">Participación</th>
             </tr>
         </thead>
@@ -68,7 +68,21 @@
                     </td>
                     <td class="num">×{{ number_format($row['form'], 2) }}</td>
                     <td class="num">{{ $row['mvp'] }}</td>
-                    <td class="num">{{ $row['matches'] }}</td>
+                    <td class="num">
+                        @if ($row['winRate'] !== null)
+                            <span class="tip">{{ $row['winRate'] }}%
+                                <span class="tipbox tipbox--col">
+                                    <span class="tip-head">Ganados</span>
+                                    <span class="tip-row">
+                                        <span class="tip-row-name">Partidos ganados</span>
+                                        <span class="tip-row-val">{{ $row['wins'] }} de {{ $row['matches'] }}</span>
+                                    </span>
+                                </span>
+                            </span>
+                        @else
+                            —
+                        @endif
+                    </td>
                     <td class="num">{{ $row['attendance'] }}%</td>
                 </tr>
             @empty
