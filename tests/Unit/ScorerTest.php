@@ -9,8 +9,8 @@ use App\Models\PlayerEvaluation;
 use App\Models\Rating;
 use App\Models\User;
 use App\Services\AlgorithmSettings;
-use Database\Factories\UserFactory;
 use App\Services\Scorer;
+use Database\Factories\UserFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -36,7 +36,7 @@ final class ScorerTest extends TestCase
 
         $user->playerFor(UserFactory::defaultGroupId())->update(array_merge([
             'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5,
-            'defense' => 5, 'goalkeeping' => 5,
+            'defense' => 5, 'goalkeeping' => 5, 'self_eval_completed_at' => now(),
         ], $attributes));
 
         return $user;
@@ -94,6 +94,44 @@ final class ScorerTest extends TestCase
         $this->evaluation(User::factory()->organizer()->create(), $user, ['speed' => 8]);
 
         $this->assertSame(8.0, $this->scorer->attributesForUser($user)['speed']);
+    }
+
+    public function test_attributes_ignore_the_placeholder_until_the_self_assessment_is_filled(): void
+    {
+        config(['balance.self_weight' => 0.5]);
+
+        // The profile row exists with the placeholder 5 and no self-evaluation:
+        // only the organizers count, so their 8 comes through whole.
+        $user = User::factory()->create();
+        $user->playerFor(UserFactory::defaultGroupId())->update([
+            'speed' => 5, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5,
+            'self_eval_completed_at' => null,
+        ]);
+
+        $this->evaluation(User::factory()->organizer()->create(), $user, ['speed' => 8]);
+
+        $this->assertSame(8.0, $this->scorer->attributesForUser($user)['speed']);
+    }
+
+    public function test_attributes_without_self_assessment_or_evaluations_stay_neutral(): void
+    {
+        $user = User::factory()->create();
+
+        $this->assertSame(5.0, $this->scorer->attributesForUser($user)['speed']);
+    }
+
+    public function test_goalkeeping_ignores_the_placeholder_without_a_self_assessment(): void
+    {
+        config(['balance.self_weight' => 0.5]);
+
+        $user = User::factory()->create();
+        $user->playerFor(UserFactory::defaultGroupId())->update([
+            'goalkeeping' => 5, 'self_eval_completed_at' => null,
+        ]);
+
+        $this->evaluation(User::factory()->organizer()->create(), $user, ['goalkeeping' => 9]);
+
+        $this->assertSame(9.0, $this->scorer->goalkeepingForUser($user));
     }
 
     public function test_recent_form_scales_the_profile_by_the_received_rating(): void

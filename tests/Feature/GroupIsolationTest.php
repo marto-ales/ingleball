@@ -258,6 +258,7 @@ final class GroupIsolationTest extends TestCase
 
         $mine->playerFor($mineId)->update([
             'speed' => 4, 'skill' => 5, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'goalkeeping' => 5,
+            'self_eval_completed_at' => now(),
         ]);
 
         $other = $this->otherGroup();

@@ -3,6 +3,10 @@
 @section('title', $player->name)
 
 @section('content')
+@php
+    $selfProfile = $player->playerFor($activeGroup?->id);
+    $selfDone = $selfProfile?->self_eval_completed_at !== null;
+@endphp
 <div class="page-head">
     <div>
         <h1>{{ $player->name }}</h1>
@@ -39,7 +43,7 @@
                         <span class="score-tag tip" tabindex="0">
                             {{ number_format($profile[$key], 1) }}
                             <span class="tipbox" role="tooltip">
-                                <span class="tipbox-num tip-self">{{ $player->playerFor($activeGroup?->id)?->{$key} ?? '—' }}</span>
+                                <span class="tipbox-num tip-self">{{ $selfDone ? $selfProfile->{$key} : '—' }}</span>
                                 <span class="tipbox-num tip-org">{{ isset($orgEval[$key]) ? number_format($orgEval[$key], 1) : '—' }}</span>
                             </span>
                         </span>
@@ -50,7 +54,7 @@
                     <span class="score-tag tip" tabindex="0">
                         {{ number_format($goalkeeping, 1) }}
                         <span class="tipbox" role="tooltip">
-                            <span class="tipbox-num tip-self">{{ $player->playerFor($activeGroup?->id)?->goalkeeping ?? '—' }}</span>
+                            <span class="tipbox-num tip-self">{{ $selfDone ? $selfProfile->goalkeeping : '—' }}</span>
                             <span class="tipbox-num tip-org">{{ isset($orgEval['goalkeeping']) ? number_format($orgEval['goalkeeping'], 1) : '—' }}</span>
                         </span>
                     </span>

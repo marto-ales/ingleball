@@ -83,4 +83,27 @@ final class PlayerEvaluationTest extends TestCase
             ->assertSee('¿Le gusta ir al arco?')
             ->assertDontSee('Sin autoevaluación registrada');
     }
+
+    public function test_stats_tooltip_hides_the_self_value_until_the_self_assessment_is_done(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $player = User::factory()->create();
+        $player->playerFor(UserFactory::defaultGroupId())->update([
+            'speed' => 8, 'skill' => 6, 'passing' => 5, 'shooting' => 7, 'defense' => 4, 'goalkeeping' => 9,
+            'self_eval_completed_at' => null,
+        ]);
+        PlayerEvaluation::create([
+            'organizer_user_id' => $organizer->id,
+            'rated_user_id' => $player->id,
+            'group_id' => UserFactory::defaultGroupId(),
+            'speed' => 6, 'skill' => 7, 'passing' => 4, 'shooting' => 5, 'defense' => 6, 'goalkeeping' => 8,
+        ]);
+
+        // The placeholder self values are not part of the profile, so the
+        // tooltip shows them as absent instead of as a contributing number.
+        $this->actingAs($organizer)
+            ->get(route('stats.show', $player))
+            ->assertOk()
+            ->assertSee('<span class="tipbox-num tip-self">—</span>', false);
+    }
 }

@@ -576,6 +576,7 @@ final class MatchFlowTest extends TestCase
                 'shooting' => 5,
                 'defense' => 5,
                 'likes_goalie' => $index < 2,
+                'self_eval_completed_at' => now(),
             ]);
 
             $speedByUser[$player->id] = $speed;
@@ -696,6 +697,7 @@ final class MatchFlowTest extends TestCase
                 'passing' => 5,
                 'shooting' => 5,
                 'defense' => 5,
+                'self_eval_completed_at' => now(),
             ]);
             $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
             $players[$player->id] = ['speed' => $speed, 'skill' => $skill];
@@ -758,6 +760,7 @@ final class MatchFlowTest extends TestCase
                 'passing' => 5,
                 'shooting' => 5,
                 'defense' => 5,
+                'self_eval_completed_at' => now(),
             ]);
             $match->entries()->create(['user_id' => $player->id, 'role' => 'going']);
         }

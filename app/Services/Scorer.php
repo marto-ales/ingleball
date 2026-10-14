@@ -36,7 +36,9 @@ class Scorer
 
     /**
      * Attribute profile of a registered player: the self-assessment blended
-     * with the organizers' evaluations, then scaled by recent form.
+     * with the organizers' evaluations, then scaled by recent form. The
+     * self-assessment only counts once the player has filled it; until then
+     * their placeholder 5s are left out and the organizers speak alone.
      *
      * @param  array{general: float|null, group: float|null, multiplier: float}|null  $form
      * @return array<string, float>
@@ -56,12 +58,19 @@ class Scorer
 
     /**
      * Blended goalkeeper skill (self + organizers), without the form scaling.
-     * Used for display only.
+     * Used for display only. The self value counts only when the player
+     * actually filled the self-assessment.
      */
     public function goalkeepingForUser(User $user): float
     {
-        $self = (float) ($user->playerFor($this->groupId())?->goalkeeping ?? 5);
+        $player = $user->playerFor($this->groupId());
         $others = $this->organizerAverage($user, 'goalkeeping');
+
+        if ($player?->self_eval_completed_at === null) {
+            return round($others ?? 5.0, 2);
+        }
+
+        $self = (float) ($player->goalkeeping ?? 5);
 
         return round($others === null ? $self : $this->blend($self, $others), 2);
     }
@@ -173,19 +182,31 @@ class Scorer
     }
 
     /**
-     * Self-assessment blended with the organizers' average, without form.
+     * Self-assessment blended with the organizers' average, without form. The
+     * self values count only when the player filled the self-assessment: until
+     * then the profile keeps the placeholder 5 for every characteristic and
+     * that placeholder must not water down what the organizers said. So the
+     * organizers' average is used alone, and 5 stands in only while nobody has
+     * evaluated the player either.
      *
      * @return array<string, float>
      */
     private function blendedAttributes(User $user): array
     {
         $player = $user->playerFor($this->groupId());
+        $hasSelfEval = $player?->self_eval_completed_at !== null;
         $attributes = [];
 
         foreach ((array) config('balance.attributes') as $key) {
-            $self = (float) ($player?->{$key} ?? 5);
             $others = $this->organizerAverage($user, $key);
 
+            if (! $hasSelfEval) {
+                $attributes[$key] = $others ?? 5.0;
+
+                continue;
+            }
+
+            $self = (float) ($player->{$key} ?? 5);
             $attributes[$key] = $others === null ? $self : $this->blend($self, $others);
         }
 
