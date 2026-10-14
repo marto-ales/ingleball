@@ -20,12 +20,13 @@
             <tr>
                 <th>#</th>
                 <th>Jugador</th>
+                <th class="num">Participación</th>
+                <th class="num">Ganados</th>
                 <th class="num">Puntaje</th>
                 <th class="num"><span class="tip">Calificaciones<span class="tipbox tipbox--col"><span class="tip-head">Calificaciones</span>Promedio de la calificación general que te pusieron tus compañeros en tus últimos {{ $formWindow }} partidos finalizados (sin contar tu autoevaluación).</span></span></th>
                 <th class="num">Rendimiento</th>
                 <th class="num">MVP</th>
-                <th class="num">Ganados</th>
-                <th class="num">Participación</th>
+
             </tr>
         </thead>
         <tbody>
@@ -33,6 +34,22 @@
                 <tr class="{{ $i === 0 ? 'top' : '' }}">
                     <td>{{ $i + 1 }}</td>
                     <td><a href="{{ route('stats.show', $row['user']) }}">{{ $row['user']->name }}</a></td>
+                    <td class="num">{{ $row['attendance'] }}%</td>
+                    <td class="num">
+                        @if ($row['winRate'] !== null)
+                            <span class="tip">{{ $row['winRate'] }}%
+                                <span class="tipbox tipbox--col">
+                                    <span class="tip-head">Ganados</span>
+                                    <span class="tip-row">
+                                        <span class="tip-row-name">Partidos ganados</span>
+                                        <span class="tip-row-val">{{ $row['wins'] }} de {{ $row['matches'] }}</span>
+                                    </span>
+                                </span>
+                            </span>
+                        @else
+                            —
+                        @endif
+                    </td>
                     <td class="num">
                         <span class="tip">{{ number_format($row['score'], 1) }}
                             <span class="tipbox tipbox--col">
@@ -68,22 +85,6 @@
                     </td>
                     <td class="num">×{{ number_format($row['form'], 2) }}</td>
                     <td class="num">{{ $row['mvp'] }}</td>
-                    <td class="num">
-                        @if ($row['winRate'] !== null)
-                            <span class="tip">{{ $row['winRate'] }}%
-                                <span class="tipbox tipbox--col">
-                                    <span class="tip-head">Ganados</span>
-                                    <span class="tip-row">
-                                        <span class="tip-row-name">Partidos ganados</span>
-                                        <span class="tip-row-val">{{ $row['wins'] }} de {{ $row['matches'] }}</span>
-                                    </span>
-                                </span>
-                            </span>
-                        @else
-                            —
-                        @endif
-                    </td>
-                    <td class="num">{{ $row['attendance'] }}%</td>
                 </tr>
             @empty
                 <tr><td colspan="8" class="empty">Todavía no hay jugadores.</td></tr>
