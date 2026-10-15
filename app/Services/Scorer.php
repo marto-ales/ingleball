@@ -57,25 +57,6 @@ class Scorer
     }
 
     /**
-     * Blended goalkeeper skill (self + organizers), without the form scaling.
-     * Used for display only. The self value counts only when the player
-     * actually filled the self-assessment.
-     */
-    public function goalkeepingForUser(User $user): float
-    {
-        $player = $user->playerFor($this->groupId());
-        $others = $this->organizerAverage($user, 'goalkeeping');
-
-        if ($player?->self_eval_completed_at === null) {
-            return round($others ?? 5.0, 2);
-        }
-
-        $self = (float) ($player->goalkeeping ?? 5);
-
-        return round($others === null ? $self : $this->blend($self, $others), 2);
-    }
-
-    /**
      * Recent form: the general score the player received over their last
      * finished matches. The multiplier scales the profile by that rating:
      * each point above or below the neutral level (stored 5) moves it up to

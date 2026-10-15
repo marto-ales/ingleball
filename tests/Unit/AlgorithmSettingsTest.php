@@ -29,10 +29,11 @@ final class AlgorithmSettingsTest extends TestCase
         $weights = $settings->weights();
 
         $this->assertSame(0.30, $weights['defense']);
-        $this->assertSame(0.25, $weights['speed']);
+        $this->assertSame(0.20, $weights['speed']);
         $this->assertSame(0.15, $weights['skill']);
         $this->assertSame(0.15, $weights['passing']);
-        $this->assertSame(0.15, $weights['shooting']);
+        $this->assertSame(0.10, $weights['shooting']);
+        $this->assertSame(0.10, $weights['goalkeeping']);
     }
 
     public function test_update_persists_every_option(): void

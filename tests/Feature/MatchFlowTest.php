@@ -673,7 +673,7 @@ final class MatchFlowTest extends TestCase
 
         // One row per attribute plus the goalkeeper line, and the total on its own.
         $this->assertSame(1, substr_count($content, 'balance-detail'));
-        $this->assertSame(6, substr_count($content, 'class="balance-row"'));
+        $this->assertSame(7, substr_count($content, 'class="balance-row"'));
         $this->assertSame(1, substr_count($content, 'balance-row balance-total'));
         // What stays for the organizer alone: the numbers that judge the lineup.
         $this->assertSame(0, preg_match_all('/<b title="Qué tan parecidos son /', $content));
@@ -1158,7 +1158,7 @@ final class MatchFlowTest extends TestCase
         $organizer = User::factory()->organizer()->create();
         $player = User::factory()->create();
         $player->playerFor(UserFactory::defaultGroupId())->update([
-            'speed' => 8, 'skill' => 4, 'passing' => 5, 'shooting' => 5, 'defense' => 5,
+            'speed' => 8, 'skill' => 4, 'passing' => 5, 'shooting' => 5, 'defense' => 5, 'goalkeeping' => 7,
             'self_eval_completed_at' => now(),
         ]);
 
@@ -1167,10 +1167,11 @@ final class MatchFlowTest extends TestCase
             ->assertOk()
             ->assertSee('Suma ponderada de las características')
             ->assertSee('Velocidad')
-            // The speed value travels with its weight, so the tooltip shows how
-            // the score was put together.
+            // Each value travels with its weight, so the tooltip shows how the
+            // score was put together; goalkeeping is one more characteristic.
             ->assertSee('8.0 · 30%')
-            ->assertSee('4.0 · 25%');
+            ->assertSee('4.0 · 20%')
+            ->assertSee('7.0 · 10%');
     }
 
     public function test_win_rate_counts_wins_over_the_matches_played(): void

@@ -36,10 +36,11 @@ return [
     */
     'attribute_weights' => [
         'speed' => 0.30,
-        'skill' => 0.25,
+        'skill' => 0.20,
         'passing' => 0.15,
         'shooting' => 0.15,
-        'defense' => 0.15,
+        'defense' => 0.10,
+        'goalkeeping' => 0.10,
     ],
 
     /*
@@ -51,5 +52,5 @@ return [
     /*
     | Attribute keys shared by self-assessment and peer ratings.
     */
-    'attributes' => ['speed', 'skill', 'passing', 'shooting', 'defense'],
+    'attributes' => ['speed', 'skill', 'passing', 'shooting', 'defense', 'goalkeeping'],
 ];

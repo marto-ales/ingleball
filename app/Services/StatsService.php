@@ -68,7 +68,6 @@ class StatsService
                     'general' => $form['general'],
                     'form' => $form['multiplier'],
                     'rendimiento' => $scorer->ratingDetailsForUser($user),
-                    'goalkeeping' => $scorer->goalkeepingForUser($user),
                 ];
             })
             ->sortByDesc(fn (array $row): array => [$row['attendance'], $row['winRate'] ?? -1, $row['score']])

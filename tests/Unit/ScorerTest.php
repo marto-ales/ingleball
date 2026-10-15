@@ -131,7 +131,21 @@ final class ScorerTest extends TestCase
 
         $this->evaluation(User::factory()->organizer()->create(), $user, ['goalkeeping' => 9]);
 
-        $this->assertSame(9.0, $this->scorer->goalkeepingForUser($user));
+        $this->assertSame(9.0, $this->scorer->attributesForUser($user)['goalkeeping']);
+    }
+
+    public function test_goalkeeping_is_part_of_the_profile_like_every_other_skill(): void
+    {
+        config(['balance.self_weight' => 1.0]);
+
+        $user = $this->player(['goalkeeping' => 8]);
+
+        $this->assertSame(8.0, $this->scorer->attributesForUser($user)['goalkeeping']);
+        $this->assertArrayHasKey('goalkeeping', $this->scorer->weights());
+        $this->assertGreaterThan(
+            $this->scorer->scoreForUser($this->player(['goalkeeping' => 1])),
+            $this->scorer->scoreForUser($user),
+        );
     }
 
     public function test_recent_form_scales_the_profile_by_the_received_rating(): void

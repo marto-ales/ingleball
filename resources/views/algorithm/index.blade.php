@@ -9,6 +9,7 @@
         'passing' => 'Pase',
         'shooting' => 'Definición',
         'defense' => 'Defensa',
+        'goalkeeping' => 'Arco',
     ];
 @endphp
 
@@ -17,7 +18,7 @@
     <div><h1>Algoritmo</h1></div>
 </div>
 
-<p class="muted">Definí cómo se arman los equipos. El orden de los atributos decide su peso: el primero pesa 0,30, el segundo 0,25 y el resto 0,15.</p>
+<p class="muted">Definí cómo se arman los equipos. El orden de los atributos decide su peso: el primero pesa 0,30, el segundo 0,20 y el resto: 0,15, 0,15, 0,10 y 0,10.</p>
 
 <form class="card card--info" method="POST" action="{{ route('algorithm.update') }}">
     @csrf

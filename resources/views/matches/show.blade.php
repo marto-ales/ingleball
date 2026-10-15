@@ -6,8 +6,8 @@
 @php
     $scorer = app(\App\Services\Scorer::class)->forGroup($match->group_id);
     $teamService = app(\App\Services\TeamService::class);
-    $attrKeys = ['speed', 'skill', 'passing', 'shooting', 'defense'];
-    $attrLabels = ['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa'];
+    $attrKeys = ['speed', 'skill', 'passing', 'shooting', 'defense', 'goalkeeping'];
+    $attrLabels = ['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'goalkeeping' => 'Arco'];
     $memberScore = function ($t) use ($scorer) {
         if ($t->user) {
             return $scorer->scoreForUser($t->user);

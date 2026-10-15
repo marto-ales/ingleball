@@ -22,7 +22,7 @@ final class AlgorithmTest extends TestCase
 
         $this->actingAs($organizer)
             ->patch('/algorithm', [
-                'order' => ['skill', 'speed', 'passing', 'shooting', 'defense'],
+                'order' => ['skill', 'speed', 'passing', 'shooting', 'defense', 'goalkeeping'],
                 'random_tie_break' => '1',
                 'self_weight' => 0.5,
             ])
@@ -43,7 +43,7 @@ final class AlgorithmTest extends TestCase
 
         $this->actingAs($organizer)
             ->patch('/algorithm', [
-                'order' => ['speed', 'skill', 'passing', 'shooting', 'defense'],
+                'order' => ['speed', 'skill', 'passing', 'shooting', 'defense', 'goalkeeping'],
                 'self_weight' => 0.5,
                 'weight_by_form' => '1',
                 'form_span' => 0.4,
@@ -57,7 +57,7 @@ final class AlgorithmTest extends TestCase
 
         $this->actingAs($organizer)
             ->patch('/algorithm', [
-                'order' => ['speed', 'skill', 'passing', 'shooting', 'defense'],
+                'order' => ['speed', 'skill', 'passing', 'shooting', 'defense', 'goalkeeping'],
                 'self_weight' => 0.5,
                 'weight_by_form' => '0',
             ])
@@ -74,7 +74,7 @@ final class AlgorithmTest extends TestCase
 
         $this->actingAs($organizer)
             ->patch('/algorithm', [
-                'order' => ['speed', 'speed', 'passing', 'shooting', 'defense'],
+                'order' => ['speed', 'speed', 'passing', 'shooting', 'defense', 'goalkeeping'],
                 'self_weight' => 0.5,
             ])
             ->assertSessionHasErrors('order');

@@ -21,7 +21,7 @@ class AlgorithmSettings
      *
      * @var array<int, float>
      */
-    private const RANKED_WEIGHTS = [0.30, 0.25, 0.15, 0.15, 0.15];
+    private const RANKED_WEIGHTS = [0.30, 0.20, 0.15, 0.15, 0.10, 0.10];
 
     public function __construct(private ?int $groupId = null) {}
 

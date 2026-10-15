@@ -170,7 +170,7 @@ final class GroupIsolationTest extends TestCase
         $other = $this->otherGroup();
         $otherOrganizer = User::factory()->inGroup($other)->organizer()->create();
 
-        $order = ['defense', 'speed', 'skill', 'passing', 'shooting'];
+        $order = ['defense', 'speed', 'skill', 'passing', 'shooting', 'goalkeeping'];
 
         $this->actingAs($organizer)->patch('/algorithm', [
             'order' => $order,
@@ -178,7 +178,7 @@ final class GroupIsolationTest extends TestCase
         ])->assertRedirect();
 
         $this->actingAs($otherOrganizer)->patch('/algorithm', [
-            'order' => ['skill', 'speed', 'passing', 'shooting', 'defense'],
+            'order' => ['skill', 'speed', 'passing', 'shooting', 'defense', 'goalkeeping'],
             'self_weight' => 0.5,
         ])->assertRedirect();
 

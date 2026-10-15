@@ -31,13 +31,13 @@
             <p class="muted small">Autoevaluación + evaluaciones de organizadores, ajustado por el rendimiento reciente.</p>
 
             @include('partials.radar', [
-                'values' => array_merge($profile, ['goalkeeping' => $goalkeeping]),
+                'values' => $profile,
                 'labels' => ['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'goalkeeping' => 'Arco'],
                 'ariaLabel' => 'Perfil de ' . $player->name,
             ])
 
             <ul class="list">
-                @foreach (['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa'] as $key => $label)
+                @foreach (['speed' => 'Velocidad', 'skill' => 'Habilidad', 'passing' => 'Pase', 'shooting' => 'Definición', 'defense' => 'Defensa', 'goalkeeping' => 'Arco'] as $key => $label)
                     <li>
                         <span>{{ $label }}</span>
                         <span class="score-tag tip" tabindex="0">
@@ -49,16 +49,6 @@
                         </span>
                     </li>
                 @endforeach
-                <li>
-                    <span>Arco</span>
-                    <span class="score-tag tip" tabindex="0">
-                        {{ number_format($goalkeeping, 1) }}
-                        <span class="tipbox" role="tooltip">
-                            <span class="tipbox-num tip-self">{{ $selfDone ? $selfProfile->goalkeeping : '—' }}</span>
-                            <span class="tipbox-num tip-org">{{ isset($orgEval['goalkeeping']) ? number_format($orgEval['goalkeeping'], 1) : '—' }}</span>
-                        </span>
-                    </span>
-                </li>
                 <li><span>General (últ. 3 partidos)</span><span class="score-tag">{{ $form['general'] !== null ? (($form['general'] - 5) > 0 ? '+' : '').number_format($form['general'] - 5, 1) : '—' }}</span></li>
                 <li><span>Rendimiento reciente</span><span class="score-tag">×{{ number_format($form['multiplier'], 2) }}</span></li>
                 <li>

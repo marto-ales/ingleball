@@ -28,6 +28,7 @@ final class TeamBalancerTest extends TestCase
             'passing' => 5,
             'shooting' => 5,
             'defense' => 5,
+            'goalkeeping' => 5,
         ], $overrides);
     }
 
@@ -289,8 +290,8 @@ final class TeamBalancerTest extends TestCase
 
         // Ten points apart on every attribute and on the score is the widest
         // gap the 0-10 scale allows.
-        $low = ['score' => 0.0, 'attributes' => $this->attributes(['speed' => 0, 'skill' => 0, 'passing' => 0, 'shooting' => 0, 'defense' => 0])];
-        $high = ['score' => 10.0, 'attributes' => $this->attributes(['speed' => 10, 'skill' => 10, 'passing' => 10, 'shooting' => 10, 'defense' => 10])];
+        $low = ['score' => 0.0, 'attributes' => $this->attributes(['speed' => 0, 'skill' => 0, 'passing' => 0, 'shooting' => 0, 'defense' => 0, 'goalkeeping' => 0])];
+        $high = ['score' => 10.0, 'attributes' => $this->attributes(['speed' => 10, 'skill' => 10, 'passing' => 10, 'shooting' => 10, 'defense' => 10, 'goalkeeping' => 10])];
 
         $this->assertSame(0.0, $this->balancer->similarityPercent($low, $high));
 

@@ -71,7 +71,6 @@ class StatsController extends Controller
             'matches' => $matches,
             'mvp' => $mvp,
             'profile' => $scorer->attributesForUser($user),
-            'goalkeeping' => $scorer->goalkeepingForUser($user),
             'form' => $scorer->formForUser($user),
             'orgEval' => $orgEval,
         ]);
