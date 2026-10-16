@@ -83,6 +83,10 @@
         @if (session('attendance'))
             @include('partials.attendance-modal')
         @endif
+
+        @if (request()->routeIs('dashboard') && ! empty($changelogAnnouncements ?? []))
+            @include('partials.changelog-modal', ['announcements' => $changelogAnnouncements])
+        @endif
     @endauth
 
     <footer class="footer">

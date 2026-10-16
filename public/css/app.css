@@ -406,6 +406,12 @@ input[type=range] { padding: 0; accent-color: var(--accent); }
 .modal-close { background: transparent; border: 0; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; padding: 4px; }
 .modal-close:hover { color: var(--ink); }
 
+/* Novedades del sitio (welcome modal + page) */
+.changelog-entry { padding: 12px 0; border-top: 1px solid var(--line); }
+.changelog-entry:first-of-type { border-top: 0; }
+.changelog-list { margin: 8px 0 0; padding-left: 18px; }
+.changelog-list li { margin: 4px 0; font-size: 14px; }
+
 /* Radar (spider) chart */
 .radar { display: block; width: 100%; max-width: 360px; height: auto; margin: 0 auto; }
 .radar-grid { fill: none; stroke: var(--radar-web); stroke-width: 1; }

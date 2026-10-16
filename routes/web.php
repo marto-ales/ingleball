@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EntryController;
 use App\Http\Controllers\GroupController;
@@ -48,8 +49,12 @@ Route::middleware('auth')->group(function () {
     Route::post('grupo/unirme', [GroupController::class, 'join'])->name('groups.join');
     Route::post('grupo/salir', [GroupController::class, 'leave'])->name('groups.leave');
 
+    Route::post('novedades/visto', [ChangelogController::class, 'dismiss'])->name('changelog.dismiss');
+
     Route::middleware('group')->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('novedades', [ChangelogController::class, 'index'])->name('changelog.index');
 
         Route::get('matches/create', [MatchController::class, 'create'])->middleware('organizer')->name('matches.create');
         Route::get('matches/{match}/edit', [MatchController::class, 'edit'])->middleware('organizer')->name('matches.edit');

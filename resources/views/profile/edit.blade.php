@@ -89,4 +89,12 @@
         <button class="btn btn-primary" type="submit">Guardar</button>
     </form>
 </div>
+
+<div class="card row between" style="max-width: 640px;">
+    <div>
+        <strong>Novedades del sitio</strong>
+        <p class="muted small mb0 mt">Mirá los últimos cambios que hicimos en Ingleball.</p>
+    </div>
+    <a class="btn btn-sm" href="{{ route('changelog.index') }}">Ver novedades</a>
+</div>
 @endsection

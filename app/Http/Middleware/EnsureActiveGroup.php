@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\GroupMembership;
 use App\Support\ActiveGroup;
+use App\Support\Changelog;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
@@ -38,6 +39,10 @@ class EnsureActiveGroup
 
         View::share('activeGroup', $group);
         View::share('isOrganizer', $this->activeGroup->isOrganizer());
+
+        // "Novedades" this account has not acknowledged yet, ready for the
+        // welcome modal the dashboard shows.
+        View::share('changelogAnnouncements', app(Changelog::class)->unseen($user, 3));
 
         // "Mi grupo" is where a person goes when they have none, so it is the
         // one page that still renders without a group in use.
