@@ -118,6 +118,7 @@ class UserManagementController extends Controller
             'email' => ['sometimes', 'nullable', 'email', 'max:120'],
             'is_organizer' => ['nullable', 'boolean'],
             'goalkeeping' => ['nullable', 'integer', 'between:0,10'],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
 
         $user->forceFill([
@@ -141,6 +142,13 @@ class UserManagementController extends Controller
         if (! empty($data['goalkeeping'])) {
             $this->memberships->ensureProfile($user, $groupId)
                 ->update(['goalkeeping' => (int) $data['goalkeeping']]);
+        }
+
+        // A new password is optional: leaving it blank keeps the current one.
+        // The account is shared across groups, so the change follows the person
+        // everywhere they play.
+        if (! empty($data['password'])) {
+            $user->forceFill(['password' => $data['password']])->save();
         }
 
         return back()->with('status', 'Datos de '.$user->name.' actualizados.');

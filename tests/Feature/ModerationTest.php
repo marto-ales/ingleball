@@ -46,6 +46,71 @@ final class ModerationTest extends TestCase
         $this->assertDatabaseHas('players', ['user_id' => User::where('name', 'Pancho')->first()->id]);
     }
 
+    public function test_organizer_can_set_a_new_password_for_a_user(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $target = User::factory()->create(['password' => Hash::make('vieja_clave_1')]);
+
+        $this->actingAs($organizer)
+            ->patch(route('users.manage.update', $target), [
+                'name' => $target->name,
+                'phone' => $target->phone,
+                'password' => 'nueva_clave_123',
+                'password_confirmation' => 'nueva_clave_123',
+            ])
+            ->assertRedirect();
+
+        $this->assertTrue(Hash::check('nueva_clave_123', $target->refresh()->password));
+    }
+
+    public function test_edit_screen_offers_a_new_password_field(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $target = User::factory()->create();
+
+        $this->actingAs($organizer)
+            ->get(route('users.manage.edit', $target))
+            ->assertOk()
+            ->assertSee('Contraseña nueva')
+            ->assertSee('name="password_confirmation"', false);
+    }
+
+    public function test_a_mismatched_password_confirmation_is_rejected(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $target = User::factory()->create(['password' => Hash::make('vieja_clave_1')]);
+
+        $this->actingAs($organizer)
+            ->from(route('users.manage.edit', $target))
+            ->patch(route('users.manage.update', $target), [
+                'name' => $target->name,
+                'password' => 'nueva_clave_123',
+                'password_confirmation' => 'otra_clave_456',
+            ])
+            ->assertSessionHasErrors('password');
+
+        $this->assertTrue(Hash::check('vieja_clave_1', $target->refresh()->password));
+    }
+
+    public function test_a_blank_password_leaves_the_current_one_untouched(): void
+    {
+        $organizer = User::factory()->organizer()->create();
+        $target = User::factory()->create(['password' => Hash::make('vieja_clave_1')]);
+
+        $this->actingAs($organizer)
+            ->patch(route('users.manage.update', $target), [
+                'name' => 'Otro Nombre',
+                'password' => '',
+                'password_confirmation' => '',
+            ])
+            ->assertRedirect();
+
+        $target->refresh();
+
+        $this->assertSame('Otro Nombre', $target->name);
+        $this->assertTrue(Hash::check('vieja_clave_1', $target->password));
+    }
+
     public function test_managed_player_cannot_login(): void
     {
         $managed = User::factory()->create(['is_managed' => true, 'password' => bcrypt(Str::random(32))]);
