@@ -52,10 +52,21 @@ class MessagingService
                 $lines[] = '   '.($i + 1).'. '.$this->teamName($member);
             }
         } else {
-            $lines[] = '*Anotados* ('.$entriesGoing->count().'):';
+            // A numbered list of every going slot the match format allows
+            // (5v5 → 10, 6v6 → 12), with the names that are already signed up
+            // and the rest left empty.
+            $capacity = $match->capacity();
+            $lines[] = '*Anotados* ('.$entriesGoing->count().'/'.$capacity.'):';
 
-            foreach ($entriesGoing as $i => $entry) {
-                $lines[] = '   '.($i + 1).'. '.$this->entryName($entry);
+            $slots = max($capacity, $entriesGoing->count());
+
+            for ($slot = 1; $slot <= $slots; $slot++) {
+                $number = str_pad((string) $slot, 2, '0', STR_PAD_LEFT);
+                $entry = $entriesGoing->get($slot - 1);
+
+                $lines[] = $entry !== null
+                    ? '   '.$number.'. '.$this->entryName($entry)
+                    : '   '.$number.'.';
             }
         }
 

@@ -423,7 +423,7 @@ final class MatchFlowTest extends TestCase
             ->assertRedirect()
             ->assertSessionHas('attendance.role', 'substitute')
             ->assertSessionHas('attendance.message', function ($message) use ($player, $other) {
-                return str_contains($message, '*Anotados* (1)')
+                return str_contains($message, '*Anotados* (1/10)')
                     && str_contains($message, '*Suplentes* (1)')
                     && substr_count($message, $player->name) === 1
                     && substr_count($message, $other->name) === 1;
