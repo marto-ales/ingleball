@@ -867,7 +867,7 @@ final class MatchFlowTest extends TestCase
         $this->assertSame(0, $match->teams()->count());
     }
 
-    public function test_result_and_mvp_can_be_recorded(): void
+    public function test_result_is_recorded_without_a_manual_mvp(): void
     {
         $organizer = User::factory()->organizer()->create();
         $player = User::factory()->create();
@@ -877,6 +877,7 @@ final class MatchFlowTest extends TestCase
             ->post(route('result.store', $match), [
                 'winner' => 'A',
                 'diff' => 2,
+                // The MVP is voted by the attendees; a manual pick is ignored.
                 'mvp' => 'user:'.$player->id,
             ])
             ->assertRedirect();
@@ -886,7 +887,8 @@ final class MatchFlowTest extends TestCase
         $this->assertSame('A', $match->result->winner);
         $this->assertSame(2, $match->result->diff);
         $this->assertSame('Ganó Equipo A por 2', $match->result->summary);
-        $this->assertDatabaseHas('match_results', ['mvp_user_id' => $player->id]);
+        $this->assertNull($match->result->mvp_user_id);
+        $this->assertNull($match->result->mvp_guest_id);
     }
 
     public function test_tie_result_can_be_recorded(): void

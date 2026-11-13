@@ -11,6 +11,7 @@ use App\Http\Controllers\EntryController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\MatchController;
+use App\Http\Controllers\MvpController;
 use App\Http\Controllers\PlayerEvaluationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RatingController;
@@ -78,6 +79,9 @@ Route::middleware('auth')->group(function () {
 
         Route::get('matches/{match}/ratings', [RatingController::class, 'create'])->name('ratings.create');
         Route::post('matches/{match}/ratings', [RatingController::class, 'store'])->name('ratings.store');
+
+        Route::post('matches/{match}/mvp', [MvpController::class, 'store'])->name('mvp.store');
+        Route::post('matches/{match}/mvp/tiebreak', [MvpController::class, 'breakTie'])->middleware('organizer')->name('mvp.break-tie');
 
         Route::post('matches/{match}/teams/generate', [TeamController::class, 'generate'])->middleware('organizer')->name('teams.generate');
         Route::post('matches/{match}/teams/swap', [TeamController::class, 'swap'])->middleware('organizer')->name('teams.swap');

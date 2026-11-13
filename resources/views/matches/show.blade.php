@@ -381,7 +381,7 @@
                     <h2 class="mb0">Calificar</h2>
                     <a class="btn btn-primary btn-sm" href="{{ route('ratings.create', $match) }}">Calificar jugadores</a>
                 </div>
-                <p class="muted small mb0 mt">Cada jugador que haya jugado califica a los demás. Esto alimenta el ranking y el armado equilibrado.</p>
+                <p class="muted small mb0 mt">Cada jugador que haya jugado califica a los demás y, cuando el resultado está cargado, vota al MVP. Esto alimenta el ranking y el armado equilibrado.</p>
             </div>
         @endif
     </div>
@@ -411,13 +411,18 @@
             </p>
         @endif
 
+        @if (! empty($mvpTally))
+            <p class="muted small mb0">
+                Votación MVP: {{ collect($mvpTally)->map(fn ($row) => $row['name'].' ('.$row['votes'].')')->implode(', ') }}
+            </p>
+        @endif
+
         @if ($isOrganizer && $match->isFinished())
             <div class="divider"></div>
             @php
                 $resultRow = $match->result;
                 $winnerVal = old('winner', $resultRow ? ($resultRow->winner ?? 'tie') : 'A');
                 $diffVal = old('diff', $resultRow?->diff ?? 0);
-                $mvpToken = old('mvp', $resultRow && $resultRow->mvpUser ? 'user:' . $resultRow->mvpUser->id : ($resultRow && $resultRow->mvpGuest ? 'guest:' . $resultRow->mvpGuest->id : ''));
             @endphp
             <form method="POST" action="{{ route('result.store', $match) }}">
                 @csrf
@@ -435,18 +440,23 @@
                         @include('partials.stepper', ['name' => 'diff', 'value' => $diffVal, 'min' => 0, 'max' => 20])
                     </div>
                 </div>
-                <div class="field">
-                    <label>MVP del partido <span class="muted small">(opcional, tocá su tarjeta)</span></label>
-                    <div class="pick-grid" data-mvp>
-                        <input type="hidden" name="mvp" id="mvp" value="{{ $mvpToken }}">
-                        @foreach ($participants as $p)
-                            <button type="button" class="pick {{ $mvpToken === $p['token'] ? 'selected' : '' }}" data-token="{{ $p['token'] }}">{{ $p['name'] }}</button>
-                        @endforeach
-                    </div>
-                    <button type="button" class="btn btn-ghost btn-sm mt" data-mvp-clear>Quitar MVP</button>
-                </div>
                 <button class="btn btn-primary" type="submit">{{ $match->result ? 'Actualizar resultado' : 'Registrar resultado' }}</button>
             </form>
+
+            @if (! empty($mvpTieOptions))
+                <div class="divider"></div>
+                <h3>Empate en la votación de MVP</h3>
+                <p class="muted small">Varios jugadores tienen los mismos votos. Elegí al MVP del partido.</p>
+                <div class="row">
+                    @foreach ($mvpTieOptions as $option)
+                        <form method="POST" action="{{ route('mvp.break-tie', $match) }}" class="inline">
+                            @csrf
+                            <input type="hidden" name="mvp" value="{{ $option['token'] }}">
+                            <button class="btn btn-sm" type="submit">{{ $option['name'] }}</button>
+                        </form>
+                    @endforeach
+                </div>
+            @endif
         @endif
     </div>
 </div>
@@ -506,24 +516,6 @@
         })();
 
         (function () {
-            var mvpGrid = document.querySelector('[data-mvp]');
-            if (mvpGrid) {
-                var mvpInput = document.getElementById('mvp');
-                mvpGrid.querySelectorAll('.pick').forEach(function (b) {
-                    b.addEventListener('click', function () {
-                        mvpGrid.querySelectorAll('.pick').forEach(function (x) { x.classList.remove('selected'); });
-                        b.classList.add('selected');
-                        mvpInput.value = b.dataset.token;
-                    });
-                });
-                var clearMvp = document.querySelector('[data-mvp-clear]');
-                if (clearMvp) {
-                    clearMvp.addEventListener('click', function () {
-                        mvpGrid.querySelectorAll('.pick').forEach(function (x) { x.classList.remove('selected'); });
-                        mvpInput.value = '';
-                    });
-                }
-            }
             document.querySelectorAll('[data-swap]').forEach(function (form) {
                 var toInput = form.querySelector('input[name="to"]');
                 var submit = form.querySelector('button[type="submit"]');

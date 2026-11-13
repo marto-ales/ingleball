@@ -82,6 +82,11 @@ class Partido extends Model
         return $this->hasOne(MatchResult::class, 'match_id');
     }
 
+    public function mvpVotes(): HasMany
+    {
+        return $this->hasMany(MvpVote::class, 'match_id');
+    }
+
     public function teams(): HasMany
     {
         return $this->hasMany(MatchTeam::class, 'match_id');

@@ -21,6 +21,16 @@
 
 return [
     [
+        'id' => '2026-11-13-mvp',
+        'date' => '2026-11-13',
+        'title' => 'El MVP ahora lo eligen los que jugaron',
+        'changes' => [
+            'Ya no lo define el organizador al cargar el resultado: cada jugador que fue vota al MVP desde la página Calificar, una vez que el resultado está cargado.',
+            'Gana el más votado y, si hay empate en el primer puesto, lo desempata el organizador desde la página del partido.',
+            'No podés votarte a vos mismo.',
+        ],
+    ],
+    [
         'id' => '2026-10-19-mensaje',
         'date' => '2026-10-19',
         'title' => 'El mensaje para compartir ahora muestra todos los casilleros',

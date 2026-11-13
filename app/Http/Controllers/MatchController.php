@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Group;
 use App\Models\Partido;
 use App\Services\MessagingService;
+use App\Services\MvpService;
 use App\Services\RecurringMatchService;
 use App\Services\ReminderService;
 use App\Services\TeamService;
@@ -21,6 +22,7 @@ class MatchController extends Controller
         private ReminderService $reminders,
         private MessagingService $messaging,
         private RecurringMatchService $recurring,
+        private MvpService $mvp,
         private ActiveGroup $activeGroup,
     ) {}
 
@@ -142,8 +144,6 @@ class MatchController extends Controller
         $goingCount = $match->entries()->where('role', 'going')->count();
         $autoSize = $this->teams->chooseTeamSize($goingCount);
 
-        $participants = $this->participants($match);
-
         $availableUsers = Group::membersQuery($match->group_id)
             ->whereDoesntHave('memberships', fn (Builder $query) => $query
                 ->where('group_id', $match->group_id)
@@ -156,6 +156,24 @@ class MatchController extends Controller
 
         $shareMessage = $this->messaging->message($match, $teamA, $teamB, $entriesGoing, $entriesSubstitute);
 
+        $mvpNames = collect($this->mvp->candidates($match))->pluck('name', 'token');
+        $mvpTally = [];
+
+        foreach ($this->mvp->tally($match) as $token => $votes) {
+            $mvpTally[] = ['token' => $token, 'name' => $mvpNames[$token] ?? '?', 'votes' => $votes];
+        }
+
+        $mvpLeaders = $this->mvp->leaders($match);
+        $mvpTieOptions = count($mvpLeaders) > 1
+            && $match->result !== null
+            && $match->result->mvp_user_id === null
+            && $match->result->mvp_guest_id === null
+            ? array_map(
+                fn (string $token): array => ['token' => $token, 'name' => $mvpNames[$token] ?? '?'],
+                $mvpLeaders,
+            )
+            : [];
+
         return view('matches.show', [
             'match' => $match,
             'myEntry' => $myEntry,
@@ -165,10 +183,11 @@ class MatchController extends Controller
             'teamB' => $teamB,
             'goingCount' => $goingCount,
             'autoSize' => $autoSize,
-            'participants' => $participants,
             'availableUsers' => $availableUsers,
             'waGroup' => $waGroup,
             'shareMessage' => $shareMessage,
+            'mvpTally' => $mvpTally,
+            'mvpTieOptions' => $mvpTieOptions,
         ]);
     }
 
@@ -213,26 +232,5 @@ class MatchController extends Controller
         }
 
         return back()->with('status', "Se enviaron {$sent} recordatorios por email. Abrí el grupo de WhatsApp para avisar al resto.");
-    }
-
-    /**
-     * Flat list of playable participants (users + guests) for the rating and
-     * MVP forms.
-     *
-     * @return array<int, array{token: string, type: string, name: string}>
-     */
-    private function participants(Partido $match): array
-    {
-        $participants = [];
-
-        foreach ($match->entries()->where('role', '!=', 'out')->with(['user', 'guest'])->get() as $entry) {
-            if ($entry->user !== null) {
-                $participants[] = ['token' => 'user:'.$entry->user->id, 'type' => 'user', 'name' => $entry->user->name];
-            } elseif ($entry->guest !== null) {
-                $participants[] = ['token' => 'guest:'.$entry->guest->id, 'type' => 'guest', 'name' => $entry->guest->name];
-            }
-        }
-
-        return $participants;
     }
 }

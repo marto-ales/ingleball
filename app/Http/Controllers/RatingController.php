@@ -8,12 +8,15 @@ use App\Models\MatchEntry;
 use App\Models\Partido;
 use App\Models\Rating;
 use App\Models\User;
+use App\Services\MvpService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class RatingController extends Controller
 {
+    public function __construct(private MvpService $mvp) {}
+
     public function create(Request $request, Partido $match): View
     {
         $me = $request->user();
@@ -49,7 +52,15 @@ class RatingController extends Controller
                 ? 'user:'.$rating->rated_user_id
                 : 'guest:'.$rating->rated_guest_id);
 
-        return view('rating.create', compact('match', 'participants', 'existing', 'me'));
+        return view('rating.create', [
+            'match' => $match,
+            'participants' => $participants,
+            'existing' => $existing,
+            'me' => $me,
+            'canVoteMvp' => $this->mvp->canVote($match, $me),
+            'mvpOptions' => $this->mvp->candidatesExcept($match, $me),
+            'myVote' => $this->mvp->myVote($match, $me),
+        ]);
     }
 
     public function store(Request $request, Partido $match): RedirectResponse

@@ -67,6 +67,30 @@
     @endif
 </div>
 
+@if ($canVoteMvp && ! empty($mvpOptions))
+    <div class="card card--ranking" style="max-width: 640px; margin-top: 16px;">
+        <h2>MVP del partido</h2>
+        <p class="muted small">Elegí al mejor jugador del partido. Cada uno que jugó tiene un voto y podés cambiarlo cuando quieras.</p>
+
+        <form method="POST" action="{{ route('mvp.store', $match) }}">
+            @csrf
+            <div class="segmented">
+                @foreach ($mvpOptions as $option)
+                    <label>
+                        <input type="radio" name="mvp" value="{{ $option['token'] }}" @checked($myVote === $option['token'])>
+                        <span>{{ $option['name'] }}</span>
+                    </label>
+                @endforeach
+            </div>
+            <button class="btn btn-primary mt" type="submit">{{ $myVote ? 'Cambiar voto' : 'Votar MVP' }}</button>
+        </form>
+
+        @error('mvp')
+            <p class="field-error">{{ $message }}</p>
+        @enderror
+    </div>
+@endif
+
 <script>
     (function () {
         const pendingKey = @json($pendingKey);

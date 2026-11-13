@@ -12,7 +12,7 @@ class MatchResult extends Model
     use HasFactory;
 
     protected $fillable = [
-        'match_id', 'winner', 'diff', 'mvp_user_id', 'mvp_guest_id',
+        'match_id', 'winner', 'diff', 'mvp_user_id', 'mvp_guest_id', 'mvp_tiebreak',
     ];
 
     /**
@@ -22,6 +22,7 @@ class MatchResult extends Model
     {
         return [
             'diff' => 'integer',
+            'mvp_tiebreak' => 'boolean',
         ];
     }
 

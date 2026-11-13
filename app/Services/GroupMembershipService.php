@@ -95,6 +95,13 @@ class GroupMembershipService
                 ->whereIn('match_id', $matchIds)
                 ->update(['mvp_user_id' => null]);
 
+            DB::table('mvp_votes')
+                ->whereIn('match_id', $matchIds)
+                ->where(fn ($query) => $query
+                    ->where('voter_user_id', $user->id)
+                    ->orWhere('voted_user_id', $user->id))
+                ->delete();
+
             DB::table('players')->where('user_id', $user->id)->where('group_id', $groupId)->delete();
 
             DB::table('group_user')->where('user_id', $user->id)->where('group_id', $groupId)->delete();
