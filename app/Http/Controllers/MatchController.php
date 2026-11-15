@@ -10,6 +10,7 @@ use App\Services\RecurringMatchService;
 use App\Services\ReminderService;
 use App\Services\TeamService;
 use App\Support\ActiveGroup;
+use App\Support\TeamKit;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,7 @@ class MatchController extends Controller
         private MessagingService $messaging,
         private RecurringMatchService $recurring,
         private MvpService $mvp,
+        private TeamKit $kit,
         private ActiveGroup $activeGroup,
     ) {}
 
@@ -181,6 +183,7 @@ class MatchController extends Controller
             'entriesSubstitute' => $entriesSubstitute,
             'teamA' => $teamA,
             'teamB' => $teamB,
+            'teamKits' => $this->kit->shirts($match),
             'goingCount' => $goingCount,
             'autoSize' => $autoSize,
             'availableUsers' => $availableUsers,

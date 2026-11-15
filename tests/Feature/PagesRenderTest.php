@@ -6,6 +6,7 @@ use App\Models\Group;
 use App\Models\MatchTeam;
 use App\Models\Partido;
 use App\Models\User;
+use App\Support\TeamKit;
 use Database\Factories\UserFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -166,6 +167,7 @@ final class PagesRenderTest extends TestCase
         $match->teams()->create(['user_id' => $beta->id, 'team' => MatchTeam::TEAM_B]);
 
         $fan = User::factory()->create();
+        $kits = app(TeamKit::class)->shirts($match);
 
         $this->actingAs($fan)
             ->get('/matches/'.$match->id)
@@ -174,7 +176,12 @@ final class PagesRenderTest extends TestCase
             ->assertSee('Alfa')
             ->assertSee('*Equipo B*')
             ->assertSee('Beta')
-            ->assertDontSee('Anotados');
+            ->assertDontSee('Anotados')
+            // The sheet headers carry the same shirt icon as the message.
+            ->assertSee('side-a">Equipo A (1) <span title="'.$kits['A']['label'].'">'.$kits['A']['icon'], false)
+            ->assertSee('side-b">Equipo B (1) <span title="'.$kits['B']['label'].'">'.$kits['B']['icon'], false)
+            ->assertSee('dupla-label-a">Equipo A (1) <span title="'.$kits['A']['label'].'">'.$kits['A']['icon'], false)
+            ->assertSee('dupla-label-b">Equipo B (1) <span title="'.$kits['B']['label'].'">'.$kits['B']['icon'], false);
     }
 
     public function test_share_message_includes_cost_per_person(): void

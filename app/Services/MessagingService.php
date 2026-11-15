@@ -5,10 +5,13 @@ namespace App\Services;
 use App\Models\MatchEntry;
 use App\Models\MatchTeam;
 use App\Models\Partido;
+use App\Support\TeamKit;
 use Illuminate\Support\Collection;
 
 class MessagingService
 {
+    public function __construct(private TeamKit $kit) {}
+
     /**
      * Builds a pre-written message for a match: header data plus the updated
      * player list, grouped by generated teams when available.
@@ -40,13 +43,15 @@ class MessagingService
         $lines[] = '';
 
         if ($teamA->isNotEmpty()) {
-            $lines[] = '*Equipo A* ('.$teamA->count().'):';
+            $kit = $this->kit->shirts($match);
+
+            $lines[] = '*Equipo A* ('.$teamA->count().'): '.$kit[MatchTeam::TEAM_A]['icon'];
 
             foreach ($teamA as $i => $member) {
                 $lines[] = '   '.($i + 1).'. '.$this->teamName($member);
             }
 
-            $lines[] = '*Equipo B* ('.$teamB->count().'):';
+            $lines[] = '*Equipo B* ('.$teamB->count().'): '.$kit[MatchTeam::TEAM_B]['icon'];
 
             foreach ($teamB as $i => $member) {
                 $lines[] = '   '.($i + 1).'. '.$this->teamName($member);
@@ -80,7 +85,14 @@ class MessagingService
         }
 
         $lines[] = '';
-        $lines[] = '¿Te sumás al próximo? Anotate acá: '.url('/matches/'.$match->id);
+
+        if ($teamA->isEmpty() && $match->isOpen()) {
+            $lines[] = '¿Te sumás al próximo? Anotate acá: '.url('/matches/'.$match->id);
+        } else {
+            // Once the list is closed there is nothing left to join, but the
+            // link to the match itself still goes out.
+            $lines[] = '🔗 '.url('/matches/'.$match->id);
+        }
 
         return implode("\n", $lines);
     }

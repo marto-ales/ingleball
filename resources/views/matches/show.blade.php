@@ -282,13 +282,13 @@
     $positions = $teamA->pluck('position')->merge($teamB->pluck('position'))->unique()->sort()->values();
                 @endphp
                 <div class="dupla-head">
-                    <span class="side-a">Equipo A ({{ $teamA->count() }})</span>
+                    <span class="side-a">Equipo A ({{ $teamA->count() }}) <span title="{{ $teamKits['A']['label'] }}">{{ $teamKits['A']['icon'] }}</span></span>
                     <span class="side-mid">similitud</span>
-                    <span class="side-b">Equipo B ({{ $teamB->count() }})</span>
+                    <span class="side-b">Equipo B ({{ $teamB->count() }}) <span title="{{ $teamKits['B']['label'] }}">{{ $teamKits['B']['icon'] }}</span></span>
                 </div>
                 <div class="duplas">
-                    <div class="dupla-label dupla-label-a">Equipo A ({{ $teamA->count() }})</div>
-                    <div class="dupla-label dupla-label-b">Equipo B ({{ $teamB->count() }})</div>
+                    <div class="dupla-label dupla-label-a">Equipo A ({{ $teamA->count() }}) <span title="{{ $teamKits['A']['label'] }}">{{ $teamKits['A']['icon'] }}</span></div>
+                    <div class="dupla-label dupla-label-b">Equipo B ({{ $teamB->count() }}) <span title="{{ $teamKits['B']['label'] }}">{{ $teamKits['B']['icon'] }}</span></div>
                     @foreach ($positions as $pos)
                         @php
                             $a = $teamAPos[$pos] ?? null;
