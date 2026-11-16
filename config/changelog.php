@@ -21,6 +21,16 @@
 
 return [
     [
+        'id' => '2026-11-15-camiseta',
+        'date' => '2026-11-15',
+        'title' => 'El mensaje ya avisa qué camiseta lleva cada equipo',
+        'changes' => [
+            'El mensaje para compartir y la planilla de equipos muestran ⚪ o ⚫ en el encabezado de cada equipo: blanco es camiseta clara y negro, oscura.',
+            'El color de camiseta cambia de un partido a otro y no se altera si se vuelven a armar los equipos.',
+            'Con la lista cerrada, el mensaje ya no invita a anotarse al próximo partido: solo deja el enlace al partido actual.',
+        ],
+    ],
+    [
         'id' => '2026-11-13-mvp',
         'date' => '2026-11-13',
         'title' => 'El MVP ahora lo eligen los que jugaron',
